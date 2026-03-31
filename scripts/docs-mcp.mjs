@@ -246,21 +246,38 @@ async function appendBlocks(packageName, pagePath, blocks) {
   return updateDocument(packageName, pagePath, [...(existing.blocks || []), ...blocks]);
 }
 
+/** Safe text extraction from a single block's content array */
+function blockText(block) {
+  try {
+    return (block.content || []).map(n => n.text || "").join("");
+  } catch { return ""; }
+}
+
 async function getDocumentContext(packageName, pagePath) {
   if (!pagePath.endsWith("page.json")) throw new Error("Solo page.json soportado");
   const { document } = await readDocument(packageName, pagePath);
   const blocks = document.blocks || [];
   const text = extractPlainText(blocks);
+
+  // Collect block types present in the document
+  const blockTypes = [...new Set(blocks.map(b => b.type).filter(Boolean))];
+
   return {
     packageName, pagePath, sourceType: "page-json",
-    title: document.meta?.title, updatedAt: document.meta?.updated_at,
+    title: document.meta?.title || "",
+    updatedAt: document.meta?.updated_at,
     documentVersion: document.document_version,
     wordCount: text.split(/\s+/).filter(Boolean).length,
     blockCount: blocks.length,
-    headings: blocks.filter(b => b.type === "heading").map(b => ({
-      level: b.attrs?.level, text: (b.content || []).map(n => n.text || "").join("") })),
-    leadingParagraphs: blocks.filter(b => b.type === "paragraph").slice(0, 4)
-      .map(b => (b.content || []).map(n => n.text || "").join("")),
+    blockTypes,
+    headings: blocks
+      .filter(b => b.type === "heading" && b.content)
+      .map(b => ({ level: b.attrs?.level, text: blockText(b) })),
+    leadingParagraphs: blocks
+      .filter(b => b.type === "paragraph" && b.content)
+      .slice(0, 4)
+      .map(b => blockText(b))
+      .filter(t => t.length > 0),
   };
 }
 
