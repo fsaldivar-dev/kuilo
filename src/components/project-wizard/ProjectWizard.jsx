@@ -52,7 +52,10 @@ export function ProjectWizard({ onComplete, onClose }) {
   };
 
   const choosePath = async () => {
-    if (api?.openVaultDialog) {
+    if (api?.chooseOrCreateFolder) {
+      const result = await api.chooseOrCreateFolder();
+      if (result?.path) setVaultPath(result.path);
+    } else if (api?.openVaultDialog) {
       const result = await api.openVaultDialog();
       if (result?.changed) setVaultPath(result.vaultPath);
     }
