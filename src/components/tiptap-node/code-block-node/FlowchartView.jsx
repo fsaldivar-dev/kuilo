@@ -37,12 +37,16 @@ const defaultEdgeOptions = {
 // ── Read-only React Flow view ────────────────────────────────────────────────
 
 export function FlowchartReadOnly({ code, isDark }) {
-  const { nodes, edges, direction } = useMemo(() => mermaidToFlow(code), [code]);
+  const { nodes, edges } = useMemo(() => mermaidToFlow(code), [code]);
 
   if (!nodes.length) return <MermaidPreview code={code} isDark={isDark} />;
 
   return (
     <div className="flowchart-readonly">
+      {/* Click-through overlay so Tiptap can select this node */}
+      <div className="flowchart-click-overlay">
+        <span className="flowchart-edit-hint">Click para editar</span>
+      </div>
       <ReactFlow
         nodes={nodes}
         edges={edges.map(e => ({ ...e, ...defaultEdgeOptions }))}
@@ -51,11 +55,11 @@ export function FlowchartReadOnly({ code, isDark }) {
         nodesDraggable={false}
         nodesConnectable={false}
         elementsSelectable={false}
-        panOnDrag
-        zoomOnScroll
+        panOnDrag={false}
+        zoomOnScroll={false}
+        preventScrolling={false}
       >
         <Background gap={16} size={1} />
-        <Controls showInteractive={false} />
       </ReactFlow>
     </div>
   );

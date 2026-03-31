@@ -1,6 +1,7 @@
 .flowchart-readonly {
   height: 340px;
   width: 100%;
+  position: relative;
 
   .react-flow__node {
     font-size: 12px;
@@ -9,12 +10,40 @@
     border: 2px solid #0071e3;
     background: #fff;
     color: #1d1d1f;
+    pointer-events: none;
   }
   .dark & .react-flow__node {
     background: #2c2c2e;
     color: #f5f5f7;
     border-color: #6cb4ff;
   }
+}
+
+.flowchart-click-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 12px;
+
+  &:hover .flowchart-edit-hint {
+    opacity: 1;
+  }
+}
+
+.flowchart-edit-hint {
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 4px 12px;
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  pointer-events: none;
 }
 
 .flowchart-editor {
