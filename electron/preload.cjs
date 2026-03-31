@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld("notesApi", {
   // Vault
   getVault: () => ipcRenderer.invoke("notes:get-vault"),
   openVaultDialog: () => ipcRenderer.invoke("notes:open-vault-dialog"),
+  chooseOrCreateFolder: () => ipcRenderer.invoke("notes:choose-or-create-folder"),
   resetVault: () => ipcRenderer.invoke("notes:reset-vault"),
   // Git Backup
   backupInit: () => ipcRenderer.invoke("notes:backup-init"),
