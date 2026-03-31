@@ -255,12 +255,39 @@ function blockText(block) {
 
 async function getDocumentContext(packageName, pagePath) {
   if (!pagePath.endsWith("page.json")) throw new Error("Solo page.json soportado");
-  const { document } = await readDocument(packageName, pagePath);
-  const blocks = document.blocks || [];
-  const text = extractPlainText(blocks);
 
-  // Collect block types present in the document
-  const blockTypes = [...new Set(blocks.map(b => b.type).filter(Boolean))];
+  const { document } = await readDocument(packageName, pagePath);
+
+  // Defensive: if document structure is unexpected, return minimal info
+  if (!document || typeof document !== "object") {
+    return { packageName, pagePath, error: "Documento vacío o corrupto" };
+  }
+
+  const blocks = Array.isArray(document.blocks) ? document.blocks : [];
+
+  let text = "";
+  try { text = extractPlainText(blocks); } catch (e) {
+    process.stderr.write(`[context] extractPlainText failed: ${e.message}\n`);
+  }
+
+  const headings = [];
+  const paragraphs = [];
+  const blockTypes = new Set();
+
+  for (const b of blocks) {
+    try {
+      if (b.type) blockTypes.add(b.type);
+      if (b.type === "heading" && Array.isArray(b.content)) {
+        headings.push({ level: b.attrs?.level, text: blockText(b) });
+      }
+      if (b.type === "paragraph" && Array.isArray(b.content) && paragraphs.length < 4) {
+        const t = blockText(b);
+        if (t) paragraphs.push(t);
+      }
+    } catch (e) {
+      process.stderr.write(`[context] block parse error: ${e.message}\n`);
+    }
+  }
 
   return {
     packageName, pagePath, sourceType: "page-json",
@@ -269,15 +296,9 @@ async function getDocumentContext(packageName, pagePath) {
     documentVersion: document.document_version,
     wordCount: text.split(/\s+/).filter(Boolean).length,
     blockCount: blocks.length,
-    blockTypes,
-    headings: blocks
-      .filter(b => b.type === "heading" && b.content)
-      .map(b => ({ level: b.attrs?.level, text: blockText(b) })),
-    leadingParagraphs: blocks
-      .filter(b => b.type === "paragraph" && b.content)
-      .slice(0, 4)
-      .map(b => blockText(b))
-      .filter(t => t.length > 0),
+    blockTypes: [...blockTypes],
+    headings,
+    leadingParagraphs: paragraphs,
   };
 }
 
@@ -346,19 +367,24 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
   const json = (data) => ({ content: [{ type: "text", text: JSON.stringify(data, null, 2) }] });
 
-  if (name === "get_vault_summary") return json(await getVaultSummary());
-  if (name === "list_documents") {
-    const all = await listAllPackages();
-    return json(args?.packageName ? all.filter(p => p.packageName === args.packageName) : all);
-  }
-  if (name === "read_document") return json(await readDocument(args.packageName, args.pagePath));
-  if (name === "search_documents") return json(await searchDocuments(args.query || ""));
-  if (name === "create_document") return json(await createDocument(args.packageName, args.title, args.blocks));
-  if (name === "update_document") return json(await updateDocument(args.packageName, args.pagePath, args.blocks));
-  if (name === "append_blocks") return json(await appendBlocks(args.packageName, args.pagePath, args.blocks));
-  if (name === "get_document_context") return json(await getDocumentContext(args.packageName, args.pagePath));
+  try {
+    if (name === "get_vault_summary") return json(await getVaultSummary());
+    if (name === "list_documents") {
+      const all = await listAllPackages();
+      return json(args?.packageName ? all.filter(p => p.packageName === args.packageName) : all);
+    }
+    if (name === "read_document") return json(await readDocument(args.packageName, args.pagePath));
+    if (name === "search_documents") return json(await searchDocuments(args.query || ""));
+    if (name === "create_document") return json(await createDocument(args.packageName, args.title, args.blocks));
+    if (name === "update_document") return json(await updateDocument(args.packageName, args.pagePath, args.blocks));
+    if (name === "append_blocks") return json(await appendBlocks(args.packageName, args.pagePath, args.blocks));
+    if (name === "get_document_context") return json(await getDocumentContext(args.packageName, args.pagePath));
 
-  throw new Error(`Tool desconocida: ${name}`);
+    throw new Error(`Tool desconocida: ${name}`);
+  } catch (err) {
+    process.stderr.write(`[kuilo-mcp] tool ${name} error: ${err.message}\n${err.stack}\n`);
+    return { content: [{ type: "text", text: JSON.stringify({ error: err.message }) }], isError: true };
+  }
 });
 
 await fs.mkdir(VAULT_ROOT, { recursive: true });
