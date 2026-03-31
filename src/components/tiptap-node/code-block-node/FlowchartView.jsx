@@ -21,10 +21,11 @@ import { mermaidToFlow, flowToMermaid } from "@/lib/diagram-converter";
 import { MermaidPreview } from "./MermaidPreview";
 import "./flowchart-view.scss";
 
-const FLOWCHART_REGEX = /^\s*(flowchart|graph)\s+(TD|TB|LR|RL|BT)/im;
+// Diagram types we can render with React Flow
+const REACTFLOW_REGEX = /^\s*(flowchart|graph|stateDiagram|stateDiagram-v2|classDiagram|classDiagram-v2|erDiagram|mindmap)\b/im;
 
 export function isFlowchart(code) {
-  return FLOWCHART_REGEX.test(code || "");
+  return REACTFLOW_REGEX.test(code || "");
 }
 
 const defaultEdgeOptions = {
