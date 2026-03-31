@@ -80,6 +80,16 @@ function blockToMd(block, depth = 0) {
       return `> [!${type}]\n${inner.split("\n").map((l) => `> ${l}`).join("\n")}`;
     }
 
+    case "kanbanBlock": {
+      const board = safeParse(block.attrs?.board);
+      if (!board.columns?.length) return "";
+      return board.columns.map((col) => {
+        const header = `### ${col.title}`;
+        const cards = (col.cards || []).map((c) => `- [ ] ${c.title}`).join("\n");
+        return `${header}\n${cards || "_(vacío)_"}`;
+      }).join("\n\n");
+    }
+
     case "diagramBlock": {
       const code = block.attrs?.mermaid || "";
       return `\`\`\`mermaid\n${code}\n\`\`\``;
