@@ -31,7 +31,12 @@
       "Bash(echo \"EXIT: $?\")",
       "Bash(printf 'Content-Length: 91\\\\r\\\\n\\\\r\\\\n{\"\"\"\"jsonrpc\"\"\"\":\"\"\"\"2.0\"\"\"\",\"\"\"\"id\"\"\"\":1,\"\"\"\"method\"\"\"\":\"\"\"\"initialize\"\"\"\",\"\"\"\"params\"\"\"\":{\"\"\"\"protocolVersion\"\"\"\":\"\"\"\"2024-11-05\"\"\"\"}}')",
       "Bash(gtimeout 5 node /Users/fsaldivar/Documents/Personal/projects/NotesApp/scripts/docs-mcp.mjs /Users/fsaldivar/Documents/SajaruBoxApp/sajarubox-mcp/knowledge)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(sed -i '' 's|<!-- SCREENSHOT: mermaid split view o preview -->||; s|<!-- !\\\\[Mermaid\\\\]\\(docs/screenshots/mermaid.png\\) -->|![Mermaid]\\(docs/screenshots/mermaid.png\\)|' README.md)",
+      "Bash(sed -i '' 's|<!-- SCREENSHOT: ecuacion renderizada -->||; s|<!-- !\\\\[KaTeX\\\\]\\(docs/screenshots/katex.png\\) -->|![KaTeX]\\(docs/screenshots/katex.png\\)|' README.md)",
+      "Bash(sed -i '' 's|<!-- SCREENSHOT: bloque API endpoint -->||; s|<!-- !\\\\[API Endpoint\\\\]\\(docs/screenshots/api-endpoint.png\\) -->|![API Endpoint]\\(docs/screenshots/api-endpoint.png\\)|' README.md)",
+      "Bash(sed -i '' 's|<!-- SCREENSHOT: metadata card con select y date -->||; s|<!-- !\\\\[Metadata\\\\]\\(docs/screenshots/metadata-card.png\\) -->|![Metadata]\\(docs/screenshots/overview.png\\)|' README.md)",
+      "Bash(sed -i '' 's|<!-- SCREENSHOT: template PRD o API Spec insertado -->||; s|<!-- !\\\\[Templates\\\\]\\(docs/screenshots/template-prd.png\\) -->|![Templates]\\(docs/screenshots/full-app.png\\)|' README.md)"
     ]
   }
 }

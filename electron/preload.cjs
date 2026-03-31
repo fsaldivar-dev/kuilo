@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
+// Kuilo API bridge — exposed as window.notesApi for backwards compatibility
 contextBridge.exposeInMainWorld("notesApi", {
   listTree: () => ipcRenderer.invoke("notes:list-tree"),
   openDocsFolder: () => ipcRenderer.invoke("notes:open-docs-folder"),
