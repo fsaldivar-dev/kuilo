@@ -139,15 +139,6 @@ export const SLASH_COMMANDS = [
     },
   },
   {
-    id: "whiteboard",
-    title: "Whiteboard",
-    description: "Pizarra libre para dibujar, esquemas y bocetos",
-    keywords: ["whiteboard", "pizarra", "draw", "dibujar", "sketch", "excalidraw", "boceto"],
-    execute: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).insertWhiteboard().run();
-    },
-  },
-  {
     id: "kanban",
     title: "Kanban Board",
     description: "Tablero con columnas y tarjetas arrastrables",
