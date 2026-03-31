@@ -183,9 +183,17 @@ export function ProjectWizard({ onComplete, onClose }) {
             />
             <callout type="tip">
             </callout>
+            <button
+              className="wizard-btn secondary"
+              style={{ marginTop: 8, width: "100%" }}
+              onClick={() => window.open("https://github.com/settings/tokens/new?scopes=repo&description=Kuilo+Backup", "_blank")}
+            >
+              Crear token en GitHub →
+            </button>
             <div className="wizard-github-help">
-              <p>Para crear un token: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens</p>
-              <p>Permisos necesarios: <strong>Contents: Read and write</strong></p>
+              <p>1. Click en "Crear token en GitHub" — se abre con los permisos pre-seleccionados</p>
+              <p>2. Click en <strong>"Generate token"</strong></p>
+              <p>3. Copia el token (empieza con <code>ghp_</code>) y pégalo arriba</p>
             </div>
           </div>
         )}
