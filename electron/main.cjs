@@ -350,6 +350,23 @@ ipcMain.handle("notes:open-vault-dialog", async () => {
   return { changed: true, vaultPath: newPath };
 });
 
+ipcMain.handle("notes:choose-or-create-folder", async () => {
+  // macOS showOpenDialog with createDirectory allows creating new folders in the dialog
+  const result = await dialog.showOpenDialog({
+    title: "Elegir o crear carpeta para el proyecto",
+    properties: ["openDirectory", "createDirectory"],
+    buttonLabel: "Usar esta carpeta",
+    message: "Selecciona una carpeta existente o crea una nueva",
+  });
+
+  if (result.canceled || !result.filePaths[0]) return { path: null };
+
+  const chosen = result.filePaths[0];
+  await fs.mkdir(chosen, { recursive: true });
+  await setVaultRoot(chosen);
+  return { path: chosen };
+});
+
 ipcMain.handle("notes:reset-vault", async () => {
   const defaultPath = getDefaultDocsRoot();
   await setVaultRoot(defaultPath);
