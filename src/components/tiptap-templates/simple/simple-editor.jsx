@@ -39,6 +39,8 @@ import { ApiEndpoint } from "@/components/tiptap-node/api-endpoint-node/api-endp
 import { ApiEndpointView } from "@/components/tiptap-node/api-endpoint-node/ApiEndpointView"
 import { ChartBlock } from "@/components/tiptap-node/chart-node/chart-node-extension"
 import { ChartBlockView } from "@/components/tiptap-node/chart-node/ChartBlockView"
+import { DiagramBlock } from "@/components/tiptap-node/diagram-node/diagram-node-extension"
+import { DiagramBlockView } from "@/components/tiptap-node/diagram-node/DiagramBlockView"
 import { EmojiShortcode } from "@/components/tiptap-node/emoji-shortcode-extension"
 import { TableOfContents } from "@/components/tiptap-node/toc-node/toc-node-extension"
 import { TocView } from "@/components/tiptap-node/toc-node/TocView"
@@ -306,6 +308,13 @@ export function SimpleEditor({ initialContent, onContentChange }) {
       ChartBlock.extend({
         addNodeView() {
           return ReactNodeViewRenderer(ChartBlockView, {
+            stopEvent: () => true,
+          });
+        },
+      }),
+      DiagramBlock.extend({
+        addNodeView() {
+          return ReactNodeViewRenderer(DiagramBlockView, {
             stopEvent: () => true,
           });
         },
