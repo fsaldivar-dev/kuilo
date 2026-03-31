@@ -138,3 +138,54 @@ describe("mermaidToFlow", () => {
     expect(edges.find(e => e.label === "Yes")).toBeDefined();
   });
 });
+
+describe("mermaidToFlow — stateDiagram", () => {
+  it("parses states and transitions", () => {
+    const code = `stateDiagram-v2
+    [*] --> Idle
+    Idle --> Processing : start
+    Processing --> Done : complete`;
+    const { nodes, edges } = mermaidToFlow(code);
+    expect(nodes.length).toBeGreaterThanOrEqual(3);
+    expect(edges.length).toBe(3);
+    expect(edges[1].label).toBe("start");
+  });
+});
+
+describe("mermaidToFlow — classDiagram", () => {
+  it("parses classes and relationships", () => {
+    const code = `classDiagram
+    Animal <|-- Duck
+    Animal <|-- Fish
+    Animal : +int age`;
+    const { nodes, edges } = mermaidToFlow(code);
+    expect(nodes.length).toBe(3);
+    expect(edges.length).toBe(2);
+  });
+});
+
+describe("mermaidToFlow — erDiagram", () => {
+  it("parses entities and relationships", () => {
+    const code = `erDiagram
+    CUSTOMER ||--o{ ORDER : places
+    ORDER ||--|{ LINE-ITEM : contains`;
+    const { nodes, edges } = mermaidToFlow(code);
+    expect(nodes.length).toBe(3);
+    expect(edges.length).toBe(2);
+    expect(edges[0].label).toBe("places");
+  });
+});
+
+describe("mermaidToFlow — mindmap", () => {
+  it("parses hierarchical structure", () => {
+    const code = `mindmap
+  root((Central))
+    Topic A
+      Sub A1
+    Topic B`;
+    const { nodes, edges } = mermaidToFlow(code);
+    expect(nodes.length).toBe(4);
+    expect(edges.length).toBe(3);
+    expect(nodes[0].data.label).toBe("Central");
+  });
+});

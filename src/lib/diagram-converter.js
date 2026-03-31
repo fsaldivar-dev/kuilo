@@ -72,12 +72,22 @@ function parseNode(segment) {
 
 export function mermaidToFlow(mermaid = "") {
   const lines = mermaid.split("\n").map(l => l.trim()).filter(Boolean);
+  if (!lines.length) return { nodes: [], edges: [], direction: "TD" };
+
+  const firstLine = lines[0].toLowerCase();
+
+  // Delegate to specialized parsers
+  if (firstLine.startsWith("statediagram")) return parseStateDiagram(lines);
+  if (firstLine.startsWith("classdiagram")) return parseClassDiagram(lines);
+  if (firstLine.startsWith("erdiagram")) return parseERDiagram(lines);
+  if (firstLine.startsWith("mindmap")) return parseMindmap(mermaid);
+
+  // Default: flowchart parser
   const nodesMap = new Map();
   const edges = [];
   let direction = "TD";
 
-  // Parse header
-  const headerMatch = lines[0]?.match(/^flowchart\s+(TD|TB|LR|RL|BT)/i);
+  const headerMatch = lines[0]?.match(/^(?:flowchart|graph)\s+(TD|TB|LR|RL|BT)/i);
   if (headerMatch) direction = headerMatch[1].toUpperCase();
 
   // Layout positioning
@@ -228,4 +238,165 @@ function autoLayout(nodes, edges, direction = "TD") {
       }
     });
   }
+}
+
+// ── State Diagram parser ─────────────────────────────────────────────────────
+// stateDiagram-v2
+//   [*] --> Idle
+//   Idle --> Processing : start
+//   Processing --> Done : complete
+
+function parseStateDiagram(lines) {
+  const nodesMap = new Map();
+  const edges = [];
+
+  const ensure = (id) => {
+    if (nodesMap.has(id)) return;
+    const isStart = id === "[*]";
+    nodesMap.set(id, {
+      id: id.replace(/[[\]*]/g, "_star_"),
+      type: isStart ? "circle" : "rounded",
+      data: { label: isStart ? "●" : id },
+      position: { x: 0, y: 0 },
+    });
+  };
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    // State --> State : label
+    const m = line.match(/^(\S+)\s*-->\s*(\S+)\s*(?::\s*(.+))?$/);
+    if (m) {
+      ensure(m[1]); ensure(m[2]);
+      const srcId = m[1].replace(/[[\]*]/g, "_star_");
+      const tgtId = m[2].replace(/[[\]*]/g, "_star_");
+      edges.push({ id: `e${edges.length}`, source: srcId, target: tgtId, label: m[3] || undefined });
+    }
+  }
+
+  const nodes = [...nodesMap.values()];
+  autoLayout(nodes, edges, "TD");
+  return { nodes, edges, direction: "TD" };
+}
+
+// ── Class Diagram parser ─────────────────────────────────────────────────────
+// classDiagram
+//   Animal <|-- Duck
+//   Animal : +int age
+//   class Duck { +String beakColor; +swim(); }
+
+function parseClassDiagram(lines) {
+  const nodesMap = new Map();
+  const edges = [];
+
+  const ensure = (id) => {
+    if (nodesMap.has(id)) return;
+    nodesMap.set(id, { id, type: "rect", data: { label: id }, position: { x: 0, y: 0 } });
+  };
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    // Inheritance: A <|-- B, A *-- B, A o-- B, A --> B
+    const rel = line.match(/^(\w+)\s*(<\|--|<\.\.|\*--|o--|-->|-->\s)\s*(\w+)(?:\s*:\s*(.+))?$/);
+    if (rel) {
+      ensure(rel[1]); ensure(rel[3]);
+      edges.push({ id: `e${edges.length}`, source: rel[1], target: rel[3], label: rel[4] || undefined });
+      continue;
+    }
+    // Class attribute: ClassName : +method()
+    const attr = line.match(/^(\w+)\s*:\s*(.+)$/);
+    if (attr) {
+      ensure(attr[1]);
+      const node = nodesMap.get(attr[1]);
+      node.data.label = `${attr[1]}\n${attr[2]}`;
+      continue;
+    }
+    // class ClassName { ... } — just capture the name
+    const cls = line.match(/^class\s+(\w+)/);
+    if (cls) ensure(cls[1]);
+  }
+
+  const nodes = [...nodesMap.values()];
+  autoLayout(nodes, edges, "TD");
+  return { nodes, edges, direction: "TD" };
+}
+
+// ── ER Diagram parser ────────────────────────────────────────────────────────
+// erDiagram
+//   CUSTOMER ||--o{ ORDER : places
+//   ORDER ||--|{ LINE-ITEM : contains
+
+function parseERDiagram(lines) {
+  const nodesMap = new Map();
+  const edges = [];
+
+  const ensure = (id) => {
+    if (nodesMap.has(id)) return;
+    nodesMap.set(id, { id, type: "rect", data: { label: id }, position: { x: 0, y: 0 } });
+  };
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    // ENTITY1 ||--o{ ENTITY2 : label
+    const m = line.match(/^(\S+)\s+(\|[|o}{\s\-]+)\s+(\S+)\s*(?::\s*(.+))?$/);
+    if (m) {
+      ensure(m[1]); ensure(m[3]);
+      edges.push({ id: `e${edges.length}`, source: m[1], target: m[3], label: m[4] || undefined });
+      continue;
+    }
+    // Entity attributes block: ENTITY { type name }
+    const entityMatch = line.match(/^(\w[\w-]*)\s*\{/);
+    if (entityMatch) ensure(entityMatch[1]);
+  }
+
+  const nodes = [...nodesMap.values()];
+  autoLayout(nodes, edges, "LR");
+  return { nodes, edges, direction: "LR" };
+}
+
+// ── Mindmap parser ───────────────────────────────────────────────────────────
+// mindmap
+//   root((Central))
+//     Topic A
+//       Sub A1
+//     Topic B
+
+function parseMindmap(rawMermaid) {
+  const nodes = [];
+  const edges = [];
+  const stack = [];
+  const rawLines = rawMermaid.split("\n");
+
+  for (let i = 1; i < rawLines.length; i++) {
+    const raw = rawLines[i];
+    const match = raw.match(/^(\s*)(.*)/);
+    if (!match || !match[2]) continue;
+
+    const indent = match[1].length;
+    let text = match[2].trim();
+    const id = `mm${i}`;
+
+    // Parse shape: root((text)), Topic(text), [text], etc.
+    let type = "rounded";
+    const shapes = [
+      { regex: /^\w+\(\((.+)\)\)$/, type: "circle" },
+      { regex: /^\w+\((.+)\)$/, type: "rounded" },
+      { regex: /^\[(.+)\]$/, type: "rect" },
+    ];
+    for (const s of shapes) {
+      const sm = text.match(s.regex);
+      if (sm) { text = sm[1]; type = s.type; break; }
+    }
+
+    nodes.push({ id, type, data: { label: text }, position: { x: 0, y: 0 } });
+
+    // Find parent: last node in stack with smaller indent
+    while (stack.length && stack[stack.length - 1].indent >= indent) stack.pop();
+    if (stack.length) {
+      edges.push({ id: `e${edges.length}`, source: stack[stack.length - 1].id, target: id });
+    }
+    stack.push({ id, indent });
+  }
+
+  autoLayout(nodes, edges, "LR");
+  return { nodes, edges, direction: "LR" };
 }
