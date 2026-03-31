@@ -153,18 +153,18 @@ export function CodeBlockLanguageSelect({ node, updateAttributes, selected, edit
     );
   }
 
-  // ── Mermaid — unselected: React Flow for flowcharts, Mermaid SVG for rest ──
+  // ── Mermaid — unselected: preview with click-to-edit overlay ──
   if (isMermaid && !selected) {
     return (
       <NodeViewWrapper className="code-block-wrapper code-block-wrapper--diagram">
         <pre style={{ display: "none" }}>
           <NodeViewContent as="code" />
         </pre>
-        {isFC ? (
-          <FlowchartReadOnly code={code} isDark={isDark} />
-        ) : (
-          <MermaidPreview code={code} isDark={isDark} />
-        )}
+        {/* Overlay outside stopEvent selectors — clicks pass to Tiptap to select node */}
+        <div className="diagram-edit-overlay">
+          <span className="diagram-edit-hint">Click para editar</span>
+        </div>
+        <MermaidPreview code={code} isDark={isDark} />
       </NodeViewWrapper>
     );
   }

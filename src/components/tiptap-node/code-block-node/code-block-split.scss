@@ -1,6 +1,7 @@
 // ─── Mermaid: diagram-only wrapper (unselected) ───────────────────────────────
 
 .code-block-wrapper--diagram {
+  position: relative;
   background: #13131f;
   border-radius: 8px;
   overflow: hidden;
@@ -62,6 +63,36 @@
     height: 100%;
     min-height: unset;
   }
+}
+
+// ─── Diagram edit overlay (click-to-edit) ─────────────────────────────────
+
+.diagram-edit-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 14px;
+
+  &:hover .diagram-edit-hint {
+    opacity: 1;
+  }
+}
+
+.diagram-edit-hint {
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 5px 14px;
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
 }
 
 // ─── Monaco in regular (non-mermaid) code blocks ─────────────────────────────
