@@ -95,6 +95,29 @@
   backdrop-filter: blur(4px);
 }
 
+// ─── Delete button on diagram ─────────────────────────────────────────────
+
+.diagram-delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 25;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: none;
+  background: rgba(255, 59, 48, 0.15);
+  color: #ff3b30;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity 0.12s, background 0.12s;
+
+  .code-block-wrapper--diagram:hover & { opacity: 1; }
+  &:hover { background: rgba(255, 59, 48, 0.3); }
+}
+
 // ─── Monaco in regular (non-mermaid) code blocks ─────────────────────────────
 
 .code-block-monaco-wrapper {

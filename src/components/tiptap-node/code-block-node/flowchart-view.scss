@@ -3,19 +3,9 @@
   width: 100%;
   position: relative;
 
-  .react-flow__node {
-    font-size: 12px;
-    border-radius: 6px;
-    padding: 8px 14px;
-    border: 2px solid #0071e3;
-    background: #fff;
-    color: #1d1d1f;
-    pointer-events: none;
-  }
-  .dark & .react-flow__node {
-    background: #2c2c2e;
-    color: #f5f5f7;
-    border-color: #6cb4ff;
+  /* Hide handles in preview — no connecting in read-only */
+  .react-flow__handle {
+    display: none !important;
   }
 }
 
