@@ -229,8 +229,11 @@ function App() {
   const [connectorsOpen, setConnectorsOpen] = useState(false);
   const [mcpInfo, setMcpInfo] = useState(null);
   const [searchResults, setSearchResults] = useState(null);
-  const [renameTarget, setRenameTarget] = useState(null); // { packageName, pagePath, title }
+  const [renameTarget, setRenameTarget] = useState(null);
   const [renameDraft, setRenameDraft] = useState("");
+  const [backupStatus, setBackupStatus] = useState(null);
+  const [backupRemoteUrl, setBackupRemoteUrl] = useState("");
+  const [backupToken, setBackupToken] = useState("");
 
   const saveTimeoutRef = useRef(null);
   const pageDocumentRef = useRef(null);
@@ -467,6 +470,35 @@ function App() {
     setSaveState(result?.ok ? "Libro exportado" : "Cancelado");
   };
 
+  // ── Git Backup ──
+  const refreshBackupStatus = async () => {
+    if (!api?.backupStatus) return;
+    try {
+      const status = await api.backupStatus();
+      setBackupStatus(status);
+    } catch {}
+  };
+
+  const doBackupCommit = async () => {
+    if (!api?.backupCommit) return;
+    setSaveState("Haciendo backup…");
+    await api.backupCommit({ message: `Manual backup ${new Date().toLocaleString("es-MX")}` });
+    await refreshBackupStatus();
+    setSaveState("Backup guardado");
+  };
+
+  const doBackupPush = async () => {
+    if (!api?.backupPush || !backupRemoteUrl || !backupToken) return;
+    setSaveState("Subiendo a remoto…");
+    try {
+      await api.backupPush({ url: backupRemoteUrl, token: backupToken });
+      await refreshBackupStatus();
+      setSaveState("Push completado");
+    } catch (err) {
+      setSaveState(`Error: ${err.message}`);
+    }
+  };
+
   // ── Conectores AI / MCP ──
   const openConnectors = async () => {
     setConnectorsOpen(true);
@@ -474,6 +506,7 @@ function App() {
       const info = await api.getMcpInfo();
       setMcpInfo(info);
     }
+    await refreshBackupStatus();
   };
 
   const connectTarget = async (target) => {
@@ -1033,6 +1066,67 @@ function App() {
                 <p className="connectors-hint">
                   Al conectar, se escribe la config MCP en el archivo de cada herramienta.
                   Reinicia la herramienta para que tome efecto.
+                </p>
+
+                <h3>Git Backup</h3>
+                {backupStatus && (
+                  <div className="connectors-info" style={{ marginBottom: 12 }}>
+                    <div className="connectors-info-row">
+                      <span className="connectors-label">Estado</span>
+                      <span className={`connector-status ${backupStatus.hasChanges ? "warn" : "on"}`}>
+                        {backupStatus.hasChanges
+                          ? `${backupStatus.files?.length || 0} archivos sin backup`
+                          : "● Todo respaldado"}
+                      </span>
+                    </div>
+                    {backupStatus.log?.[0] && (
+                      <div className="connectors-info-row">
+                        <span className="connectors-label">Ultimo</span>
+                        <code className="connectors-value">
+                          {backupStatus.log[0].message} — {new Date(backupStatus.log[0].date).toLocaleString("es-MX")}
+                        </code>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <button className="connector-action connect" onClick={doBackupCommit} style={{ marginBottom: 10, width: "100%" }}>
+                  Hacer backup ahora
+                </button>
+
+                <div className="connectors-info" style={{ marginBottom: 8 }}>
+                  <div className="connectors-info-row">
+                    <span className="connectors-label">Remote URL</span>
+                    <input
+                      className="rename-input"
+                      placeholder="https://github.com/user/repo.git"
+                      value={backupRemoteUrl}
+                      onChange={(e) => setBackupRemoteUrl(e.target.value)}
+                      style={{ fontSize: 12 }}
+                    />
+                  </div>
+                  <div className="connectors-info-row">
+                    <span className="connectors-label">Token</span>
+                    <input
+                      className="rename-input"
+                      type="password"
+                      placeholder="ghp_xxx o token personal"
+                      value={backupToken}
+                      onChange={(e) => setBackupToken(e.target.value)}
+                      style={{ fontSize: 12 }}
+                    />
+                  </div>
+                </div>
+                <button
+                  className="connector-action connect"
+                  onClick={doBackupPush}
+                  disabled={!backupRemoteUrl || !backupToken}
+                  style={{ width: "100%" }}
+                >
+                  Push a remoto
+                </button>
+                <p className="connectors-hint">
+                  Funciona con GitHub, GitLab, Bitbucket, o cualquier repo Git.
+                  El token es un Personal Access Token con permisos de escritura.
                 </p>
               </div>
             )}
