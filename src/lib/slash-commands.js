@@ -139,6 +139,15 @@ export const SLASH_COMMANDS = [
     },
   },
   {
+    id: "kanban",
+    title: "Kanban Board",
+    description: "Tablero con columnas y tarjetas arrastrables",
+    keywords: ["kanban", "board", "tablero", "task", "tarea", "trello", "jira", "sprint"],
+    execute: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).insertKanban().run();
+    },
+  },
+  {
     id: "chart",
     title: "Chart",
     description: "Grafica de barras, lineas, area o pie",
