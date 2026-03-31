@@ -65,16 +65,12 @@ input, textarea, select { font: inherit; }
   height: 60px;
 }
 
-.titlebar-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: linear-gradient(145deg, #3b82f6 0%, #4f46e5 100%);
-  display: grid;
-  place-items: center;
-  color: white;
+.titlebar-logo {
+  width: 28px;
+  height: 28px;
   flex-shrink: 0;
   -webkit-app-region: no-drag;
+  object-fit: contain;
 }
 
 .titlebar-name {

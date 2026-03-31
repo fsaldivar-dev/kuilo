@@ -695,7 +695,7 @@ const AI_TARGETS = {
   },
 };
 
-const MCP_SERVER_KEY = "notesapp-vault";
+const MCP_SERVER_KEY = "kuilo-vault";
 
 async function resolveScriptPath() {
   // Script lives at <project-root>/scripts/docs-mcp.mjs
@@ -990,7 +990,7 @@ ipcMain.handle("notes:export-pdf", async (_, { html, title, css }) => {
 </body>
 </html>`;
 
-  const tmpHtml = path.join(app.getPath("temp"), `notesapp-pdf-${Date.now()}.html`);
+  const tmpHtml = path.join(app.getPath("temp"), `kuilo-pdf-${Date.now()}.html`);
   await fs.writeFile(tmpHtml, fullHtml, "utf8");
   await pdfWin.loadFile(tmpHtml);
   await new Promise((r) => setTimeout(r, 1500));
@@ -1037,7 +1037,7 @@ ipcMain.handle("notes:export-book", async (_, { html, title, css }) => {
 </html>`;
 
   // Write to temp file (data URLs fail for large HTML)
-  const tmpHtml = path.join(app.getPath("temp"), `notesapp-book-${Date.now()}.html`);
+  const tmpHtml = path.join(app.getPath("temp"), `kuilo-book-${Date.now()}.html`);
   await fs.writeFile(tmpHtml, fullHtml, "utf8");
   await pdfWin.loadFile(tmpHtml);
   await new Promise((r) => setTimeout(r, 2500));
