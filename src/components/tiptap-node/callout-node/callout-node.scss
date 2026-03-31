@@ -1,0 +1,62 @@
+/* ── Callout / Admonition blocks ─────────────────────────────────── */
+
+.callout {
+  position: relative;
+  margin: 12px 0;
+  padding: 14px 16px 14px 44px;
+  border-radius: 8px;
+  border-left: 4px solid;
+
+  > *:first-child { margin-top: 0; }
+  > *:last-child  { margin-bottom: 0; }
+
+  &::before {
+    position: absolute;
+    left: 14px;
+    top: 14px;
+    font-size: 16px;
+    line-height: 1;
+  }
+}
+
+/* ── Type variants ── */
+
+.callout-note {
+  background: rgba(0, 113, 227, 0.06);
+  border-left-color: #0071e3;
+  &::before { content: "ℹ️"; }
+}
+
+.callout-tip {
+  background: rgba(52, 199, 89, 0.06);
+  border-left-color: #34c759;
+  &::before { content: "💡"; }
+}
+
+.callout-important {
+  background: rgba(175, 82, 222, 0.06);
+  border-left-color: #af52de;
+  &::before { content: "❗"; }
+}
+
+.callout-warning {
+  background: rgba(255, 149, 0, 0.06);
+  border-left-color: #ff9500;
+  &::before { content: "⚠️"; }
+}
+
+.callout-caution {
+  background: rgba(255, 59, 48, 0.06);
+  border-left-color: #ff3b30;
+  &::before { content: "🔴"; }
+}
+
+/* ── Dark mode ── */
+
+.dark {
+  .callout-note      { background: rgba(0, 113, 227, 0.1); }
+  .callout-tip       { background: rgba(52, 199, 89, 0.1); }
+  .callout-important { background: rgba(175, 82, 222, 0.1); }
+  .callout-warning   { background: rgba(255, 149, 0, 0.1); }
+  .callout-caution   { background: rgba(255, 59, 48, 0.1); }
+}
