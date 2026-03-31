@@ -640,7 +640,7 @@ ipcMain.handle("notes:search-content", async (_, { query }) => {
         if (await pathExists(pjPath)) {
           const doc = await readJson(pjPath);
           const title = doc.meta?.title || entry.name;
-          const text = (doc.blocks || []).map(b => (b.content || []).map(n => n.text || "").join("")).join(" ");
+          const text = (doc.blocks || []).map(b => typeof b.content === "string" ? b.content : Array.isArray(b.content) ? b.content.map(n => n.text || "").join("") : "").join(" ");
           if (title.toLowerCase().includes(q) || text.toLowerCase().includes(q)) {
             const idx = text.toLowerCase().indexOf(q);
             results.push({
