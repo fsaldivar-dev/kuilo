@@ -18,6 +18,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { mermaidToFlow, flowToMermaid } from "@/lib/diagram-converter";
 import { FlowchartReadOnly } from "@/components/tiptap-node/code-block-node/FlowchartView";
+import { nodeTypes } from "@/components/tiptap-node/code-block-node/DiagramNodes";
 import "./diagram-node.scss";
 
 const NODE_TYPES_CONFIG = [
@@ -136,6 +137,7 @@ export function DiagramBlockView({ node, updateAttributes, selected }) {
           onNodeDoubleClick={onNodeDoubleClick}
           onEdgeDoubleClick={onEdgeDoubleClick}
           defaultEdgeOptions={defaultEdgeOptions}
+          nodeTypes={nodeTypes}
           fitView
           colorMode={isDark ? "dark" : "light"}
         >
