@@ -69,7 +69,7 @@ body,
 }
 
 .simple-editor-content {
-  max-width: 900px;
+  max-width: min(1200px, 90%);
   width: 100%;
   margin: 0 auto;
   height: 100%;
