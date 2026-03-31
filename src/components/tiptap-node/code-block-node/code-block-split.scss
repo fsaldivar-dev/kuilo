@@ -1,0 +1,76 @@
+// ─── Mermaid: diagram-only wrapper (unselected) ───────────────────────────────
+
+.code-block-wrapper--diagram {
+  background: #13131f;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+
+  .mermaid-preview {
+    height: 360px;
+    border-radius: 0;
+  }
+}
+
+// ─── Mermaid: split wrapper (selected) ────────────────────────────────────────
+
+.code-block-wrapper--split {
+  background: #1e1e2e;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.code-block-split {
+  display: flex;
+  height: 420px;
+}
+
+// ── Left pane: Monaco ─────────────────────────────────────────────────────────
+
+.code-block-split__editor {
+  flex: 0 0 46%;
+  overflow: hidden;
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  flex-direction: column;
+
+  // Monaco fills the pane
+  .monaco-editor,
+  .overflow-guard {
+    flex: 1;
+  }
+}
+
+// ── Right pane: live diagram ──────────────────────────────────────────────────
+
+.code-block-split__preview {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #13131f;
+
+  .mermaid-preview {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+  }
+
+  .mermaid-diagram-area {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    min-height: unset;
+  }
+}
+
+// ─── Monaco in regular (non-mermaid) code blocks ─────────────────────────────
+
+.code-block-monaco-wrapper {
+  width: 100%;
+  min-height: 80px;
+
+  .monaco-editor.focused {
+    outline: none;
+  }
+}
