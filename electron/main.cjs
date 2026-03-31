@@ -279,7 +279,11 @@ const listPackages = async () => {
 const createWindow = async () => {
   await ensureVaultRoot();
 
+  // Set app name for macOS menu bar and About dialog
+  app.setName("Kuilo");
+
   const win = new BrowserWindow({
+    title: "Kuilo",
     width: 1440,
     height: 960,
     minWidth: 1000,
