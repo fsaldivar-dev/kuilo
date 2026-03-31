@@ -1,0 +1,68 @@
+.flowchart-readonly {
+  height: 340px;
+  width: 100%;
+
+  .react-flow__node {
+    font-size: 12px;
+    border-radius: 6px;
+    padding: 8px 14px;
+    border: 2px solid #0071e3;
+    background: #fff;
+    color: #1d1d1f;
+  }
+  .dark & .react-flow__node {
+    background: #2c2c2e;
+    color: #f5f5f7;
+    border-color: #6cb4ff;
+  }
+}
+
+.flowchart-editor {
+  width: 100%;
+}
+
+.flowchart-toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+  .dark & {
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.fc-btn {
+  padding: 3px 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  background: transparent;
+  font-size: 11px;
+  font-family: ui-monospace, monospace;
+  color: inherit;
+  cursor: pointer;
+
+  &:hover { background: rgba(0, 0, 0, 0.06); }
+  .dark & { border-color: rgba(255, 255, 255, 0.1); }
+  .dark &:hover { background: rgba(255, 255, 255, 0.06); }
+}
+
+.flowchart-canvas {
+  height: 380px;
+
+  .react-flow__node {
+    font-size: 12px;
+    border-radius: 6px;
+    padding: 8px 14px;
+    border: 2px solid #0071e3;
+    background: #fff;
+    color: #1d1d1f;
+  }
+  .dark & .react-flow__node {
+    background: #2c2c2e;
+    color: #f5f5f7;
+    border-color: #6cb4ff;
+  }
+}
