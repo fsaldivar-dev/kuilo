@@ -1,0 +1,113 @@
+.whiteboard-block {
+  margin: 12px 0;
+}
+
+.whiteboard-preview {
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  min-height: 200px;
+  transition: border-color 0.12s;
+
+  &:hover { border-color: rgba(0,0,0,0.15); }
+  .dark & { border-color: rgba(255,255,255,0.08); }
+  .dark &:hover { border-color: rgba(255,255,255,0.15); }
+}
+
+.whiteboard-svg {
+  width: 100%;
+  max-height: 400px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+
+  svg { max-width: 100%; max-height: 360px; }
+}
+
+.whiteboard-empty {
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0,0,0,0.25);
+  font-size: 13px;
+
+  .dark & { color: rgba(255,255,255,0.2); }
+}
+
+/* ── Fullscreen editor ── */
+
+.whiteboard-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+}
+
+.whiteboard-editor {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+
+  &[data-theme="dark"] { background: #1c1c1e; }
+}
+
+.whiteboard-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px 8px 90px; /* safe area for traffic lights */
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  -webkit-app-region: drag;
+  flex-shrink: 0;
+
+  [data-theme="dark"] & { border-bottom-color: rgba(255,255,255,0.08); }
+}
+
+.whiteboard-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(0,0,0,0.5);
+  -webkit-app-region: no-drag;
+
+  [data-theme="dark"] & { color: rgba(255,255,255,0.4); }
+}
+
+.whiteboard-actions {
+  display: flex;
+  gap: 6px;
+  -webkit-app-region: no-drag;
+}
+
+.wb-btn {
+  padding: 5px 12px;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 6px;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &.primary { background: #0071e3; color: #fff; border-color: #0071e3; }
+  &.primary:hover { background: #0077ed; }
+  &:hover { background: rgba(0,0,0,0.06); }
+
+  [data-theme="dark"] & { border-color: rgba(255,255,255,0.1); }
+}
+
+.whiteboard-canvas {
+  flex: 1;
+  position: relative;
+
+  .excalidraw { height: 100% !important; }
+}
