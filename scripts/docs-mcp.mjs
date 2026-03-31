@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * docs-mcp.mjs — MCP server genérico para vaults NotesApp
+ * docs-mcp.mjs — MCP server genérico para vaults Kuilo
  *
  * Uso:
  *   node docs-mcp.mjs /absolute/path/to/vault
@@ -224,7 +224,7 @@ async function getDocumentContext(packageName, pagePath) {
 // ─── MCP Server ───────────────────────────────────────────────────────────────
 
 const server = new Server(
-  { name: "notesapp-vault-mcp", version: "1.0.0" },
+  { name: "kuilo-mcp", version: "1.0.0" },
   { capabilities: { tools: {} } }
 );
 
