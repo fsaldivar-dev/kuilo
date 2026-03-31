@@ -325,6 +325,18 @@ input, textarea, select { font: inherit; }
   background: rgba(255,255,255,0.05);
 }
 
+.footer-btn.wizard-btn {
+  color: rgba(52, 199, 89, 0.8);
+  border-top: 1px solid rgba(255,255,255,0.06);
+  border-radius: 0;
+  padding-top: 9px;
+  margin-top: 2px;
+}
+.footer-btn.wizard-btn:hover {
+  color: rgba(72, 220, 110, 1);
+  background: rgba(52, 199, 89, 0.08);
+}
+
 .footer-btn.book-btn {
   color: rgba(52, 199, 89, 0.75);
   border-top: 1px solid rgba(255,255,255,0.06);

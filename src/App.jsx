@@ -29,6 +29,8 @@ import { PAGE_TEMPLATES } from "@/lib/page-templates";
 import { exportMarkdown, exportHtml, exportPdf } from "@/lib/export-utils";
 import { buildBookHtml, BOOK_CSS } from "@/lib/export-book";
 import { blocksToMarkdown } from "@/lib/blocks-to-markdown";
+import { ProjectWizard } from "@/components/project-wizard/ProjectWizard";
+import { generateProject } from "@/lib/project-generator";
 import { EmojiPicker } from "@/components/page-identity/EmojiPicker";
 import { CoverImage } from "@/components/page-identity/CoverImage";
 import { Breadcrumb } from "@/components/page-identity/Breadcrumb";
@@ -235,6 +237,7 @@ function App() {
   const [backupStatus, setBackupStatus] = useState(null);
   const [backupRemoteUrl, setBackupRemoteUrl] = useState("");
   const [backupToken, setBackupToken] = useState("");
+  const [wizardOpen, setWizardOpen] = useState(false);
 
   const saveTimeoutRef = useRef(null);
   const pageDocumentRef = useRef(null);
@@ -486,6 +489,31 @@ function App() {
     const vaultName = vaultPath ? vaultPath.split("/").pop() : "book";
     const result = await api.exportBook({ html: bookHtml, title: vaultName, css: BOOK_CSS });
     setSaveState(result?.ok ? "Libro exportado" : "Cancelado");
+  };
+
+  // ── Project Wizard ──
+  const handleWizardComplete = async ({ projectName, projectDesc, areas }) => {
+    setWizardOpen(false);
+    setSaveState("Creando proyecto…");
+    const packages = generateProject(projectName, areas);
+
+    for (const pkg of packages) {
+      // Create package
+      try { await api.createPackage({ name: pkg.packageName }); } catch {}
+      // Create docs
+      for (const doc of pkg.docs) {
+        try {
+          const result = await api.createDoc({ packageName: pkg.packageName, parentPath: null, title: doc.title });
+          const document = { ...result.document, blocks: doc.blocks, meta: { ...result.document.meta, title: doc.title } };
+          await api.saveDoc({ packageName: pkg.packageName, pagePath: result.pagePath, sourceType: "page-json", document });
+        } catch (err) {
+          console.error(`Error creating ${doc.title}:`, err);
+        }
+      }
+    }
+
+    await refreshTree();
+    setSaveState(`Proyecto "${projectName}" creado`);
   };
 
   // ── Git Backup ──
@@ -815,6 +843,10 @@ function App() {
                     <Download size={13} />
                     Exportar libro PDF
                   </button>
+                  <button className="footer-btn wizard-btn" onClick={() => setWizardOpen(true)}>
+                    <Plus size={13} />
+                    Nuevo proyecto
+                  </button>
                   <button className="footer-btn connectors-btn" onClick={openConnectors}>
                     <Plug size={13} />
                     Conectores AI
@@ -1016,6 +1048,14 @@ function App() {
           </>
         )}
       </main>
+
+      {/* ── Project Wizard ── */}
+      {wizardOpen && (
+        <ProjectWizard
+          onComplete={handleWizardComplete}
+          onClose={() => setWizardOpen(false)}
+        />
+      )}
 
       {/* ── Rename modal ── */}
       {renameTarget && (
