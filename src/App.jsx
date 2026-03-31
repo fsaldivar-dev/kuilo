@@ -294,9 +294,24 @@ function App() {
       setPageDocument(result.document);
       setPageMeta({ icon: result.document?.meta?.icon || "", cover: result.document?.meta?.cover || null });
       setLegacyContent("");
-      // Pass Tiptap JSON directly — preserves all custom nodes
-      const tiptapJson = { type: "doc", content: result.document.blocks || [] };
-      setEditorHtml(tiptapJson);
+
+      // Detect format: Tiptap JSON vs pageDocument (promoted .md)
+      // Tiptap JSON blocks have content as array: [{ type: "text", text: "..." }]
+      // pageDocument blocks have content as string: "plain text"
+      const blocks = result.document.blocks || [];
+      const isTiptapJson = blocks.length === 0 || (
+        blocks[0]?.content === undefined ||
+        Array.isArray(blocks[0]?.content) ||
+        blocks[0]?.attrs !== undefined
+      );
+
+      if (isTiptapJson) {
+        setEditorHtml({ type: "doc", content: blocks });
+      } else {
+        // Legacy pageDocument format — convert to HTML for the editor
+        setEditorHtml(pageDocumentToHtml(result.document));
+      }
+
       const nextVersions = await api.listDocVersions({ packageName: doc.packageName, pagePath: doc.pagePath });
       setVersions(nextVersions || []);
       return;
@@ -586,7 +601,9 @@ function App() {
     const nextActive = { packageName: result.packageName, pagePath: result.pagePath, title: result.title };
     setActiveDoc(nextActive);
     setPageDocument(result.document);
-    setEditorHtml({ type: "doc", content: result.document.blocks || [] });
+    const rBlocks = result.document.blocks || [];
+    const rIsTiptap = rBlocks.length === 0 || Array.isArray(rBlocks[0]?.content) || rBlocks[0]?.attrs !== undefined;
+    setEditorHtml(rIsTiptap ? { type: "doc", content: rBlocks } : pageDocumentToHtml(result.document));
     setVersions(result.versions || []);
     await refreshTree(nextActive);
     setSaveState("Versión restaurada");
