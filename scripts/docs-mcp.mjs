@@ -6,15 +6,9 @@
  *   node docs-mcp.mjs /absolute/path/to/vault
  *   NOTES_VAULT=/absolute/path/to/vault node docs-mcp.mjs
  *
- * Registro en Claude Desktop:
- * {
- *   "mcpServers": {
- *     "mi-vault": {
- *       "command": "node",
- *       "args": ["/path/to/docs-mcp.mjs", "/path/to/vault"]
- *     }
- *   }
- * }
+ * Expone solo documentos page.json (structured).
+ * Archivos .md se listan como legacy pero no se exponen via read_document.
+ * Usa list_documents para ver qué hay y promote desde la app si necesitas leer .md.
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -54,20 +48,24 @@ function uid() {
   return Date.now().toString(36) + crypto.randomBytes(3).toString("hex");
 }
 
-function getTitleFromMarkdown(md = "") {
-  const m = md.match(/^#\s+(.+)$/m);
-  return m ? m[1].trim() : "Sin título";
-}
+// ─── Extract all plain text from page.json blocks (deep) ─────────────────────
 
 function extractPlainText(blocks = []) {
-  return blocks.map(b => {
-    const inner = (b.content || []).map(n => n.text || "").join("");
-    return b.children?.length ? inner + "\n" + extractPlainText(b.children) : inner;
-  }).join("\n");
+  const parts = [];
+  const walk = (nodes) => {
+    for (const node of nodes) {
+      if (node.text) parts.push(node.text);
+      if (node.content) walk(node.content);
+      if (node.children) walk(node.children);
+    }
+  };
+  walk(blocks);
+  return parts.join(" ");
 }
 
-// ─── Document operations ──────────────────────────────────────────────────────
+// ─── Document operations ────────────────────────────────────────────────────
 
+/** Lists only page.json docs. Legacy .md are flagged but not readable via MCP. */
 async function listPagesRecursive(dir, relDir = "") {
   let entries;
   try { entries = await fs.readdir(dir, { withFileTypes: true }); } catch { return []; }
@@ -75,16 +73,17 @@ async function listPagesRecursive(dir, relDir = "") {
 
   for (const e of entries.sort((a, b) => a.name.localeCompare(b.name, "es-MX"))) {
     if (e.name.startsWith(".") || e.name.startsWith("_")) continue;
-    const rel = relDir ? `${relDir}/${e.name}` : e.name;
 
     if (e.isFile() && e.name.endsWith(".md")) {
-      const content = await fs.readFile(path.join(dir, e.name), "utf8");
-      nodes.push({ pagePath: rel, title: getTitleFromMarkdown(content), sourceType: "legacy-markdown", children: [] });
+      // Flag as legacy — not readable via MCP, needs promote
+      const rel = relDir ? `${relDir}/${e.name}` : e.name;
+      nodes.push({ pagePath: rel, title: e.name.replace(".md", ""), sourceType: "legacy-markdown", children: [] });
       continue;
     }
 
     if (!e.isDirectory() || RESERVED.has(e.name)) continue;
 
+    const rel = relDir ? `${relDir}/${e.name}` : e.name;
     const pjPath = path.join(dir, e.name, "page.json");
     if (await exists(pjPath)) {
       const doc = await readJson(pjPath);
@@ -107,54 +106,99 @@ async function listAllPackages() {
   try { entries = await fs.readdir(VAULT_ROOT, { withFileTypes: true }); } catch { return []; }
   const packages = [];
 
-  const rootFiles = entries.filter(e => e.isFile() && e.name.endsWith(".md"));
-  if (rootFiles.length) {
-    const pages = [];
-    for (const f of rootFiles) {
-      const content = await fs.readFile(path.join(VAULT_ROOT, f.name), "utf8");
-      pages.push({ pagePath: f.name, title: getTitleFromMarkdown(content), sourceType: "legacy-markdown", children: [] });
-    }
-    packages.push({ packageName: "__root__", pages });
-  }
-
   for (const e of entries.filter(e => e.isDirectory() && !e.name.startsWith(".") && !RESERVED.has(e.name))) {
     const pages = await listPagesRecursive(path.join(VAULT_ROOT, e.name));
     if (pages.length) packages.push({ packageName: e.name, pages });
   }
+
+  // Root-level .md files (legacy only)
+  const rootMd = entries.filter(e => e.isFile() && e.name.endsWith(".md"));
+  if (rootMd.length) {
+    packages.push({
+      packageName: "__root__",
+      pages: rootMd.map(f => ({ pagePath: f.name, title: f.name.replace(".md", ""), sourceType: "legacy-markdown", children: [] })),
+    });
+  }
+
   return packages;
 }
 
+/** Read only page.json documents. Rejects .md files. */
 async function readDocument(packageName, pagePath) {
+  if (!pagePath.endsWith("page.json")) {
+    throw new Error(`Solo se pueden leer documentos page.json via MCP. "${pagePath}" es legacy markdown — usa la app Kuilo para promoverlo a structured.`);
+  }
   const pkgDir = packageName === "__root__" ? VAULT_ROOT : safeResolve(VAULT_ROOT, packageName);
   const fullPath = safeResolve(pkgDir, pagePath);
-  if (pagePath.endsWith("page.json")) {
-    return { sourceType: "page-json", document: await readJson(fullPath) };
-  }
-  return { sourceType: "legacy-markdown", content: await fs.readFile(fullPath, "utf8") };
+  return { sourceType: "page-json", document: await readJson(fullPath) };
 }
 
+/** Full-text search across all page.json documents. */
 async function searchDocuments(query) {
   const q = query.trim().toLowerCase();
+  if (!q) return [];
   const packages = await listAllPackages();
   const results = [];
 
   const search = async (pages, packageName) => {
     for (const page of pages) {
+      if (page.sourceType !== "page-json") continue; // skip .md in search
+
       try {
-        const { sourceType, document, content } = await readDocument(packageName, page.pagePath);
-        const text = sourceType === "page-json" ? extractPlainText(document.blocks || []) : (content || "");
-        if (page.title.toLowerCase().includes(q) || text.toLowerCase().includes(q)) {
+        const pkgDir = packageName === "__root__" ? VAULT_ROOT : safeResolve(VAULT_ROOT, packageName);
+        const fullPath = safeResolve(pkgDir, page.pagePath);
+        const doc = await readJson(fullPath);
+        const text = extractPlainText(doc.blocks || []);
+        const title = doc.meta?.title || "";
+
+        if (title.toLowerCase().includes(q) || text.toLowerCase().includes(q)) {
           const idx = text.toLowerCase().indexOf(q);
-          results.push({ packageName, pagePath: page.pagePath, title: page.title, sourceType,
-            snippet: idx >= 0 ? text.slice(Math.max(0, idx - 60), idx + 180).trim() : text.slice(0, 240) });
+          results.push({
+            packageName,
+            pagePath: page.pagePath,
+            title,
+            snippet: idx >= 0 ? text.slice(Math.max(0, idx - 60), idx + 180).trim() : text.slice(0, 240),
+          });
         }
-      } catch {}
+      } catch (err) {
+        process.stderr.write(`[search] error reading ${page.pagePath}: ${err.message}\n`);
+      }
+
       if (page.children?.length) await search(page.children, packageName);
     }
   };
 
   for (const pkg of packages) await search(pkg.pages, pkg.packageName);
   return results;
+}
+
+/** Vault summary — one line per doc, no content. */
+async function getVaultSummary() {
+  const packages = await listAllPackages();
+  const summary = [];
+
+  const walk = (pages, packageName) => {
+    for (const page of pages) {
+      summary.push({
+        packageName,
+        pagePath: page.pagePath,
+        title: page.title,
+        sourceType: page.sourceType,
+      });
+      if (page.children?.length) walk(page.children, packageName);
+    }
+  };
+
+  for (const pkg of packages) walk(pkg.pages, pkg.packageName);
+
+  return {
+    vaultPath: VAULT_ROOT,
+    totalPackages: packages.length,
+    totalDocuments: summary.length,
+    structured: summary.filter(d => d.sourceType === "page-json").length,
+    legacy: summary.filter(d => d.sourceType === "legacy-markdown").length,
+    documents: summary,
+  };
 }
 
 async function createDocument(packageName, title, blocks = []) {
@@ -175,6 +219,7 @@ async function createDocument(packageName, title, blocks = []) {
 }
 
 async function updateDocument(packageName, pagePath, blocks) {
+  if (!pagePath.endsWith("page.json")) throw new Error("Solo se pueden actualizar documentos page.json");
   const pkgDir = packageName === "__root__" ? VAULT_ROOT : safeResolve(VAULT_ROOT, packageName);
   const filePath = safeResolve(pkgDir, pagePath);
   const versionsDir = path.join(path.dirname(filePath), "versions");
@@ -194,6 +239,7 @@ async function updateDocument(packageName, pagePath, blocks) {
 }
 
 async function appendBlocks(packageName, pagePath, blocks) {
+  if (!pagePath.endsWith("page.json")) throw new Error("Solo se pueden actualizar documentos page.json");
   const pkgDir = packageName === "__root__" ? VAULT_ROOT : safeResolve(VAULT_ROOT, packageName);
   const filePath = safeResolve(pkgDir, pagePath);
   const existing = await readJson(filePath);
@@ -201,18 +247,15 @@ async function appendBlocks(packageName, pagePath, blocks) {
 }
 
 async function getDocumentContext(packageName, pagePath) {
-  const { sourceType, document, content } = await readDocument(packageName, pagePath);
-  if (sourceType === "legacy-markdown") {
-    const lines = (content || "").split("\n");
-    return { packageName, pagePath, sourceType, wordCount: content.split(/\s+/).filter(Boolean).length,
-      headings: lines.filter(l => l.startsWith("#")).slice(0, 10), preview: content.slice(0, 600) };
-  }
+  if (!pagePath.endsWith("page.json")) throw new Error("Solo page.json soportado");
+  const { document } = await readDocument(packageName, pagePath);
   const blocks = document.blocks || [];
+  const text = extractPlainText(blocks);
   return {
     packageName, pagePath, sourceType: "page-json",
     title: document.meta?.title, updatedAt: document.meta?.updated_at,
     documentVersion: document.document_version,
-    wordCount: extractPlainText(blocks).split(/\s+/).filter(Boolean).length,
+    wordCount: text.split(/\s+/).filter(Boolean).length,
     blockCount: blocks.length,
     headings: blocks.filter(b => b.type === "heading").map(b => ({
       level: b.attrs?.level, text: (b.content || []).map(n => n.text || "").join("") })),
@@ -228,62 +271,65 @@ const server = new Server(
   { capabilities: { tools: {} } }
 );
 
-// ── tools/list ──
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
+      name: "get_vault_summary",
+      description: "Resumen del vault: total de paquetes, documentos, y lista de títulos con pagePath. Usar como primer paso para explorar.",
+      inputSchema: { type: "object", properties: {} },
+    },
+    {
       name: "list_documents",
-      description: "Lista todos los documentos del vault. Devuelve árbol con packageName, pagePath, title y sourceType.",
+      description: "Lista documentos con árbol completo. Filtrable por paquete.",
       inputSchema: { type: "object", properties: { packageName: { type: "string", description: "Filtra por paquete. Omitir = todos." } } },
     },
     {
       name: "read_document",
-      description: "Lee un documento. page.json devuelve blocks estructurados; .md devuelve markdown plano.",
+      description: "Lee un documento page.json. Requiere packageName + pagePath exacto (usar list_documents primero). No soporta .md — promover desde la app.",
       inputSchema: { type: "object", required: ["packageName", "pagePath"],
-        properties: { packageName: { type: "string" }, pagePath: { type: "string" } } },
+        properties: { packageName: { type: "string" }, pagePath: { type: "string", description: "Debe terminar en page.json" } } },
     },
     {
       name: "search_documents",
-      description: "Busca texto en títulos y contenido de todos los documentos del vault.",
+      description: "Busca texto en títulos y contenido de documentos page.json del vault.",
       inputSchema: { type: "object", required: ["query"],
         properties: { query: { type: "string" } } },
     },
     {
       name: "create_document",
-      description: "Crea un nuevo documento page.json en el vault.",
+      description: "Crea un nuevo documento page.json.",
       inputSchema: { type: "object", required: ["packageName", "title"],
         properties: { packageName: { type: "string" }, title: { type: "string" },
           blocks: { type: "array", description: "Bloques Tiptap. Omitir para documento vacío.", items: { type: "object" } } } },
     },
     {
       name: "update_document",
-      description: "Reemplaza todos los bloques de un documento page.json. Crea snapshot automático.",
+      description: "Reemplaza todos los bloques de un page.json. Crea snapshot automático.",
       inputSchema: { type: "object", required: ["packageName", "pagePath", "blocks"],
         properties: { packageName: { type: "string" }, pagePath: { type: "string" },
           blocks: { type: "array", items: { type: "object" } } } },
     },
     {
       name: "append_blocks",
-      description: "Agrega bloques al final de un documento page.json sin tocar el contenido existente.",
+      description: "Agrega bloques al final de un page.json sin tocar el contenido existente.",
       inputSchema: { type: "object", required: ["packageName", "pagePath", "blocks"],
         properties: { packageName: { type: "string" }, pagePath: { type: "string" },
           blocks: { type: "array", items: { type: "object" } } } },
     },
     {
       name: "get_document_context",
-      description: "Resumen compacto: headings, primeros párrafos, wordCount. Útil antes de leer el documento completo.",
+      description: "Resumen compacto de un page.json: headings, primeros párrafos, wordCount. Útil antes de leer el documento completo.",
       inputSchema: { type: "object", required: ["packageName", "pagePath"],
         properties: { packageName: { type: "string" }, pagePath: { type: "string" } } },
     },
   ],
 }));
 
-// ── tools/call ──
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
-
   const json = (data) => ({ content: [{ type: "text", text: JSON.stringify(data, null, 2) }] });
 
+  if (name === "get_vault_summary") return json(await getVaultSummary());
   if (name === "list_documents") {
     const all = await listAllPackages();
     return json(args?.packageName ? all.filter(p => p.packageName === args.packageName) : all);
@@ -298,8 +344,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   throw new Error(`Tool desconocida: ${name}`);
 });
 
-// ── Start ──
 await fs.mkdir(VAULT_ROOT, { recursive: true });
 const transport = new StdioServerTransport();
 await server.connect(transport);
-process.stderr.write(`[docs-mcp] vault: ${VAULT_ROOT}\n`);
+process.stderr.write(`[kuilo-mcp] vault: ${VAULT_ROOT}\n`);
