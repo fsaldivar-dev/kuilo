@@ -1,0 +1,194 @@
+/**
+ * ProjectWizard — setup wizard for new documentation projects.
+ * Asks questions, then creates packages + initial documents.
+ */
+
+import { useState } from "react";
+import { createPortal } from "react-dom";
+import { X, ChevronRight, ChevronLeft, Rocket } from "lucide-react";
+import "./project-wizard.scss";
+
+const AREAS = [
+  { id: "producto",     icon: "📦", label: "Producto",     desc: "PRDs, roadmap, features, specs", docs: ["PRD inicial", "Roadmap"] },
+  { id: "tecnico",      icon: "⚙️", label: "Técnico",      desc: "Arquitectura, APIs, runbooks, stack", docs: ["Stack técnico", "API Spec", "Runbook"] },
+  { id: "negocio",      icon: "💼", label: "Negocio",       desc: "Modelo de negocio, pricing, métricas", docs: ["Lean Canvas", "Modelo de pricing"] },
+  { id: "marketing",    icon: "📣", label: "Marketing",     desc: "Plan de marketing, canales, contenido", docs: ["Plan de marketing", "Canales de adquisición"] },
+  { id: "legal",        icon: "⚖️", label: "Legal",         desc: "Contratos, privacidad, términos", docs: ["Aviso de privacidad", "Términos y condiciones"] },
+  { id: "operaciones",  icon: "🔧", label: "Operaciones",   desc: "Procesos del día a día, playbooks", docs: ["Manual de operaciones", "Checklist diario"] },
+  { id: "cliente",      icon: "👤", label: "Cliente",        desc: "Personas, journey, soporte, FAQ", docs: ["Customer persona", "Customer journey"] },
+  { id: "franquicia",   icon: "🏪", label: "Franquicia",     desc: "Manual para replicar el negocio", docs: ["Manual de franquicia", "Checklist de apertura"] },
+  { id: "bitacora",     icon: "📝", label: "Bitácora",       desc: "Registro de éxitos, fracasos, lecciones", docs: ["Bitácora del proyecto"] },
+];
+
+const PRESETS = [
+  { id: "todo",       label: "Proyecto completo",         desc: "Todas las áreas — para documentar un negocio entero", areas: AREAS.map(a => a.id) },
+  { id: "app",        label: "App / Software",             desc: "Producto + técnico + cliente", areas: ["producto", "tecnico", "cliente"] },
+  { id: "startup",    label: "Startup / Emprendimiento",   desc: "Negocio + producto + marketing + legal", areas: ["negocio", "producto", "marketing", "legal", "bitacora"] },
+  { id: "franchise",  label: "Franquicia",                 desc: "Operaciones + franquicia + negocio", areas: ["operaciones", "franquicia", "negocio", "cliente"] },
+  { id: "custom",     label: "Personalizado",              desc: "Elige exactamente qué áreas necesitas", areas: [] },
+];
+
+export function ProjectWizard({ onComplete, onClose }) {
+  const [step, setStep] = useState(0);
+  const [projectName, setProjectName] = useState("");
+  const [projectDesc, setProjectDesc] = useState("");
+  const [preset, setPreset] = useState(null);
+  const [selectedAreas, setSelectedAreas] = useState([]);
+
+  const toggleArea = (id) => {
+    setSelectedAreas((prev) => prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]);
+  };
+
+  const selectPreset = (p) => {
+    setPreset(p.id);
+    if (p.id !== "custom") {
+      setSelectedAreas(p.areas);
+    }
+  };
+
+  const handleCreate = () => {
+    const areas = AREAS.filter(a => selectedAreas.includes(a.id));
+    onComplete({ projectName, projectDesc, areas });
+  };
+
+  const canNext = () => {
+    if (step === 0) return projectName.trim().length > 0;
+    if (step === 1) return preset !== null;
+    if (step === 2) return selectedAreas.length > 0;
+    return true;
+  };
+
+  return createPortal(
+    <div className="wizard-overlay">
+      <div className="wizard-container">
+        {/* Header */}
+        <div className="wizard-header">
+          <div className="wizard-steps">
+            {["Proyecto", "Tipo", "Áreas", "Crear"].map((s, i) => (
+              <span key={i} className={`wizard-step ${i === step ? "active" : ""} ${i < step ? "done" : ""}`}>
+                {i < step ? "✓" : i + 1}. {s}
+              </span>
+            ))}
+          </div>
+          <button className="wizard-close" onClick={onClose}><X size={18} /></button>
+        </div>
+
+        {/* Step 0: Project info */}
+        {step === 0 && (
+          <div className="wizard-body">
+            <h2>¿Cómo se llama tu proyecto?</h2>
+            <p className="wizard-subtitle">Este será el nombre de tu workspace de documentación.</p>
+            <input
+              className="wizard-input"
+              placeholder="ej. SajaruBox, Mi Tienda, App de Fitness..."
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              autoFocus
+            />
+            <input
+              className="wizard-input secondary"
+              placeholder="Descripción breve (opcional)"
+              value={projectDesc}
+              onChange={(e) => setProjectDesc(e.target.value)}
+            />
+          </div>
+        )}
+
+        {/* Step 1: Preset selection */}
+        {step === 1 && (
+          <div className="wizard-body">
+            <h2>¿Qué tipo de proyecto es?</h2>
+            <p className="wizard-subtitle">Elige un preset o personaliza las áreas.</p>
+            <div className="wizard-presets">
+              {PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  className={`wizard-preset ${preset === p.id ? "selected" : ""}`}
+                  onClick={() => selectPreset(p)}
+                >
+                  <strong>{p.label}</strong>
+                  <span>{p.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Area selection (always shown, editable) */}
+        {step === 2 && (
+          <div className="wizard-body">
+            <h2>Áreas de documentación</h2>
+            <p className="wizard-subtitle">Selecciona las áreas que necesitas. Cada una creará un paquete con documentos iniciales.</p>
+            <div className="wizard-areas">
+              {AREAS.map((area) => (
+                <button
+                  key={area.id}
+                  className={`wizard-area ${selectedAreas.includes(area.id) ? "selected" : ""}`}
+                  onClick={() => toggleArea(area.id)}
+                >
+                  <span className="wizard-area-icon">{area.icon}</span>
+                  <div className="wizard-area-info">
+                    <strong>{area.label}</strong>
+                    <span>{area.desc}</span>
+                  </div>
+                  <div className="wizard-area-check">{selectedAreas.includes(area.id) ? "✓" : ""}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Confirm */}
+        {step === 3 && (
+          <div className="wizard-body">
+            <h2>Listo para crear</h2>
+            <div className="wizard-summary">
+              <div className="wizard-summary-item">
+                <span className="wizard-summary-label">Proyecto</span>
+                <span className="wizard-summary-value">{projectName}</span>
+              </div>
+              {projectDesc && (
+                <div className="wizard-summary-item">
+                  <span className="wizard-summary-label">Descripción</span>
+                  <span className="wizard-summary-value">{projectDesc}</span>
+                </div>
+              )}
+              <div className="wizard-summary-item">
+                <span className="wizard-summary-label">Áreas</span>
+                <span className="wizard-summary-value">{selectedAreas.length} paquetes</span>
+              </div>
+              <div className="wizard-summary-docs">
+                {AREAS.filter(a => selectedAreas.includes(a.id)).map((area) => (
+                  <div key={area.id} className="wizard-summary-pkg">
+                    <span>{area.icon} {area.label}</span>
+                    <ul>{area.docs.map((d, i) => <li key={i}>{d}</li>)}</ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="wizard-footer">
+          {step > 0 && (
+            <button className="wizard-btn secondary" onClick={() => setStep(s => s - 1)}>
+              <ChevronLeft size={14} /> Anterior
+            </button>
+          )}
+          <div className="wizard-spacer" />
+          {step < 3 ? (
+            <button className="wizard-btn primary" onClick={() => setStep(s => s + 1)} disabled={!canNext()}>
+              Siguiente <ChevronRight size={14} />
+            </button>
+          ) : (
+            <button className="wizard-btn create" onClick={handleCreate}>
+              <Rocket size={14} /> Crear proyecto
+            </button>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
