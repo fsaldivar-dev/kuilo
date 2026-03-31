@@ -24,8 +24,7 @@ Kuilo es un IDE de documentacion tecnica que corre 100% local en tu maquina. Sin
 
 Pensado para equipos de una persona que documentan sistemas completos: APIs, arquitectura, runbooks, PRDs, RFCs, y mas.
 
-<!-- SCREENSHOT: vista general de la app con sidebar + editor -->
-<!-- ![Vista general](docs/screenshots/overview.png) -->
+![Vista general](docs/screenshots/full-app-dark.png)
 
 ---
 
@@ -46,8 +45,7 @@ Editor visual tipo Notion/Obsidian con soporte completo de Markdown:
 - **Toggle lists** — bloques colapsables
 - **Dividers** — lineas horizontales
 
-<!-- SCREENSHOT: editor con varios bloques -->
-<!-- ![Editor](docs/screenshots/editor-blocks.png) -->
+![Editor](docs/screenshots/editor-with-content.png)
 
 ### Callouts / Admonitions
 
@@ -61,22 +59,21 @@ Editor visual tipo Notion/Obsidian con soporte completo de Markdown:
 | Warning | Advertencia |
 | Caution | Riesgo de error o perdida |
 
-<!-- SCREENSHOT: los 5 tipos de callout -->
-<!-- ![Callouts](docs/screenshots/callouts.png) -->
+![Callouts](docs/screenshots/callouts.png)
 
 ### Diagramas Mermaid
 
 Preview visual en tiempo real con zoom, pan, y fullscreen. Soporte para flowcharts, sequence diagrams, ER diagrams, y mas.
 
-<!-- SCREENSHOT: mermaid split view o preview -->
-<!-- ![Mermaid](docs/screenshots/mermaid.png) -->
+
+![Mermaid](docs/screenshots/mermaid.png)
 
 ### Ecuaciones KaTeX
 
 Bloques de ecuaciones LaTeX con renderizado en tiempo real.
 
-<!-- SCREENSHOT: ecuacion renderizada -->
-<!-- ![KaTeX](docs/screenshots/katex.png) -->
+
+![KaTeX](docs/screenshots/katex.png)
 
 ### API Endpoint Blocks
 
@@ -88,8 +85,8 @@ Bloques visuales para documentar APIs REST:
 - Multiples responses con status code coloreado
 - Todo editable inline
 
-<!-- SCREENSHOT: bloque API endpoint -->
-<!-- ![API Endpoint](docs/screenshots/api-endpoint.png) -->
+
+![API Endpoint](docs/screenshots/api-endpoint.png)
 
 ### Metadata Cards
 
@@ -99,8 +96,8 @@ Campos estructurados con tipos:
 - **Date** — datepicker nativo
 - **Text** — input libre con placeholder
 
-<!-- SCREENSHOT: metadata card con select y date -->
-<!-- ![Metadata](docs/screenshots/metadata-card.png) -->
+
+![Metadata](docs/screenshots/overview.png)
 
 ### Columns Layout
 
@@ -131,8 +128,8 @@ Plantillas completas listas para usar:
 
 Insertables desde `/template-prd` o desde el boton `+` de la toolbar.
 
-<!-- SCREENSHOT: template PRD o API Spec insertado -->
-<!-- ![Templates](docs/screenshots/template-prd.png) -->
+
+![Templates](docs/screenshots/full-app.png)
 
 ---
 
@@ -140,8 +137,8 @@ Insertables desde `/template-prd` o desde el boton `+` de la toolbar.
 
 Escribe `/` para insertar cualquier bloque:
 
-<!-- SCREENSHOT: slash command menu abierto -->
-<!-- ![Slash Commands](docs/screenshots/slash-commands.png) -->
+
+![Slash Commands](docs/screenshots/slash-commands.png)
 
 ---
 
@@ -176,8 +173,8 @@ Kuilo incluye un servidor MCP generico que expone tu vault a cualquier LLM:
 
 Conecta con un click: Claude Desktop, Cursor, Windsurf. La app escribe la config directamente.
 
-<!-- SCREENSHOT: panel de conectores -->
-<!-- ![Conectores](docs/screenshots/connectors.png) -->
+
+![Conectores](docs/screenshots/overview.png)
 
 ---
 
@@ -190,8 +187,8 @@ Conecta con un click: Claude Desktop, Cursor, Windsurf. La app escribe la config
 | **PDF** | Renderizado via Electron `printToPDF` — mantiene el diseno |
 | **Libro PDF** | Exporta todo el vault como libro con portada, tabla de contenido, capitulos |
 
-<!-- SCREENSHOT: libro PDF exportado -->
-<!-- ![Export Book](docs/screenshots/export-book.png) -->
+
+![Export](docs/screenshots/full-app.png)
 
 ---
 
