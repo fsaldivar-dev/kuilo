@@ -28,12 +28,17 @@ const PRESETS = [
   { id: "custom",     label: "Personalizado",              desc: "Elige exactamente qué áreas necesitas", areas: [] },
 ];
 
+const api = window.notesApi;
+
 export function ProjectWizard({ onComplete, onClose }) {
   const [step, setStep] = useState(0);
   const [projectName, setProjectName] = useState("");
   const [projectDesc, setProjectDesc] = useState("");
+  const [vaultPath, setVaultPath] = useState("");
   const [preset, setPreset] = useState(null);
   const [selectedAreas, setSelectedAreas] = useState([]);
+  const [githubUrl, setGithubUrl] = useState("");
+  const [githubToken, setGithubToken] = useState("");
 
   const toggleArea = (id) => {
     setSelectedAreas((prev) => prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]);
@@ -46,13 +51,20 @@ export function ProjectWizard({ onComplete, onClose }) {
     }
   };
 
+  const choosePath = async () => {
+    if (api?.openVaultDialog) {
+      const result = await api.openVaultDialog();
+      if (result?.changed) setVaultPath(result.vaultPath);
+    }
+  };
+
   const handleCreate = () => {
     const areas = AREAS.filter(a => selectedAreas.includes(a.id));
-    onComplete({ projectName, projectDesc, areas });
+    onComplete({ projectName, projectDesc, vaultPath, areas, githubUrl, githubToken });
   };
 
   const canNext = () => {
-    if (step === 0) return projectName.trim().length > 0;
+    if (step === 0) return projectName.trim().length > 0 && vaultPath.length > 0;
     if (step === 1) return preset !== null;
     if (step === 2) return selectedAreas.length > 0;
     return true;
@@ -64,7 +76,7 @@ export function ProjectWizard({ onComplete, onClose }) {
         {/* Header */}
         <div className="wizard-header">
           <div className="wizard-steps">
-            {["Proyecto", "Tipo", "Áreas", "Crear"].map((s, i) => (
+            {["Proyecto", "Tipo", "Áreas", "Backup", "Crear"].map((s, i) => (
               <span key={i} className={`wizard-step ${i === step ? "active" : ""} ${i < step ? "done" : ""}`}>
                 {i < step ? "✓" : i + 1}. {s}
               </span>
@@ -91,6 +103,19 @@ export function ProjectWizard({ onComplete, onClose }) {
               value={projectDesc}
               onChange={(e) => setProjectDesc(e.target.value)}
             />
+
+            <div className="wizard-path-row">
+              <div className="wizard-path-display">
+                {vaultPath ? (
+                  <code className="wizard-path-value">{vaultPath}</code>
+                ) : (
+                  <span className="wizard-path-empty">Sin carpeta seleccionada</span>
+                )}
+              </div>
+              <button className="wizard-btn secondary" onClick={choosePath}>
+                Elegir carpeta
+              </button>
+            </div>
           </div>
         )}
 
@@ -138,8 +163,35 @@ export function ProjectWizard({ onComplete, onClose }) {
           </div>
         )}
 
-        {/* Step 3: Confirm */}
+        {/* Step 3: GitHub backup (optional) */}
         {step === 3 && (
+          <div className="wizard-body">
+            <h2>Backup en GitHub (opcional)</h2>
+            <p className="wizard-subtitle">Vincula un repositorio para respaldar tu documentación automáticamente. Puedes saltarte este paso.</p>
+            <input
+              className="wizard-input"
+              placeholder="https://github.com/usuario/repo.git"
+              value={githubUrl}
+              onChange={(e) => setGithubUrl(e.target.value)}
+            />
+            <input
+              className="wizard-input secondary"
+              type="password"
+              placeholder="Personal Access Token (ghp_...)"
+              value={githubToken}
+              onChange={(e) => setGithubToken(e.target.value)}
+            />
+            <callout type="tip">
+            </callout>
+            <div className="wizard-github-help">
+              <p>Para crear un token: GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens</p>
+              <p>Permisos necesarios: <strong>Contents: Read and write</strong></p>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Confirm */}
+        {step === 4 && (
           <div className="wizard-body">
             <h2>Listo para crear</h2>
             <div className="wizard-summary">
@@ -154,9 +206,19 @@ export function ProjectWizard({ onComplete, onClose }) {
                 </div>
               )}
               <div className="wizard-summary-item">
+                <span className="wizard-summary-label">Carpeta</span>
+                <code className="wizard-summary-value" style={{fontSize: 11}}>{vaultPath}</code>
+              </div>
+              <div className="wizard-summary-item">
                 <span className="wizard-summary-label">Áreas</span>
                 <span className="wizard-summary-value">{selectedAreas.length} paquetes</span>
               </div>
+              {githubUrl && (
+                <div className="wizard-summary-item">
+                  <span className="wizard-summary-label">GitHub</span>
+                  <span className="wizard-summary-value">✓ Vinculado</span>
+                </div>
+              )}
               <div className="wizard-summary-docs">
                 {AREAS.filter(a => selectedAreas.includes(a.id)).map((area) => (
                   <div key={area.id} className="wizard-summary-pkg">
@@ -177,7 +239,7 @@ export function ProjectWizard({ onComplete, onClose }) {
             </button>
           )}
           <div className="wizard-spacer" />
-          {step < 3 ? (
+          {step < 4 ? (
             <button className="wizard-btn primary" onClick={() => setStep(s => s + 1)} disabled={!canNext()}>
               Siguiente <ChevronRight size={14} />
             </button>
