@@ -80,6 +80,12 @@ function blockToMd(block, depth = 0) {
       return `> [!${type}]\n${inner.split("\n").map((l) => `> ${l}`).join("\n")}`;
     }
 
+    case "whiteboardBlock": {
+      const wbData = safeParse(block.attrs?.data);
+      const count = wbData.elements?.length || 0;
+      return `> [Whiteboard: ${count} elemento${count !== 1 ? "s" : ""}]`;
+    }
+
     case "kanbanBlock": {
       const board = safeParse(block.attrs?.board);
       if (!board.columns?.length) return "";
