@@ -48,39 +48,35 @@
   .dark &.selected { border-color: #ff9500; }
 }
 
-/* ── Diamond ── */
-.dn-diamond-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: transparent;
-}
-
-.dn-diamond-shape {
+/* ── Diamond — SVG polygon background ── */
+.dn-diamond {
+  --dn-bg: #fff;
+  position: relative;
   width: 120px;
   height: 80px;
-  background: #fff;
-  border: 2px solid #ff9500;
-  transform: rotate(45deg);
   display: flex;
   align-items: center;
   justify-content: center;
+  background: transparent;
 
-  span {
-    transform: rotate(-45deg);
-    font-size: 12px;
-    max-width: 80px;
-    word-wrap: break-word;
-    text-align: center;
-  }
+  .dark & { --dn-bg: #2c2c2e; }
+  &.selected svg polygon { stroke: #ff3b30; stroke-width: 3; }
+}
 
-  .selected & {
-    border-color: #ff3b30;
-    box-shadow: 0 0 0 3px rgba(255, 59, 48, 0.2);
-  }
+.dn-diamond-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
 
-  .dark & { background: #2c2c2e; border-color: #ffcc00; }
-  .dark .selected & { border-color: #ff3b30; }
+.dn-diamond-label {
+  position: relative;
+  z-index: 1;
+  font-size: 12px;
+  max-width: 80px;
+  text-align: center;
+  word-wrap: break-word;
 }
 
 /* ── Circle ── */

@@ -24,12 +24,14 @@ export function RoundedNode({ data, selected }) {
 }
 
 export function DiamondNode({ data, selected }) {
+  const color = selected ? "#ff9500" : "#ff9500";
   return (
-    <div className={`diagram-node dn-diamond-wrapper ${selected ? "selected" : ""}`}>
+    <div className={`diagram-node dn-diamond ${selected ? "selected" : ""}`}>
       <Handle type="target" position={Position.Top} />
-      <div className="dn-diamond-shape">
-        <span>{data?.label || ""}</span>
-      </div>
+      <svg className="dn-diamond-bg" viewBox="0 0 120 80" preserveAspectRatio="none">
+        <polygon points="60,2 118,40 60,78 2,40" fill="var(--dn-bg)" stroke={color} strokeWidth="2" />
+      </svg>
+      <span className="dn-diamond-label">{data?.label || ""}</span>
       <Handle type="source" position={Position.Bottom} />
     </div>
   );
