@@ -13,6 +13,7 @@
 import { useCallback, useState } from "react";
 import { NodeViewContent, NodeViewWrapper } from "@tiptap/react";
 import Editor from "@monaco-editor/react";
+import { Trash2 } from "lucide-react";
 import { SUPPORTED_LANGUAGES } from "./code-block-lowlight-extension";
 import { FlowchartReadOnly } from "./FlowchartView";
 import { DiagramEditor } from "./DiagramEditor";
@@ -133,6 +134,14 @@ export function CodeBlockLanguageSelect({ node, updateAttributes, selected, edit
         <div className="diagram-edit-overlay" onClick={() => setEditorOpen(true)}>
           <span className="diagram-edit-hint">Click para editar diagrama</span>
         </div>
+        {/* Delete button */}
+        <button
+          className="diagram-delete-btn"
+          onClick={(e) => { e.stopPropagation(); if (editor && getPos != null) editor.chain().focus().deleteRange({ from: getPos(), to: getPos() + node.nodeSize }).run(); }}
+          title="Eliminar diagrama"
+        >
+          <Trash2 size={14} />
+        </button>
 
         {/* React Flow read-only preview */}
         <FlowchartReadOnly code={code} isDark={isDark} />
