@@ -139,6 +139,15 @@ export const SLASH_COMMANDS = [
     },
   },
   {
+    id: "chart",
+    title: "Chart",
+    description: "Grafica de barras, lineas, area o pie",
+    keywords: ["chart", "grafica", "graph", "bar", "line", "pie", "kpi", "metrics", "metricas"],
+    execute: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).insertChart().run();
+    },
+  },
+  {
     id: "api-endpoint",
     title: "API Endpoint",
     description: "Documentar un endpoint REST con método, params y responses",

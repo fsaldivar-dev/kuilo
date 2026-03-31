@@ -37,6 +37,8 @@ import { MetadataCard } from "@/components/tiptap-node/metadata-node/metadata-no
 import { MetadataCardView } from "@/components/tiptap-node/metadata-node/MetadataCardView"
 import { ApiEndpoint } from "@/components/tiptap-node/api-endpoint-node/api-endpoint-extension"
 import { ApiEndpointView } from "@/components/tiptap-node/api-endpoint-node/ApiEndpointView"
+import { ChartBlock } from "@/components/tiptap-node/chart-node/chart-node-extension"
+import { ChartBlockView } from "@/components/tiptap-node/chart-node/ChartBlockView"
 import { EmojiShortcode } from "@/components/tiptap-node/emoji-shortcode-extension"
 import { TableOfContents } from "@/components/tiptap-node/toc-node/toc-node-extension"
 import { TocView } from "@/components/tiptap-node/toc-node/TocView"
@@ -297,6 +299,13 @@ export function SimpleEditor({ initialContent, onContentChange }) {
       ApiEndpoint.extend({
         addNodeView() {
           return ReactNodeViewRenderer(ApiEndpointView, {
+            stopEvent: () => true,
+          });
+        },
+      }),
+      ChartBlock.extend({
+        addNodeView() {
+          return ReactNodeViewRenderer(ChartBlockView, {
             stopEvent: () => true,
           });
         },
