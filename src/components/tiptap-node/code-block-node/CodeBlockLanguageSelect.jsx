@@ -15,6 +15,7 @@ import { NodeViewContent, NodeViewWrapper } from "@tiptap/react";
 import Editor from "@monaco-editor/react";
 import { SUPPORTED_LANGUAGES } from "./code-block-lowlight-extension";
 import { MermaidPreview } from "./MermaidPreview";
+import { FlowchartReadOnly, FlowchartEditor, isFlowchart } from "./FlowchartView";
 import { isMermaidCode } from "@/lib/mermaid-utils";
 import "./code-block-split.scss";
 
@@ -118,48 +119,52 @@ export function CodeBlockLanguageSelect({ node, updateAttributes, selected, edit
 
   const onLangChange = (val) => updateAttributes({ language: val });
 
-  // ── Mermaid — selected: split layout ───────────────────────────────────────
+  const isFC = isMermaid && isFlowchart(code);
+
+  // ── Mermaid flowchart — selected: split Monaco + React Flow editor ─────────
   if (isMermaid && selected) {
     return (
       <NodeViewWrapper className="code-block-wrapper code-block-wrapper--split">
         <BlockHeader language={language} onChange={onLangChange} />
-
-        {/* NodeViewContent hidden but required for Tiptap content tracking */}
         <pre style={{ display: "none" }}>
           <NodeViewContent as="code" />
         </pre>
 
         <div className="code-block-split" contentEditable={false}>
-          {/* Left pane — Monaco */}
           <div className="code-block-split__editor">
             <Editor
               value={code}
               language={toMonacoLang(language)}
-              theme={isDark ? "vs-dark" : "vs-dark"}
+              theme="vs-dark"
               options={MONACO_OPTIONS}
               onMount={handleEditorMount}
               onChange={handleMonacoChange}
             />
           </div>
-
-          {/* Right pane — live diagram */}
           <div className="code-block-split__preview">
-            <MermaidPreview code={code} isDark={isDark} />
+            {isFC ? (
+              <FlowchartEditor code={code} isDark={isDark} onCodeChange={handleMonacoChange} />
+            ) : (
+              <MermaidPreview code={code} isDark={isDark} />
+            )}
           </div>
         </div>
       </NodeViewWrapper>
     );
   }
 
-  // ── Mermaid — unselected: clean diagram only ────────────────────────────────
+  // ── Mermaid — unselected: React Flow for flowcharts, Mermaid SVG for rest ──
   if (isMermaid && !selected) {
     return (
       <NodeViewWrapper className="code-block-wrapper code-block-wrapper--diagram">
-        {/* Hidden NodeViewContent keeps Tiptap content sync */}
         <pre style={{ display: "none" }}>
           <NodeViewContent as="code" />
         </pre>
-        <MermaidPreview code={code} isDark={isDark} />
+        {isFC ? (
+          <FlowchartReadOnly code={code} isDark={isDark} />
+        ) : (
+          <MermaidPreview code={code} isDark={isDark} />
+        )}
       </NodeViewWrapper>
     );
   }
