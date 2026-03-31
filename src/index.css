@@ -66,11 +66,14 @@ input, textarea, select { font: inherit; }
 }
 
 .titlebar-logo {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
   -webkit-app-region: no-drag;
   object-fit: contain;
+  background: #fff;
+  border-radius: 8px;
+  padding: 3px;
 }
 
 .titlebar-name {
