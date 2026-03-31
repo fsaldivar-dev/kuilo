@@ -17,6 +17,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { mermaidToFlow, flowToMermaid } from "@/lib/diagram-converter";
+import { FlowchartReadOnly, isFlowchart } from "@/components/tiptap-node/code-block-node/FlowchartView";
 import { MermaidPreview } from "@/components/tiptap-node/code-block-node/MermaidPreview";
 import "./diagram-node.scss";
 
@@ -97,11 +98,15 @@ export function DiagramBlockView({ node, updateAttributes, selected }) {
 
   const isDark = document.documentElement.classList.contains("dark");
 
-  // ── Read-only: Mermaid preview ──
+  // ── Read-only ──
   if (!selected) {
     return (
       <NodeViewWrapper className="diagram-block" contentEditable={false}>
-        <MermaidPreview code={mermaidCode} isDark={isDark} />
+        {isFlowchart(mermaidCode) ? (
+          <FlowchartReadOnly code={mermaidCode} isDark={isDark} />
+        ) : (
+          <MermaidPreview code={mermaidCode} isDark={isDark} />
+        )}
       </NodeViewWrapper>
     );
   }
