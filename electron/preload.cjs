@@ -18,6 +18,12 @@ contextBridge.exposeInMainWorld("notesApi", {
   getVault: () => ipcRenderer.invoke("notes:get-vault"),
   openVaultDialog: () => ipcRenderer.invoke("notes:open-vault-dialog"),
   resetVault: () => ipcRenderer.invoke("notes:reset-vault"),
+  // Git Backup
+  backupInit: () => ipcRenderer.invoke("notes:backup-init"),
+  backupStatus: () => ipcRenderer.invoke("notes:backup-status"),
+  backupCommit: (payload) => ipcRenderer.invoke("notes:backup-commit", payload),
+  backupPush: (payload) => ipcRenderer.invoke("notes:backup-push", payload),
+  backupLog: () => ipcRenderer.invoke("notes:backup-log"),
   // Export
   exportPdf: (payload) => ipcRenderer.invoke("notes:export-pdf", payload),
   exportBook: (payload) => ipcRenderer.invoke("notes:export-book", payload),
