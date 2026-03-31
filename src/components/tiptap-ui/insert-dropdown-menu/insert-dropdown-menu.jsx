@@ -8,7 +8,7 @@ import { createPortal } from "react-dom";
 import {
   Plus, Table2, GitBranch, ChevronRight, Sigma, Columns2, Columns3, ListTree,
   Info, Lightbulb, AlertTriangle, ShieldAlert, AlertCircle,
-  FileText, Minus, Code2, Globe, BarChart3,
+  FileText, Minus, Code2, Globe, BarChart3, Kanban,
 } from "lucide-react";
 import { ChevronDownIcon } from "@/components/tiptap-icons/chevron-down-icon";
 import { useTiptapEditor } from "@/hooks/use-tiptap-editor";
@@ -29,6 +29,7 @@ const GROUPS = [
       { id: "toc",     label: "Table of Contents",   desc: "Índice automático de headings",        icon: ListTree,     action: (e) => e.chain().focus().insertTableOfContents().run() },
       { id: "api",     label: "API Endpoint",        desc: "Endpoint REST con método y responses",  icon: Globe,        action: (e) => e.chain().focus().insertApiEndpoint().run() },
       { id: "chart",   label: "Chart",               desc: "Grafica de barras, lineas, area o pie", icon: BarChart3,    action: (e) => e.chain().focus().insertChart().run() },
+      { id: "kanban",  label: "Kanban Board",         desc: "Tablero con tareas arrastrables",       icon: Kanban,       action: (e) => e.chain().focus().insertKanban().run() },
     ],
   },
   {

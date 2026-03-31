@@ -39,6 +39,8 @@ import { ApiEndpoint } from "@/components/tiptap-node/api-endpoint-node/api-endp
 import { ApiEndpointView } from "@/components/tiptap-node/api-endpoint-node/ApiEndpointView"
 import { ChartBlock } from "@/components/tiptap-node/chart-node/chart-node-extension"
 import { ChartBlockView } from "@/components/tiptap-node/chart-node/ChartBlockView"
+import { KanbanBlock } from "@/components/tiptap-node/kanban-node/kanban-extension"
+import { KanbanView } from "@/components/tiptap-node/kanban-node/KanbanView"
 import { EmojiShortcode } from "@/components/tiptap-node/emoji-shortcode-extension"
 import { TableOfContents } from "@/components/tiptap-node/toc-node/toc-node-extension"
 import { TocView } from "@/components/tiptap-node/toc-node/TocView"
@@ -308,6 +310,11 @@ export function SimpleEditor({ initialContent, onContentChange }) {
           return ReactNodeViewRenderer(ChartBlockView, {
             stopEvent: () => true,
           });
+        },
+      }),
+      KanbanBlock.extend({
+        addNodeView() {
+          return ReactNodeViewRenderer(KanbanView, { stopEvent: () => true });
         },
       }),
       EmojiShortcode,
