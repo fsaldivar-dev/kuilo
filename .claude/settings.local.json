@@ -37,7 +37,10 @@
       "Bash(sed -i '' 's|<!-- SCREENSHOT: bloque API endpoint -->||; s|<!-- !\\\\[API Endpoint\\\\]\\(docs/screenshots/api-endpoint.png\\) -->|![API Endpoint]\\(docs/screenshots/api-endpoint.png\\)|' README.md)",
       "Bash(sed -i '' 's|<!-- SCREENSHOT: metadata card con select y date -->||; s|<!-- !\\\\[Metadata\\\\]\\(docs/screenshots/metadata-card.png\\) -->|![Metadata]\\(docs/screenshots/overview.png\\)|' README.md)",
       "Bash(sed -i '' 's|<!-- SCREENSHOT: template PRD o API Spec insertado -->||; s|<!-- !\\\\[Templates\\\\]\\(docs/screenshots/template-prd.png\\) -->|![Templates]\\(docs/screenshots/full-app.png\\)|' README.md)",
-      "WebFetch(domain:www.npmjs.com)"
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(for dir:*)",
+      "Bash(do basename:*)",
+      "Bash(done)"
     ]
   }
 }
