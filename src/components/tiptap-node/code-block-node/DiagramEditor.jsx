@@ -22,14 +22,34 @@ const SHAPES = [
   { type: "circle",  label: "Círculo",    icon: "○" },
 ];
 
-const DIAGRAM_TYPES = [
-  { value: "flowchart TD", label: "Flowchart ↓" },
-  { value: "flowchart LR", label: "Flowchart →" },
-  { value: "stateDiagram-v2", label: "State Diagram" },
-  { value: "classDiagram", label: "Class Diagram" },
-  { value: "erDiagram", label: "ER Diagram" },
-  { value: "mindmap", label: "Mindmap" },
-];
+const DIAGRAM_TEMPLATES = {
+  "flowchart TD": {
+    label: "Flowchart ↓",
+    code: 'flowchart TD\n    A["Inicio"] --> B{"Decisión"}\n    B -->|"Sí"| C["Resultado"]\n    B -->|"No"| D["Fin"]',
+  },
+  "flowchart LR": {
+    label: "Flowchart →",
+    code: 'flowchart LR\n    A["Entrada"] --> B["Proceso"] --> C["Salida"]',
+  },
+  "stateDiagram-v2": {
+    label: "State Diagram",
+    code: 'stateDiagram-v2\n    [*] --> Idle\n    Idle --> Loading : fetch\n    Loading --> Success : resolve\n    Loading --> Error : reject\n    Error --> Idle : retry\n    Success --> [*]',
+  },
+  "classDiagram": {
+    label: "Class Diagram",
+    code: 'classDiagram\n    Animal <|-- Dog\n    Animal <|-- Cat\n    Animal : +String name\n    Animal : +int age\n    Dog : +bark()\n    Cat : +meow()',
+  },
+  "erDiagram": {
+    label: "ER Diagram",
+    code: 'erDiagram\n    USER ||--o{ ORDER : places\n    ORDER ||--|{ ITEM : contains\n    USER ||--o{ REVIEW : writes\n    ITEM ||--o{ REVIEW : has',
+  },
+  "mindmap": {
+    label: "Mindmap",
+    code: 'mindmap\n  root((Proyecto))\n    Fase 1\n      Investigación\n      Diseño\n    Fase 2\n      Desarrollo\n      Testing\n    Fase 3\n      Lanzamiento\n      Métricas',
+  },
+};
+
+const DIAGRAM_TYPES = Object.entries(DIAGRAM_TEMPLATES).map(([value, { label }]) => ({ value, label }));
 
 const defaultEdgeOptions = {
   type: "smoothstep",
@@ -49,6 +69,17 @@ export function DiagramEditor({ code, isDark, onSave, onClose }) {
   });
   const [selectedNode, setSelectedNode] = useState(null);
   const [selectedEdge, setSelectedEdge] = useState(null);
+
+  // Load template when diagram type changes
+  const loadTemplate = useCallback((type) => {
+    setDiagramType(type);
+    const template = DIAGRAM_TEMPLATES[type];
+    if (template) {
+      const { nodes: tplNodes, edges: tplEdges } = mermaidToFlow(template.code);
+      setNodes(tplNodes);
+      setEdges(tplEdges);
+    }
+  }, [setNodes, setEdges]);
 
   // ── Actions ──
 
@@ -131,7 +162,11 @@ export function DiagramEditor({ code, isDark, onSave, onClose }) {
             <select
               className="de-select"
               value={diagramType}
-              onChange={(e) => setDiagramType(e.target.value)}
+              onChange={(e) => {
+                if (nodes.length === 0 || confirm("¿Cargar plantilla? Se reemplazarán los nodos actuales.")) {
+                  loadTemplate(e.target.value);
+                }
+              }}
             >
               {DIAGRAM_TYPES.map((t) => (
                 <option key={t.value} value={t.value}>{t.label}</option>
