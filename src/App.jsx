@@ -492,15 +492,17 @@ function App() {
   };
 
   // ── Project Wizard ──
-  const handleWizardComplete = async ({ projectName, projectDesc, areas }) => {
+  const handleWizardComplete = async ({ projectName, projectDesc, vaultPath: newVault, areas, githubUrl, githubToken }) => {
     setWizardOpen(false);
+
+    // Set vault path if provided (already set by openVaultDialog)
+    if (newVault) setVaultPath(newVault);
+
     setSaveState("Creando proyecto…");
     const packages = generateProject(projectName, areas);
 
     for (const pkg of packages) {
-      // Create package
       try { await api.createPackage({ name: pkg.packageName }); } catch {}
-      // Create docs
       for (const doc of pkg.docs) {
         try {
           const result = await api.createDoc({ packageName: pkg.packageName, parentPath: null, title: doc.title });
@@ -513,7 +515,21 @@ function App() {
     }
 
     await refreshTree();
-    setSaveState(`Proyecto "${projectName}" creado`);
+
+    // Setup GitHub backup if provided
+    if (githubUrl && githubToken && api?.backupInit && api?.backupCommit && api?.backupPush) {
+      setSaveState("Configurando backup…");
+      try {
+        await api.backupInit();
+        await api.backupCommit({ message: `Proyecto "${projectName}" creado` });
+        await api.backupPush({ url: githubUrl, token: githubToken });
+        setSaveState(`Proyecto creado + backup en GitHub`);
+      } catch (err) {
+        setSaveState(`Proyecto creado (backup falló: ${err.message})`);
+      }
+    } else {
+      setSaveState(`Proyecto "${projectName}" creado`);
+    }
   };
 
   // ── Git Backup ──
