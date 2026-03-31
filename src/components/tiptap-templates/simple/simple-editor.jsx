@@ -322,7 +322,8 @@ export function SimpleEditor({ initialContent, onContentChange }) {
     content: initialContent || content,
     onUpdate: ({ editor: ed }) => {
       if (isExternalLoad.current) return
-      onContentChange?.(ed.getHTML())
+      // Send both HTML (for legacy .md) and JSON (for page-json)
+      onContentChange?.(ed.getHTML(), ed.getJSON())
     },
   })
 

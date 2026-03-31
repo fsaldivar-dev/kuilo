@@ -293,7 +293,9 @@ function App() {
       setPageDocument(result.document);
       setPageMeta({ icon: result.document?.meta?.icon || "", cover: result.document?.meta?.cover || null });
       setLegacyContent("");
-      setEditorHtml(pageDocumentToHtml(result.document));
+      // Pass Tiptap JSON directly — preserves all custom nodes
+      const tiptapJson = { type: "doc", content: result.document.blocks || [] };
+      setEditorHtml(tiptapJson);
       const nextVersions = await api.listDocVersions({ packageName: doc.packageName, pagePath: doc.pagePath });
       setVersions(nextVersions || []);
       return;
@@ -583,17 +585,16 @@ function App() {
     const nextActive = { packageName: result.packageName, pagePath: result.pagePath, title: result.title };
     setActiveDoc(nextActive);
     setPageDocument(result.document);
-    setEditorHtml(pageDocumentToHtml(result.document));
+    setEditorHtml({ type: "doc", content: result.document.blocks || [] });
     setVersions(result.versions || []);
     await refreshTree(nextActive);
     setSaveState("Versión restaurada");
   };
 
-  const handleEditorChange = (html) => {
+  const handleEditorChange = (html, json) => {
     if (!activeDocRef.current) return;
 
     if (sourceTypeRef.current === "legacy-markdown") {
-      // Bridge: HTML del editor → Markdown → guardar como .md
       const markdown = htmlToMarkdown(html);
       setLegacyContent(markdown);
       scheduleSaveLegacy(markdown);
@@ -601,7 +602,12 @@ function App() {
     }
 
     if (sourceTypeRef.current !== "page-json" || !pageDocumentRef.current) return;
-    const nextDocument = htmlToPageDocument(html, pageDocumentRef.current);
+
+    // Use Tiptap JSON directly — preserves all custom nodes (charts, API endpoints, etc.)
+    const nextDocument = {
+      ...pageDocumentRef.current,
+      blocks: json?.content || pageDocumentRef.current.blocks,
+    };
     pageDocumentRef.current = nextDocument;
     setPageDocument(nextDocument);
     scheduleSavePageDocument(nextDocument);
