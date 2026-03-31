@@ -108,6 +108,11 @@
 .whiteboard-canvas {
   flex: 1;
   position: relative;
+  min-height: 0;
 
-  .excalidraw { height: 100% !important; }
+  .excalidraw,
+  .excalidraw-container {
+    width: 100% !important;
+    height: 100% !important;
+  }
 }
