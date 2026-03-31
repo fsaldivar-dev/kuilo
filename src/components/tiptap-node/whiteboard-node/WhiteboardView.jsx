@@ -22,8 +22,11 @@ export function WhiteboardView({ node, updateAttributes }) {
   const [svgPreview, setSvgPreview] = useState(null);
   const excalidrawRef = useRef(null);
 
-  // Lazy-load Excalidraw (heavy module)
+  // Lazy-load Excalidraw (heavy module) + configure asset path
   useEffect(() => {
+    // Excalidraw needs assets (fonts, icons) — use CDN for Electron compatibility
+    window.EXCALIDRAW_ASSET_PATH = "https://unpkg.com/@excalidraw/excalidraw/dist/excalidraw-assets/";
+
     import("@excalidraw/excalidraw").then((mod) => {
       setExcalidraw(() => mod.Excalidraw);
       setExportToSvg(() => mod.exportToSvg);
