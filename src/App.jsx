@@ -592,7 +592,7 @@ function App() {
       <aside className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
         {/* Draggable titlebar */}
         <div className="titlebar">
-          <img src="/logo.png" alt="Kuilo" className="titlebar-logo" />
+          <img src="./logo.png" alt="Kuilo" className="titlebar-logo" />
           {!sidebarCollapsed && <span className="titlebar-name">Kuilo</span>}
           <button
             className="collapse-btn"
