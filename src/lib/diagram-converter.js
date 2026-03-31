@@ -81,6 +81,15 @@ export function mermaidToFlow(mermaid = "") {
   if (firstLine.startsWith("classdiagram")) return parseClassDiagram(lines);
   if (firstLine.startsWith("erdiagram")) return parseERDiagram(lines);
   if (firstLine.startsWith("mindmap")) return parseMindmap(mermaid);
+  if (firstLine.startsWith("sequencediagram")) return parseSequenceDiagram(lines);
+  if (firstLine.startsWith("gantt")) return parseGantt(lines);
+  if (firstLine.startsWith("pie")) return parsePie(lines);
+  if (firstLine.startsWith("journey")) return parseJourney(lines);
+  if (firstLine.startsWith("timeline")) return parseTimeline(lines);
+  if (firstLine.startsWith("gitgraph")) return parseGitGraph(lines);
+  if (firstLine.startsWith("c4")) return parseGenericLines(lines, "LR");
+  if (firstLine.startsWith("block")) return parseGenericLines(lines, "TD");
+  if (firstLine.startsWith("requirement")) return parseGenericLines(lines, "LR");
 
   // Default: flowchart parser
   const nodesMap = new Map();
@@ -399,4 +408,231 @@ function parseMindmap(rawMermaid) {
 
   autoLayout(nodes, edges, "LR");
   return { nodes, edges, direction: "LR" };
+}
+
+// ── Sequence Diagram parser ──────────────────────────────────────────────────
+// sequenceDiagram
+//   Alice->>Bob: Hello
+//   Bob-->>Alice: Hi
+
+function parseSequenceDiagram(lines) {
+  const nodesMap = new Map();
+  const edges = [];
+
+  const ensure = (id) => {
+    const clean = id.replace(/[^a-zA-Z0-9_]/g, "_");
+    if (nodesMap.has(clean)) return clean;
+    nodesMap.set(clean, { id: clean, type: "rect", data: { label: id }, position: { x: 0, y: 0 } });
+    return clean;
+  };
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    // participant/actor declarations
+    const part = line.match(/^(?:participant|actor)\s+(\w+)(?:\s+as\s+(.+))?$/i);
+    if (part) { const id = ensure(part[1]); if (part[2]) nodesMap.get(id).data.label = part[2]; continue; }
+    // Messages: A->>B: text, A-->>B: text, A->>+B: text
+    const msg = line.match(/^(\S+?)\s*(->>|-->>|->|-->)\+?\s*(\S+?)\s*:\s*(.+)$/);
+    if (msg) {
+      const src = ensure(msg[1]);
+      const tgt = ensure(msg[3]);
+      edges.push({ id: `e${edges.length}`, source: src, target: tgt, label: msg[4] });
+    }
+  }
+
+  const nodes = [...nodesMap.values()];
+  // Layout: actors side by side
+  nodes.forEach((n, i) => { n.position = { x: i * 200, y: 0 }; });
+  // Stagger edges vertically
+  edges.forEach((e, i) => { e.data = { yOffset: (i + 1) * 60 }; });
+
+  return { nodes, edges, direction: "LR" };
+}
+
+// ── Gantt parser ─────────────────────────────────────────────────────────────
+// gantt
+//   title Project
+//   section Phase 1
+//   Task A : a1, 2024-01-01, 30d
+
+function parseGantt(lines) {
+  const nodes = [];
+  let section = "";
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    const secMatch = line.match(/^section\s+(.+)$/i);
+    if (secMatch) { section = secMatch[1]; continue; }
+    const taskMatch = line.match(/^(.+?)\s*:/);
+    if (taskMatch && !line.match(/^title/i) && !line.match(/^dateFormat/i)) {
+      const label = section ? `${section} / ${taskMatch[1].trim()}` : taskMatch[1].trim();
+      nodes.push({ id: `g${nodes.length}`, type: "rect", data: { label }, position: { x: 0, y: 0 } });
+    }
+  }
+
+  // Chain tasks sequentially
+  const edges = [];
+  for (let i = 1; i < nodes.length; i++) {
+    edges.push({ id: `e${i}`, source: nodes[i - 1].id, target: nodes[i].id });
+  }
+
+  autoLayout(nodes, edges, "LR");
+  return { nodes, edges, direction: "LR" };
+}
+
+// ── Pie parser ───────────────────────────────────────────────────────────────
+// pie title Pets
+//   "Dogs" : 40
+//   "Cats" : 30
+
+function parsePie(lines) {
+  const nodes = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.match(/^title/i)) continue;
+    const m = line.match(/^\s*"?([^":]+)"?\s*:\s*(\d+)/);
+    if (m) {
+      nodes.push({
+        id: `p${nodes.length}`,
+        type: "circle",
+        data: { label: `${m[1].trim()} (${m[2]})` },
+        position: { x: 0, y: 0 },
+      });
+    }
+  }
+
+  // Radial layout around center
+  const cx = 300, cy = 200, r = 150;
+  nodes.forEach((n, i) => {
+    const angle = (i / nodes.length) * 2 * Math.PI - Math.PI / 2;
+    n.position = { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
+  });
+
+  return { nodes, edges: [], direction: "TD" };
+}
+
+// ── Journey parser ───────────────────────────────────────────────────────────
+// journey
+//   title My day
+//   section Morning
+//   Wake up: 5: Me
+
+function parseJourney(lines) {
+  const nodes = [];
+  const edges = [];
+  let section = "";
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.match(/^title/i)) continue;
+    const secMatch = line.match(/^section\s+(.+)$/i);
+    if (secMatch) { section = secMatch[1]; continue; }
+    const step = line.match(/^(.+?):\s*(\d+)/);
+    if (step) {
+      const label = `${step[1].trim()} (${step[2]}/5)`;
+      nodes.push({ id: `j${nodes.length}`, type: "rounded", data: { label }, position: { x: 0, y: 0 } });
+    }
+  }
+
+  for (let i = 1; i < nodes.length; i++) {
+    edges.push({ id: `e${i}`, source: nodes[i - 1].id, target: nodes[i].id });
+  }
+
+  autoLayout(nodes, edges, "LR");
+  return { nodes, edges, direction: "LR" };
+}
+
+// ── Timeline parser ──────────────────────────────────────────────────────────
+// timeline
+//   title History
+//   2020 : Event A : Event B
+//   2021 : Event C
+
+function parseTimeline(lines) {
+  const nodes = [];
+  const edges = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.match(/^title/i)) continue;
+    const m = line.match(/^(.+?)\s*:\s*(.+)$/);
+    if (m) {
+      const period = m[1].trim();
+      const events = m[2].split(":").map(e => e.trim()).filter(Boolean);
+      const label = `${period}\n${events.join(", ")}`;
+      nodes.push({ id: `t${nodes.length}`, type: "rect", data: { label }, position: { x: 0, y: 0 } });
+    }
+  }
+
+  for (let i = 1; i < nodes.length; i++) {
+    edges.push({ id: `e${i}`, source: nodes[i - 1].id, target: nodes[i].id });
+  }
+
+  autoLayout(nodes, edges, "LR");
+  return { nodes, edges, direction: "LR" };
+}
+
+// ── Git Graph parser ─────────────────────────────────────────────────────────
+// gitGraph
+//   commit
+//   branch develop
+//   commit
+
+function parseGitGraph(lines) {
+  const nodes = [];
+  const edges = [];
+  let commitCount = 0;
+  let currentBranch = "main";
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    const commitMatch = line.match(/^commit(?:\s+id:\s*"?(.+?)"?)?/i);
+    if (commitMatch) {
+      const id = `c${commitCount++}`;
+      const label = commitMatch[1] || `commit ${commitCount}`;
+      nodes.push({ id, type: "circle", data: { label: `${currentBranch}\n${label}` }, position: { x: 0, y: 0 } });
+      if (nodes.length > 1) edges.push({ id: `e${edges.length}`, source: nodes[nodes.length - 2].id, target: id });
+      continue;
+    }
+    const branchMatch = line.match(/^branch\s+(\S+)/i);
+    if (branchMatch) currentBranch = branchMatch[1];
+    const mergeMatch = line.match(/^merge\s+(\S+)/i);
+    if (mergeMatch) {
+      const id = `c${commitCount++}`;
+      nodes.push({ id, type: "circle", data: { label: `merge ${mergeMatch[1]}` }, position: { x: 0, y: 0 } });
+      if (nodes.length > 1) edges.push({ id: `e${edges.length}`, source: nodes[nodes.length - 2].id, target: id });
+    }
+  }
+
+  autoLayout(nodes, edges, "LR");
+  return { nodes, edges, direction: "LR" };
+}
+
+// ── Generic parser (for types with --> relationships) ────────────────────────
+
+function parseGenericLines(lines, dir = "LR") {
+  const nodesMap = new Map();
+  const edges = [];
+
+  const ensure = (id) => {
+    const clean = id.replace(/[^a-zA-Z0-9_]/g, "_");
+    if (nodesMap.has(clean)) return clean;
+    nodesMap.set(clean, { id: clean, type: "rect", data: { label: id }, position: { x: 0, y: 0 } });
+    return clean;
+  };
+
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    const m = line.match(/^(\S+)\s*(?:-->|->|--)\s*(\S+)(?:\s*:\s*(.+))?$/);
+    if (m) {
+      const src = ensure(m[1]);
+      const tgt = ensure(m[2]);
+      edges.push({ id: `e${edges.length}`, source: src, target: tgt, label: m[3] || undefined });
+    }
+  }
+
+  const nodes = [...nodesMap.values()];
+  autoLayout(nodes, edges, dir);
+  return { nodes, edges, direction: dir };
 }

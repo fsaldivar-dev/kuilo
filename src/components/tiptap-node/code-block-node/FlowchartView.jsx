@@ -18,14 +18,11 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { mermaidToFlow, flowToMermaid } from "@/lib/diagram-converter";
-import { MermaidPreview } from "./MermaidPreview";
 import "./flowchart-view.scss";
 
-// Diagram types we can render with React Flow
-const REACTFLOW_REGEX = /^\s*(flowchart|graph|stateDiagram|stateDiagram-v2|classDiagram|classDiagram-v2|erDiagram|mindmap)\b/im;
-
-export function isFlowchart(code) {
-  return REACTFLOW_REGEX.test(code || "");
+// ALL mermaid diagrams go through React Flow now
+export function isFlowchart() {
+  return true;
 }
 
 const defaultEdgeOptions = {
@@ -36,9 +33,33 @@ const defaultEdgeOptions = {
 
 // ── Read-only React Flow view ────────────────────────────────────────────────
 
-// Read-only: use Mermaid SVG (doesn't capture clicks → Tiptap can select the node)
+// Read-only: React Flow with pointer-events disabled (clicks pass through overlay to Tiptap)
 export function FlowchartReadOnly({ code, isDark }) {
-  return <MermaidPreview code={code} isDark={isDark} />;
+  const { nodes, edges } = useMemo(() => mermaidToFlow(code), [code]);
+
+  if (!nodes.length) {
+    return <div className="flowchart-empty">Diagrama sin nodos</div>;
+  }
+
+  return (
+    <div className="flowchart-readonly" style={{ pointerEvents: "none" }}>
+      <ReactFlow
+        nodes={nodes}
+        edges={edges.map(e => ({ ...e, ...defaultEdgeOptions }))}
+        fitView
+        colorMode={isDark ? "dark" : "light"}
+        nodesDraggable={false}
+        nodesConnectable={false}
+        elementsSelectable={false}
+        panOnDrag={false}
+        zoomOnScroll={false}
+        preventScrolling={false}
+        proOptions={{ hideAttribution: true }}
+      >
+        <Background gap={16} size={1} />
+      </ReactFlow>
+    </div>
+  );
 }
 
 // ── Editable React Flow view ─────────────────────────────────────────────────
