@@ -1,0 +1,90 @@
+/* ── Tabla en el editor ──────────────────────────────────────────────────── */
+
+.tiptap.ProseMirror,
+.simple-editor {
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 12px 0;
+    table-layout: fixed;
+    overflow: hidden;
+    border-radius: 6px;
+    border: 1px solid var(--tt-color-border, #e5e5e5);
+  }
+
+  th, td {
+    position: relative;
+    min-width: 80px;
+    padding: 8px 12px;
+    border: 1px solid var(--tt-color-border, #e5e5e5);
+    vertical-align: top;
+    text-align: left;
+    font-size: 14px;
+    line-height: 1.5;
+
+    > * { margin: 0; }
+  }
+
+  th {
+    background: var(--tt-color-surface, rgba(0, 0, 0, 0.04));
+    font-weight: 600;
+    color: var(--tt-color-text, #1d1d1f);
+    white-space: nowrap;
+  }
+
+  td {
+    background: var(--tt-color-bg, #fff);
+    color: var(--tt-color-text, #1d1d1f);
+  }
+
+  tr:nth-child(even) td {
+    background: var(--tt-color-surface, rgba(0, 0, 0, 0.02));
+  }
+
+  // Celda seleccionada
+  .selectedCell::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: rgba(79, 70, 229, 0.1);
+    border: 1px solid rgba(79, 70, 229, 0.4);
+    border-radius: 1px;
+  }
+
+  // Handle de resize de columna
+  .column-resize-handle {
+    position: absolute;
+    right: -2px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: rgba(79, 70, 229, 0.5);
+    cursor: col-resize;
+    pointer-events: auto;
+    z-index: 20;
+
+    &:hover {
+      background: rgba(79, 70, 229, 0.9);
+    }
+  }
+}
+
+// Cursor durante resize
+.resize-cursor {
+  cursor: col-resize !important;
+}
+
+/* ── Dark mode ───────────────────────────────────────────────────────────── */
+
+.dark {
+  .tiptap.ProseMirror,
+  .simple-editor {
+    table { border-color: rgba(255, 255, 255, 0.1); }
+    th, td { border-color: rgba(255, 255, 255, 0.1); }
+    th { background: rgba(255, 255, 255, 0.05); color: #f5f5f7; }
+    td { background: transparent; color: #f5f5f7; }
+    tr:nth-child(even) td { background: rgba(255, 255, 255, 0.02); }
+  }
+}

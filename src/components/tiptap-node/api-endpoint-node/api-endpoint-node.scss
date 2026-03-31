@@ -1,0 +1,261 @@
+.api-endpoint {
+  margin: 12px 0;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  user-select: none;
+
+  .dark & { border-color: rgba(255,255,255,0.1); }
+}
+
+/* ── Header: method badge + path ── */
+
+.api-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: rgba(0,0,0,0.03);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+
+  .dark & { background: rgba(255,255,255,0.04); border-bottom-color: rgba(255,255,255,0.06); }
+}
+
+.api-method-badge {
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: ui-monospace, monospace;
+  letter-spacing: 0.03em;
+  option { background: #fff; color: #1d1d1f; }
+  .dark & option { background: #2c2c2e; color: #fff; }
+}
+
+.api-path {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-family: ui-monospace, monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: inherit;
+  outline: none;
+  padding: 2px;
+}
+
+/* ── Description ── */
+
+.api-desc {
+  display: block;
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: rgba(0,0,0,0.55);
+  padding: 8px 14px;
+  outline: none;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+
+  &::placeholder { color: rgba(0,0,0,0.25); }
+  .dark & { color: rgba(255,255,255,0.5); border-bottom-color: rgba(255,255,255,0.04); }
+  .dark &::placeholder { color: rgba(255,255,255,0.2); }
+}
+
+/* ── Sections ── */
+
+.api-section {
+  padding: 8px 14px;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+
+  &:last-child { border-bottom: none; }
+  .dark & { border-bottom-color: rgba(255,255,255,0.04); }
+}
+
+.api-section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(0,0,0,0.35);
+  margin-bottom: 6px;
+
+  .dark & { color: rgba(255,255,255,0.3); }
+}
+
+.api-section-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-family: ui-monospace, monospace;
+  color: inherit;
+  outline: none;
+  padding: 2px 0;
+
+  &::placeholder { color: rgba(0,0,0,0.2); }
+  .dark &::placeholder { color: rgba(255,255,255,0.15); }
+}
+
+.api-add-btn {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px dashed rgba(0,0,0,0.15);
+  background: transparent;
+  color: rgba(0,0,0,0.3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  &:hover { border-color: rgba(0,0,0,0.3); color: rgba(0,0,0,0.6); }
+  .dark & { border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.3); }
+  .dark &:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.6); }
+}
+
+.api-remove-btn {
+  background: none;
+  border: none;
+  color: rgba(0,0,0,0.2);
+  cursor: pointer;
+  padding: 2px;
+  border-radius: 3px;
+
+  &:hover { color: #ff3b30; background: rgba(255,59,48,0.08); }
+  .dark & { color: rgba(255,255,255,0.2); }
+}
+
+/* ── Parameters table ── */
+
+.api-params-table {
+  font-size: 12px;
+}
+
+.api-params-header {
+  display: grid;
+  grid-template-columns: 100px 80px 30px 1fr 24px;
+  gap: 6px;
+  padding: 3px 0;
+  font-weight: 600;
+  color: rgba(0,0,0,0.35);
+  font-size: 10px;
+  text-transform: uppercase;
+
+  .dark & { color: rgba(255,255,255,0.3); }
+}
+
+.api-params-row {
+  display: grid;
+  grid-template-columns: 100px 80px 30px 1fr 24px;
+  gap: 6px;
+  align-items: center;
+  padding: 3px 0;
+
+  input[type="text"], input:not([type]) {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-size: 12px;
+    font-family: ui-monospace, monospace;
+    color: inherit;
+    outline: none;
+    padding: 2px 4px;
+    border-radius: 3px;
+
+    &:focus { background: rgba(0,0,0,0.04); }
+    .dark &:focus { background: rgba(255,255,255,0.06); }
+  }
+
+  select {
+    border: none;
+    background: transparent;
+    font-size: 11px;
+    color: #af52de;
+    font-family: ui-monospace, monospace;
+    cursor: pointer;
+    outline: none;
+  }
+
+  input[type="checkbox"] {
+    cursor: pointer;
+    accent-color: #0071e3;
+  }
+}
+
+/* ── Code blocks (request body / response body) ── */
+
+.api-code {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  border: none;
+  background: rgba(0,0,0,0.04);
+  border-radius: 6px;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 8px 10px;
+  color: inherit;
+  resize: vertical;
+  outline: none;
+
+  .dark & { background: rgba(255,255,255,0.05); }
+}
+
+/* ── Responses ── */
+
+.api-responses {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.api-response {
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 6px;
+  overflow: hidden;
+
+  .dark & { border-color: rgba(255,255,255,0.06); }
+}
+
+.api-response-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: rgba(0,0,0,0.02);
+
+  .dark & { background: rgba(255,255,255,0.03); }
+}
+
+.api-status-input {
+  width: 40px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 800;
+  font-family: ui-monospace, monospace;
+  outline: none;
+}
+
+.api-response-desc {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  color: rgba(0,0,0,0.45);
+  outline: none;
+
+  &::placeholder { color: rgba(0,0,0,0.2); }
+  .dark & { color: rgba(255,255,255,0.4); }
+  .dark &::placeholder { color: rgba(255,255,255,0.15); }
+}

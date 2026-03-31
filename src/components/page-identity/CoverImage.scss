@@ -1,0 +1,114 @@
+.cover-wrapper {
+  width: 100%;
+  // Si no hay portada no ocupa espacio
+}
+
+.cover-area {
+  position: relative;
+  width: 100%;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  border-radius: 0 0 4px 4px;
+  overflow: hidden;
+  transition: height 200ms ease;
+
+  &.has-cover {
+    height: 200px;
+  }
+
+  &.empty {
+    height: 0;
+
+    // Muestra un área mínima al hacer hover sobre la zona del header
+    &:hover {
+      height: 44px;
+      background: var(--tt-color-surface, rgba(0, 0, 0, 0.03));
+    }
+  }
+}
+
+// Controles — visibles solo en hover
+.cover-controls {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 150ms;
+  pointer-events: none;
+}
+
+.cover-area:hover .cover-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.cover-btn {
+  padding: 4px 10px;
+  font-size: 12px;
+  border: none;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #1d1d1f;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 80ms;
+  white-space: nowrap;
+
+  &:hover {
+    background: #fff;
+  }
+
+  &.cover-btn-remove {
+    background: rgba(255, 59, 48, 0.15);
+    color: #ff3b30;
+
+    &:hover {
+      background: rgba(255, 59, 48, 0.25);
+    }
+  }
+}
+
+.cover-colors {
+  display: flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+
+.cover-color-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: transform 80ms, border-color 80ms;
+
+  &:hover {
+    transform: scale(1.2);
+    border-color: white;
+  }
+}
+
+// Dark mode — controles con fondo oscuro
+.dark {
+  .cover-area.empty:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .cover-btn {
+    background: rgba(0, 0, 0, 0.7);
+    color: #f5f5f7;
+
+    &:hover { background: rgba(0, 0, 0, 0.85); }
+  }
+
+  .cover-colors {
+    background: rgba(0, 0, 0, 0.7);
+  }
+}

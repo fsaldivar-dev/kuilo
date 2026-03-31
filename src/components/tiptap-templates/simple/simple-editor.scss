@@ -1,0 +1,122 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+
+body {
+  --tt-toolbar-height: 44px;
+  --tt-theme-text: var(--tt-gray-light-900);
+
+  // Toolbar comparte el mismo fondo que el workspace (#f2f2f7 / dark equiv.)
+  --tt-toolbar-bg-color: #f2f2f7;
+  --tt-toolbar-border-color: rgba(0, 0, 0, 0.07);
+
+  .dark & {
+    --tt-theme-text: var(--tt-gray-dark-900);
+    --tt-toolbar-bg-color: #1c1c1e;
+    --tt-toolbar-border-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+body {
+  font-family: "Inter", sans-serif;
+  color: var(--tt-theme-text);
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  padding: 0;
+  overscroll-behavior-y: none;
+}
+
+html,
+body {
+  overscroll-behavior-x: none;
+}
+
+html,
+body,
+#root,
+#app {
+  height: 100%;
+  background-color: var(--tt-bg-color);
+}
+
+::-webkit-scrollbar {
+  width: 0.25rem;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--tt-scrollbar-color) transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--tt-scrollbar-color);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tiptap.ProseMirror {
+  font-family: "DM Sans", sans-serif;
+}
+
+.simple-editor-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.simple-editor-content {
+  max-width: 648px;
+  width: 100%;
+  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.simple-editor-content .tiptap.ProseMirror.simple-editor {
+  flex: 1;
+  padding: 3rem 3rem 30vh;
+}
+
+@media screen and (max-width: 480px) {
+  .simple-editor-content .tiptap.ProseMirror.simple-editor {
+    padding: 1rem 1.5rem 30vh;
+  }
+}
+
+/*
+ * Dark mode fix for Radix portal-rendered components (dropdowns, popovers, tooltips).
+ * These render at <body> level outside the component tree, so `.dark &` inside
+ * component classes doesn't reach them. This global rule applies dark variables
+ * when <html class="dark">.
+ */
+html.dark {
+  // Dropdown
+  --tt-dropdown-menu-bg-color: var(--tt-gray-dark-50);
+  --tt-dropdown-menu-text-color: var(--tt-gray-dark-a-600);
+  --tt-dropdown-menu-label-color: var(--tt-gray-dark-a-800);
+
+  // Popover
+  --tt-popover-border-color: var(--tt-gray-dark-a-50);
+  --tt-popover-bg-color: var(--tt-gray-dark-50);
+  --tt-popover-text-color: var(--tt-gray-dark-a-600);
+
+  // Buttons inside portals
+  .tiptap-button {
+    --tt-button-default-bg-color: var(--tt-gray-dark-a-100);
+    --tt-button-hover-bg-color: var(--tt-gray-dark-200);
+    --tt-button-active-bg-color: var(--tt-gray-dark-a-200);
+    --tt-button-active-bg-color-emphasized: var(--tt-brand-color-900);
+    --tt-button-disabled-bg-color: var(--tt-gray-dark-a-50);
+    --tt-button-default-text-color: var(--tt-gray-dark-a-600);
+    --tt-button-hover-text-color: var(--tt-gray-dark-a-900);
+    --tt-button-active-text-color: var(--tt-gray-dark-a-900);
+    --tt-button-default-icon-color: var(--tt-gray-dark-a-600);
+    --tt-button-hover-icon-color: var(--tt-gray-dark-a-900);
+  }
+}
