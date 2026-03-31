@@ -1,0 +1,121 @@
+.emoji-picker-root {
+  position: relative;
+  display: inline-block;
+}
+
+.emoji-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  font-size: 36px;
+  line-height: 1;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 80ms;
+
+  &:hover {
+    background: var(--tt-color-hover, rgba(0, 0, 0, 0.07));
+  }
+
+  &.empty .emoji-placeholder {
+    font-size: 28px;
+    opacity: 0.25;
+  }
+}
+
+.emoji-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 9999;
+  width: 300px;
+  background: var(--tt-color-bg, #fff);
+  border: 1px solid var(--tt-color-border, #e5e5e5);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.14);
+  padding: 10px;
+}
+
+.emoji-search {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--tt-color-border, #e5e5e5);
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  background: var(--tt-color-surface, rgba(0, 0, 0, 0.04));
+  color: var(--tt-color-text, #1d1d1f);
+  margin-bottom: 8px;
+
+  &:focus {
+    border-color: var(--tt-color-accent, #007aff);
+  }
+}
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.emoji-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 80ms;
+
+  &:hover {
+    background: var(--tt-color-hover, rgba(0, 0, 0, 0.07));
+  }
+}
+
+.emoji-remove {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 5px;
+  font-size: 12px;
+  color: var(--tt-color-text-muted, #8e8e93);
+  background: transparent;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 80ms, color 80ms;
+
+  &:hover {
+    background: var(--tt-color-hover, rgba(0, 0, 0, 0.07));
+    color: var(--tt-color-text, #1d1d1f);
+  }
+}
+
+// Dark mode
+.dark {
+  .emoji-popover {
+    background: #2c2c2e;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .emoji-search {
+    background: rgba(255, 255, 255, 0.06);
+    color: #f5f5f7;
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .emoji-option:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}

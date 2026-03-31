@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "WebFetch(domain:template.tiptap.dev)",
+      "WebFetch(domain:tiptap.dev)",
+      "WebSearch",
+      "Bash(npm install)",
+      "Bash(npm list:*)",
+      "Bash(node:*)",
+      "Bash(npm install:*)",
+      "Bash(npx:*)",
+      "Bash(printf '\\\\n')",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:appflowy.io)",
+      "WebFetch(domain:docs.appflowy.io)",
+      "WebFetch(domain:vitest.dev)",
+      "WebFetch(domain:playwright.dev)",
+      "WebFetch(domain:appflowy.com)",
+      "WebFetch(domain:appflowy-io-appflowy.mintlify.app)",
+      "Bash(npm info:*)",
+      "Bash(grep -E \"^marked$|^turndown$|^remark$|^unified$\")",
+      "WebFetch(domain:api.github.com)",
+      "Bash(curl -s \"https://api.github.com/repos/mermaid-js/mermaid-live-editor/contents/src?recursive=1\")",
+      "Bash(curl -s \"https://api.github.com/repos/mermaid-js/mermaid-live-editor/search/code?q=svg-pan-zoom+repo:mermaid-js/mermaid-live-editor\")",
+      "Bash(curl -s \"https://api.github.com/repos/mermaid-js/mermaid-live-editor/git/trees/develop?recursive=1\")",
+      "Bash(npm uninstall:*)",
+      "Bash(npm test:*)",
+      "Bash(grep:*)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(printf 'Content-Length: 91\\\\r\\\\n\\\\r\\\\n{\"\"\"\"jsonrpc\"\"\"\":\"\"\"\"2.0\"\"\"\",\"\"\"\"id\"\"\"\":1,\"\"\"\"method\"\"\"\":\"\"\"\"initialize\"\"\"\",\"\"\"\"params\"\"\"\":{\"\"\"\"protocolVersion\"\"\"\":\"\"\"\"2024-11-05\"\"\"\"}}')",
+      "Bash(gtimeout 5 node /Users/fsaldivar/Documents/Personal/projects/NotesApp/scripts/docs-mcp.mjs /Users/fsaldivar/Documents/SajaruBoxApp/sajarubox-mcp/knowledge)",
+      "Bash(npm ls:*)"
+    ]
+  }
+}

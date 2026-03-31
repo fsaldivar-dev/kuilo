@@ -1,0 +1,64 @@
+.math-block-wrapper {
+  margin: 12px 0;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  overflow: hidden;
+
+  .dark & {
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.math-source {
+  margin: 0;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0.03);
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+
+  &.hidden {
+    display: none;
+  }
+
+  code {
+    background: transparent !important;
+    border: none !important;
+    font-size: inherit !important;
+    color: inherit !important;
+  }
+
+  .dark & {
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+  }
+}
+
+.math-preview {
+  padding: 20px 16px;
+  text-align: center;
+  min-height: 40px;
+
+  &.empty {
+    padding: 16px;
+  }
+}
+
+.math-placeholder {
+  color: rgba(0, 0, 0, 0.3);
+  font-size: 13px;
+  font-style: italic;
+
+  .dark & {
+    color: rgba(255, 255, 255, 0.25);
+  }
+}
+
+.math-error {
+  padding: 6px 12px;
+  font-size: 11px;
+  color: #ff3b30;
+  background: rgba(255, 59, 48, 0.06);
+  font-family: ui-monospace, monospace;
+}
