@@ -49,6 +49,7 @@ export function FlowchartReadOnly({ code, isDark }) {
         edges={edges.map(e => ({ ...e, ...defaultEdgeOptions }))}
         nodeTypes={nodeTypes}
         fitView
+        fitViewOptions={{ padding: 0.3 }}
         colorMode={isDark ? "dark" : "light"}
         nodesDraggable={false}
         nodesConnectable={false}
