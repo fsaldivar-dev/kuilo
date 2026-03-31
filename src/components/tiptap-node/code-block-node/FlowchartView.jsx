@@ -36,33 +36,9 @@ const defaultEdgeOptions = {
 
 // ── Read-only React Flow view ────────────────────────────────────────────────
 
+// Read-only: use Mermaid SVG (doesn't capture clicks → Tiptap can select the node)
 export function FlowchartReadOnly({ code, isDark }) {
-  const { nodes, edges } = useMemo(() => mermaidToFlow(code), [code]);
-
-  if (!nodes.length) return <MermaidPreview code={code} isDark={isDark} />;
-
-  return (
-    <div className="flowchart-readonly">
-      {/* Click-through overlay so Tiptap can select this node */}
-      <div className="flowchart-click-overlay">
-        <span className="flowchart-edit-hint">Click para editar</span>
-      </div>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges.map(e => ({ ...e, ...defaultEdgeOptions }))}
-        fitView
-        colorMode={isDark ? "dark" : "light"}
-        nodesDraggable={false}
-        nodesConnectable={false}
-        elementsSelectable={false}
-        panOnDrag={false}
-        zoomOnScroll={false}
-        preventScrolling={false}
-      >
-        <Background gap={16} size={1} />
-      </ReactFlow>
-    </div>
-  );
+  return <MermaidPreview code={code} isDark={isDark} />;
 }
 
 // ── Editable React Flow view ─────────────────────────────────────────────────
