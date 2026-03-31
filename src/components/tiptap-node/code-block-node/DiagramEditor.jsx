@@ -11,7 +11,8 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { mermaidToFlow, flowToMermaid } from "@/lib/diagram-converter";
-import { X, Plus, Trash2, Type, ArrowRight, RotateCcw } from "lucide-react";
+import { X, Trash2 } from "lucide-react";
+import { nodeTypes } from "./DiagramNodes";
 import "./diagram-editor.scss";
 
 const SHAPES = [
@@ -172,6 +173,7 @@ export function DiagramEditor({ code, isDark, onSave, onClose }) {
             onEdgeClick={onEdgeClick}
             onPaneClick={onPaneClick}
             defaultEdgeOptions={defaultEdgeOptions}
+            nodeTypes={nodeTypes}
             fitView
             colorMode={isDark ? "dark" : "light"}
           >

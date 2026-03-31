@@ -18,6 +18,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { mermaidToFlow, flowToMermaid } from "@/lib/diagram-converter";
+import { nodeTypes } from "./DiagramNodes";
 import "./flowchart-view.scss";
 
 // ALL mermaid diagrams go through React Flow now
@@ -46,6 +47,7 @@ export function FlowchartReadOnly({ code, isDark }) {
       <ReactFlow
         nodes={nodes}
         edges={edges.map(e => ({ ...e, ...defaultEdgeOptions }))}
+        nodeTypes={nodeTypes}
         fitView
         colorMode={isDark ? "dark" : "light"}
         nodesDraggable={false}
