@@ -10,12 +10,12 @@
  * keeps node.textContent in sync with the document.
  */
 
-import { useCallback, useRef } from "react";
+import { useCallback, useState } from "react";
 import { NodeViewContent, NodeViewWrapper } from "@tiptap/react";
 import Editor from "@monaco-editor/react";
 import { SUPPORTED_LANGUAGES } from "./code-block-lowlight-extension";
-import { MermaidPreview } from "./MermaidPreview";
-import { FlowchartReadOnly, FlowchartEditor, isFlowchart } from "./FlowchartView";
+import { FlowchartReadOnly } from "./FlowchartView";
+import { DiagramEditor } from "./DiagramEditor";
 import { isMermaidCode } from "@/lib/mermaid-utils";
 import "./code-block-split.scss";
 
@@ -119,52 +119,33 @@ export function CodeBlockLanguageSelect({ node, updateAttributes, selected, edit
 
   const onLangChange = (val) => updateAttributes({ language: val });
 
-  const isFC = isMermaid && isFlowchart(code);
+  const [editorOpen, setEditorOpen] = useState(false);
 
-  // ── Mermaid flowchart — selected: split Monaco + React Flow editor ─────────
-  if (isMermaid && selected) {
-    return (
-      <NodeViewWrapper className="code-block-wrapper code-block-wrapper--split">
-        <BlockHeader language={language} onChange={onLangChange} />
-        <pre style={{ display: "none" }}>
-          <NodeViewContent as="code" />
-        </pre>
-
-        <div className="code-block-split" contentEditable={false}>
-          <div className="code-block-split__editor">
-            <Editor
-              value={code}
-              language={toMonacoLang(language)}
-              theme="vs-dark"
-              options={MONACO_OPTIONS}
-              onMount={handleEditorMount}
-              onChange={handleMonacoChange}
-            />
-          </div>
-          <div className="code-block-split__preview">
-            {isFC ? (
-              <FlowchartEditor code={code} isDark={isDark} onCodeChange={handleMonacoChange} />
-            ) : (
-              <MermaidPreview code={code} isDark={isDark} />
-            )}
-          </div>
-        </div>
-      </NodeViewWrapper>
-    );
-  }
-
-  // ── Mermaid — unselected: preview with click-to-edit overlay ──
-  if (isMermaid && !selected) {
+  // ── Mermaid — preview + click opens fullscreen editor ──
+  if (isMermaid) {
     return (
       <NodeViewWrapper className="code-block-wrapper code-block-wrapper--diagram">
         <pre style={{ display: "none" }}>
           <NodeViewContent as="code" />
         </pre>
-        {/* Overlay outside stopEvent selectors — clicks pass to Tiptap to select node */}
-        <div className="diagram-edit-overlay">
-          <span className="diagram-edit-hint">Click para editar</span>
+
+        {/* Click overlay — opens fullscreen editor */}
+        <div className="diagram-edit-overlay" onClick={() => setEditorOpen(true)}>
+          <span className="diagram-edit-hint">Click para editar diagrama</span>
         </div>
-        <MermaidPreview code={code} isDark={isDark} />
+
+        {/* React Flow read-only preview */}
+        <FlowchartReadOnly code={code} isDark={isDark} />
+
+        {/* Fullscreen editor portal */}
+        {editorOpen && (
+          <DiagramEditor
+            code={code}
+            isDark={isDark}
+            onSave={(newCode) => handleMonacoChange(newCode)}
+            onClose={() => setEditorOpen(false)}
+          />
+        )}
       </NodeViewWrapper>
     );
   }
