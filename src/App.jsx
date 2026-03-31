@@ -28,6 +28,7 @@ import { markdownToHtml, htmlToMarkdown } from "@/lib/markdown-bridge";
 import { PAGE_TEMPLATES } from "@/lib/page-templates";
 import { exportMarkdown, exportHtml, exportPdf } from "@/lib/export-utils";
 import { buildBookHtml, BOOK_CSS } from "@/lib/export-book";
+import { blocksToMarkdown } from "@/lib/blocks-to-markdown";
 import { EmojiPicker } from "@/components/page-identity/EmojiPicker";
 import { CoverImage } from "@/components/page-identity/CoverImage";
 import { Breadcrumb } from "@/components/page-identity/Breadcrumb";
@@ -891,8 +892,18 @@ function App() {
                     <button
                       className="control-btn"
                       onClick={() => {
-                        const el = document.querySelector(".simple-editor");
-                        if (el) exportMarkdown(el.innerHTML, activeDoc.title);
+                        if (sourceType === "page-json" && pageDocument?.blocks) {
+                          // Export from JSON blocks — preserves charts as mermaid, API endpoints as tables, etc.
+                          const md = blocksToMarkdown(pageDocument.blocks);
+                          const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement("a"); a.href = url;
+                          a.download = `${activeDoc.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.md`;
+                          a.click(); URL.revokeObjectURL(url);
+                        } else {
+                          const el = document.querySelector(".simple-editor");
+                          if (el) exportMarkdown(el.innerHTML, activeDoc.title);
+                        }
                       }}
                       title="Exportar Markdown"
                     >
