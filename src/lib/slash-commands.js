@@ -139,6 +139,15 @@ export const SLASH_COMMANDS = [
     },
   },
   {
+    id: "diagram",
+    title: "Diagram (Visual)",
+    description: "Editor visual de diagramas — arrastra, conecta, exporta como Mermaid",
+    keywords: ["diagram", "diagrama", "flow", "flowchart", "visual", "react-flow", "draw"],
+    execute: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).insertDiagram().run();
+    },
+  },
+  {
     id: "chart",
     title: "Chart",
     description: "Grafica de barras, lineas, area o pie",

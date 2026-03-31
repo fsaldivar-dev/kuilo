@@ -80,6 +80,11 @@ function blockToMd(block, depth = 0) {
       return `> [!${type}]\n${inner.split("\n").map((l) => `> ${l}`).join("\n")}`;
     }
 
+    case "diagramBlock": {
+      const code = block.attrs?.mermaid || "";
+      return `\`\`\`mermaid\n${code}\n\`\`\``;
+    }
+
     case "chartBlock": {
       const mermaid = chartToMermaid(block.attrs || {});
       return `\`\`\`mermaid\n${mermaid}\n\`\`\``;
