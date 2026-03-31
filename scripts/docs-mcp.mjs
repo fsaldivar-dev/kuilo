@@ -49,14 +49,32 @@ function uid() {
 }
 
 // ─── Extract all plain text from page.json blocks (deep) ─────────────────────
+// Handles both formats:
+//   Tiptap JSON:    { content: [{ type: "text", text: "..." }] }
+//   pageDocument:   { content: "plain string" }
 
 function extractPlainText(blocks = []) {
   const parts = [];
   const walk = (nodes) => {
+    if (!Array.isArray(nodes)) return;
     for (const node of nodes) {
-      if (node.text) parts.push(node.text);
-      if (node.content) walk(node.content);
-      if (node.children) walk(node.children);
+      if (!node || typeof node !== "object") continue;
+      // pageDocument format: content is a string
+      if (typeof node.content === "string" && node.content) {
+        parts.push(node.content);
+      }
+      // Direct text node
+      if (typeof node.text === "string" && node.text) {
+        parts.push(node.text);
+      }
+      // HTML fallback
+      if (typeof node.html === "string" && node.html) {
+        const stripped = node.html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+        if (stripped) parts.push(stripped);
+      }
+      // Recurse into arrays
+      if (Array.isArray(node.content)) walk(node.content);
+      if (Array.isArray(node.children)) walk(node.children);
     }
   };
   walk(blocks);
@@ -246,10 +264,14 @@ async function appendBlocks(packageName, pagePath, blocks) {
   return updateDocument(packageName, pagePath, [...(existing.blocks || []), ...blocks]);
 }
 
-/** Safe text extraction from a single block's content array */
+/** Safe text extraction from a single block — handles both formats */
 function blockText(block) {
   try {
-    return (block.content || []).map(n => n.text || "").join("");
+    // pageDocument format: content is a plain string
+    if (typeof block.content === "string") return block.content;
+    // Tiptap format: content is array of text nodes
+    if (Array.isArray(block.content)) return block.content.map(n => n.text || "").join("");
+    return "";
   } catch { return ""; }
 }
 
@@ -277,10 +299,10 @@ async function getDocumentContext(packageName, pagePath) {
   for (const b of blocks) {
     try {
       if (b.type) blockTypes.add(b.type);
-      if (b.type === "heading" && Array.isArray(b.content)) {
-        headings.push({ level: b.attrs?.level, text: blockText(b) });
+      if (b.type === "heading") {
+        headings.push({ level: b.attrs?.level || b.props?.level, text: blockText(b) });
       }
-      if (b.type === "paragraph" && Array.isArray(b.content) && paragraphs.length < 4) {
+      if (b.type === "paragraph" && paragraphs.length < 4) {
         const t = blockText(b);
         if (t) paragraphs.push(t);
       }
