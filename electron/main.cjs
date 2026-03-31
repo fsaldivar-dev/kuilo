@@ -436,6 +436,8 @@ ipcMain.handle("notes:create-doc", async (_, payload) => {
 });
 
 ipcMain.handle("notes:save-doc", async (_, payload) => {
+  // Schedule auto-backup after save completes (defined below)
+  if (typeof scheduleAutoBackup === "function") setTimeout(scheduleAutoBackup, 100);
   const packageDir = await getPackageDir(payload.packageName);
 
   if (payload.sourceType === "page-json" || payload.pagePath.endsWith("page.json")) {
@@ -1059,6 +1061,70 @@ ipcMain.handle("notes:export-book", async (_, { html, title, css }) => {
   shell.openPath(filePath);
   return { ok: true, filePath };
 });
+
+// ─── Git Backup ──────────────────────────────────────────────────────────────
+
+let gitBackup = null;
+
+async function loadGitBackup() {
+  if (gitBackup) return gitBackup;
+  gitBackup = await import("../src/lib/git-backup.js");
+  return gitBackup;
+}
+
+ipcMain.handle("notes:backup-init", async () => {
+  const vaultPath = await getVaultRoot();
+  const backup = await loadGitBackup();
+  await backup.initRepo(vaultPath);
+  return { ok: true, vaultPath };
+});
+
+ipcMain.handle("notes:backup-status", async () => {
+  const vaultPath = await getVaultRoot();
+  const backup = await loadGitBackup();
+  const status = await backup.getStatus(vaultPath);
+  const log = await backup.getLog(vaultPath, 5);
+  return { ...status, log, vaultPath };
+});
+
+ipcMain.handle("notes:backup-commit", async (_, { message }) => {
+  const vaultPath = await getVaultRoot();
+  const backup = await loadGitBackup();
+  await backup.initRepo(vaultPath);
+  return backup.commitAll(vaultPath, message || `Backup ${new Date().toISOString().split("T")[0]}`);
+});
+
+ipcMain.handle("notes:backup-push", async (_, { url, token }) => {
+  const vaultPath = await getVaultRoot();
+  const backup = await loadGitBackup();
+  return backup.pushToRemote(vaultPath, { url, token });
+});
+
+ipcMain.handle("notes:backup-log", async () => {
+  const vaultPath = await getVaultRoot();
+  const backup = await loadGitBackup();
+  return backup.getLog(vaultPath, 20);
+});
+
+// Auto-backup: commit after each save (debounced)
+let autoBackupTimer = null;
+const scheduleAutoBackup = () => {
+  clearTimeout(autoBackupTimer);
+  autoBackupTimer = setTimeout(async () => {
+    try {
+      const backup = await loadGitBackup();
+      const vaultPath = await getVaultRoot();
+      await backup.initRepo(vaultPath);
+      const result = await backup.commitAll(vaultPath, `Auto-backup ${new Date().toLocaleString("es-MX")}`);
+      if (result.committed) {
+        process.stderr.write(`[kuilo] auto-backup: ${result.sha?.slice(0, 7)}\n`);
+      }
+    } catch (err) {
+      process.stderr.write(`[kuilo] auto-backup error: ${err.message}\n`);
+    }
+  }, 30000); // 30s after last save
+};
+
 
 app.whenReady().then(createWindow);
 
