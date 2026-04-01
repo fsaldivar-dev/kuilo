@@ -41,7 +41,9 @@
       "Bash(for dir:*)",
       "Bash(do basename:*)",
       "Bash(done)",
-      "Bash(find /Users/fsaldivar/Documents/Personal/projects/NotesApp/src -type f \\\\\\(-name *.jsx -o -name *.js \\\\\\))"
+      "Bash(find /Users/fsaldivar/Documents/Personal/projects/NotesApp/src -type f \\\\\\(-name *.jsx -o -name *.js \\\\\\))",
+      "Bash(sed -i '' 's|import DOMPurify from \"\"dompurify\"\";|import { sanitizeSvg } from \"\"@/lib/sanitize\"\";|' src/components/tiptap-node/whiteboard-node/WhiteboardView.jsx)",
+      "Bash(sed -i '' 's|DOMPurify.sanitize\\(svgPreview, { USE_PROFILES: { svg: true } }\\)|sanitizeSvg\\(svgPreview\\)|' src/components/tiptap-node/whiteboard-node/WhiteboardView.jsx)"
     ]
   }
 }
