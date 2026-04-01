@@ -51,6 +51,7 @@ Kuilo es un IDE de documentacion tecnica para equipos de una persona. Documenta 
 | **Favoritos** | [COMMAND-PALETTE.md](docs/COMMAND-PALETTE.md) | Marca paginas con estrella para acceso rapido |
 | **Duplicar pagina** | [COMMAND-PALETTE.md](docs/COMMAND-PALETTE.md) | Copia un documento con todo su contenido |
 | **Atajos de teclado** | [COMMAND-PALETTE.md](docs/COMMAND-PALETTE.md) | Panel de referencia con Cmd+/ |
+| **Workflow Pipeline** | [WORKFLOWS.md](docs/WORKFLOWS.md) | Flujos de documentacion por area con estados y dependencias cross-area |
 
 ---
 
