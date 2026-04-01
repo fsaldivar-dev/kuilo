@@ -1404,24 +1404,36 @@ input, textarea, select { font: inherit; }
 .template-title { font-size: 13px; font-weight: 600; color: #1d1d1f; }
 .template-desc { font-size: 11px; color: #8e8e93; margin-top: 2px; }
 
-.dark .template-picker { background: #2c2c2e; }
+.dark .template-picker {
+  background: #1c1c1e;
+  border: 1px solid #3a3a3c;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.3);
+}
 .dark .template-picker-header h3 { color: #f2f2f7; }
-.dark .template-search { background: #1c1c1e; border-color: #3a3a3c; color: #f2f2f7; }
+.dark .template-search { background: #2c2c2e; border-color: #3a3a3c; color: #f2f2f7; }
 .dark .template-search:focus { border-color: #0a84ff; }
-.dark .template-card { background: #3a3a3c; border-color: #48484a; }
-.dark .template-card:hover { border-color: #0a84ff; }
+.dark .template-card { background: #2c2c2e; border-color: #3a3a3c; }
+.dark .template-card:hover { border-color: #0a84ff; background: rgba(10,132,255,0.08); }
 .dark .template-title { color: #f2f2f7; }
+.dark .template-desc { color: #636366; }
 
 /* ─── Command Palette — dark mode ────────────────────────────────── */
-.dark .palette { background: #2c2c2e; }
-.dark .palette-input-row { border-bottom-color: #3a3a3c; color: #98989d; }
+.dark .palette-overlay { background: rgba(0,0,0,0.6); }
+.dark .palette {
+  background: #1c1c1e;
+  border: 1px solid #3a3a3c;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.3);
+}
+.dark .palette-input-row { border-bottom-color: #2c2c2e; color: #98989d; }
 .dark .palette-input { color: #f2f2f7; }
 .dark .palette-input::placeholder { color: #636366; }
-.dark .palette-item.selected { background: #3a3a3c; }
-.dark .palette-item:hover { background: #3a3a3c; }
-.dark .palette-icon { background: rgba(255,255,255,0.06); color: #98989d; }
+.dark .palette-list { background: #1c1c1e; }
+.dark .palette-item.selected { background: #2c2c2e; }
+.dark .palette-item:hover { background: #2c2c2e; }
+.dark .palette-icon { background: #2c2c2e; color: #98989d; }
 .dark .palette-item.selected .palette-icon { background: #0a84ff; color: white; }
 .dark .palette-title { color: #f2f2f7; }
+.dark .palette-desc { color: #636366; }
 .dark .palette-kbd { background: rgba(255,255,255,0.08); }
 
 /* ─── History panel — dark mode ──────────────────────────────────── */
