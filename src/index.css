@@ -1475,6 +1475,7 @@ a.wiki-link:hover {
   border-radius: 7px;
   text-align: left;
   color: #8e8e93;
+  background: transparent;
   transition: background 0.06s;
 }
 .mention-item.selected { background: #e8e8ed; }
@@ -1496,10 +1497,15 @@ a.wiki-link:hover {
   color: #8e8e93;
 }
 
-.dark .mention-menu { background: #252528; border-color: #48484a; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+.dark .mention-menu {
+  background: #252528;
+  border-color: #48484a;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.5), 0 4px 10px rgba(0,0,0,0.3);
+}
 .dark .mention-item.selected { background: #3a3a3c; }
 .dark .mention-item:hover { background: #3a3a3c; }
 .dark .mention-item-title { color: #f2f2f7; }
+.dark .mention-item-pkg { color: #8e8e93; }
 
 /* ─── Backlinks Panel ────────────────────────────────────────────── */
 .backlinks-panel {
