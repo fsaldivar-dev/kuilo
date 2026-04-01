@@ -100,7 +100,7 @@ export function CommandPalette({ open, onClose, commands }) {
  * Build the command list from app state.
  * Called on each render so doc list stays current.
  */
-export function buildPaletteCommands({ vault, search, onOpenWizard, onOpenConnectors, onExportBook }) {
+export function buildPaletteCommands({ vault, search, onOpenWizard, onOpenConnectors, onExportBook, onPublishSite }) {
   const commands = [];
 
   // Navigation: all pages in all packages
@@ -154,6 +154,15 @@ export function buildPaletteCommands({ vault, search, onOpenWizard, onOpenConnec
     keywords: ["pdf", "libro", "export", "descargar"],
     icon: <Download size={14} />,
     execute: onExportBook,
+  });
+
+  commands.push({
+    id: "action:publish-site",
+    title: "Publicar en web",
+    description: "Generar sitio estático HTML",
+    keywords: ["publish", "web", "html", "sitio", "publicar", "deploy"],
+    icon: <Download size={14} />,
+    execute: onPublishSite,
   });
 
   commands.push({

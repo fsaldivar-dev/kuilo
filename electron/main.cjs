@@ -1101,6 +1101,27 @@ safeHandle("notes:export-book", async (_, { html, title, css }) => {
   return { ok: true, filePath };
 });
 
+// ─── Publish to Web ─────────────────────────────────────────────────────────
+
+safeHandle("notes:publish-site", async (_, { files }) => {
+  const { filePaths, canceled } = await dialog.showOpenDialog({
+    title: "Elegir carpeta para publicar",
+    properties: ["openDirectory", "createDirectory"],
+    buttonLabel: "Publicar aquí",
+  });
+  if (canceled || !filePaths?.[0]) return { ok: false };
+
+  const outDir = filePaths[0];
+  for (const file of files) {
+    const fullPath = path.join(outDir, file.path);
+    await fs.mkdir(path.dirname(fullPath), { recursive: true });
+    await fs.writeFile(fullPath, file.content, "utf8");
+  }
+
+  shell.openPath(outDir);
+  return { ok: true, outDir, totalFiles: files.length };
+});
+
 // ─── Git Backup ──────────────────────────────────────────────────────────────
 
 let gitBackup = null;
