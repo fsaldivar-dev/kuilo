@@ -11,6 +11,7 @@ import { ConnectorsModal } from "@/components/modals/ConnectorsModal";
 import { CommandPalette, buildPaletteCommands } from "@/components/command-palette/CommandPalette";
 import { TemplatePickerModal } from "@/components/modals/TemplatePickerModal";
 import { ShortcutsModal } from "@/components/modals/ShortcutsModal";
+import { AiChat } from "@/components/ai-chat/AiChat";
 import { useEditorState } from "@/hooks/use-editor-state";
 import { useVault } from "@/hooks/use-vault";
 import { useBackup } from "@/hooks/use-backup";
@@ -35,6 +36,7 @@ function App() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [templatePicker, setTemplatePicker] = useState(null);
 
   // ── Export book ──
@@ -112,6 +114,36 @@ function App() {
     }
   };
 
+  // ── Vault context for AI chat ──
+  const vaultContext = useMemo(() => {
+    const pkgs = vault.packages.map((pkg) => {
+      const pages = (pkg.pages || []).map((p) => p.title).join(", ");
+      return `- ${pkg.name}: ${pages || "(vacío)"}`;
+    }).join("\n");
+
+    let activeContent = "";
+    if (vault.activeDoc) {
+      activeContent = `\n\nDocumento activo: "${vault.activeDoc.title}" (paquete: ${vault.activeDoc.packageName})`;
+      if (editor.pageDocument?.blocks) {
+        // Extract plain text from Tiptap JSON blocks
+        const extractText = (nodes) => {
+          if (!Array.isArray(nodes)) return typeof nodes === "string" ? nodes : "";
+          return nodes.map((n) => n.text || extractText(n.content) || "").join("");
+        };
+        const text = (editor.pageDocument.blocks || []).map((b) => {
+          const t = extractText(b.content);
+          if (b.type === "heading") return `\n## ${t}`;
+          return t;
+        }).filter(Boolean).join("\n");
+        if (text) activeContent += `\nContenido:\n${text.slice(0, 3000)}`;
+      } else if (editor.legacyContent) {
+        activeContent += `\nContenido:\n${editor.legacyContent.slice(0, 3000)}`;
+      }
+    }
+
+    return `Vault: ${vault.vaultPath || "local"}\nPaquetes:\n${pkgs}${activeContent}`;
+  }, [vault.packages, vault.activeDoc, editor.pageDocument, editor.legacyContent]);
+
   // ── Tab-aware doc opener ──
   const openDocWithTab = (doc) => {
     tabs.openTab(doc);
@@ -177,6 +209,7 @@ function App() {
         onPublishSite={publishSite}
         onOpenWizard={() => setWizardOpen(true)}
         onOpenConnectors={connectors.openConnectors}
+        onOpenChat={() => setChatOpen(true)}
         onOpenWorkflow={wf.loadWorkflow}
       />
 
@@ -215,6 +248,19 @@ function App() {
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
         commands={paletteCommands}
+      />
+      <AiChat
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        vaultContext={vaultContext}
+        pages={vault.packages.flatMap((pkg) => {
+          const walk = (pages) => pages.flatMap((p) => [
+            { title: p.title, packageName: p.packageName, pagePath: p.pagePath, sourceType: p.sourceType },
+            ...walk(p.children || []),
+          ]);
+          return walk(pkg.pages || []);
+        })}
+        onOpenDoc={openDocWithTab}
       />
     </div>
   );
