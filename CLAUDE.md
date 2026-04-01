@@ -13,6 +13,7 @@ App.jsx (shell only)
 ├── useSearch(packages)  → search: query, results, filteredPackages
 ├── useTabs()            → tabs: open/close/switch tabs, activeTab
 ├── useFavorites()       → favorites: star/unstar pages (localStorage)
+├── useWorkflow()        → workflow: load/save workflow.json, updateStatus, linkDoc
 │
 ├── <Sidebar />          → sidebar/Sidebar.jsx (4 components: Sidebar, SearchResults, SidebarFooter, PageTreeNode)
 ├── <Workspace />        → workspace/Workspace.jsx (5 components: Workspace, DocHeader, ExportButtons, HistoryPanel, TabBar)
@@ -21,6 +22,7 @@ App.jsx (shell only)
 ├── <ShortcutsModal />   → modals/ShortcutsModal.jsx (Cmd+/)
 ├── <TemplatePickerModal /> → modals/TemplatePickerModal.jsx
 ├── <CommandPalette />   → command-palette/CommandPalette.jsx (Cmd+K)
+├── <WorkflowBoard />    → workflow/WorkflowBoard.jsx (methodology-based pipeline)
 └── <ProjectWizard />    → project-wizard/ProjectWizard.jsx
 ```
 
