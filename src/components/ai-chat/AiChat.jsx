@@ -4,9 +4,11 @@ import { X, Send, Bot, User, Settings, Loader, ExternalLink } from "lucide-react
 const api = window.notesApi;
 
 const PROVIDERS = [
-  { id: "gemini", label: "Gemini Flash (Google)", placeholder: "AIza...", keyUrl: "https://aistudio.google.com/apikey", keyLabel: "Obtener API key gratis →" },
-  { id: "anthropic", label: "Claude Haiku (Anthropic)", placeholder: "sk-ant-...", keyUrl: "https://console.anthropic.com/settings/keys", keyLabel: "Crear API key →" },
-  { id: "openai", label: "GPT-4o mini (OpenAI)", placeholder: "sk-...", keyUrl: "https://platform.openai.com/api-keys", keyLabel: "Crear API key →" },
+  { id: "gemini", label: "Gemini Flash (Google) — gratis", placeholder: "AIza...", keyUrl: "https://aistudio.google.com/apikey", keyLabel: "Obtener API key gratis →", free: true },
+  { id: "groq", label: "Llama 3 (Groq) — gratis", placeholder: "gsk_...", keyUrl: "https://console.groq.com/keys", keyLabel: "Obtener API key gratis →", free: true },
+  { id: "cohere", label: "Command R (Cohere) — gratis", placeholder: "...", keyUrl: "https://dashboard.cohere.com/api-keys", keyLabel: "Obtener API key gratis →", free: true },
+  { id: "anthropic", label: "Claude Haiku (Anthropic) — $", placeholder: "sk-ant-...", keyUrl: "https://console.anthropic.com/settings/keys", keyLabel: "Crear API key (requiere tarjeta)" },
+  { id: "openai", label: "GPT-4o mini (OpenAI) — $", placeholder: "sk-...", keyUrl: "https://platform.openai.com/api-keys", keyLabel: "Crear API key (requiere tarjeta)" },
 ];
 
 const STORAGE_KEY = "kuilo-ai-config";

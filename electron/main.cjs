@@ -777,7 +777,37 @@ Reglas:
       return { content: data.candidates?.[0]?.content?.parts?.[0]?.text || "", provider: "gemini" };
     }
 
-    return { error: `Provider "${provider}" no soportado. Usa: anthropic, openai, gemini` };
+    if (provider === "groq") {
+      // Groq uses OpenAI-compatible API
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          max_tokens: 1024,
+          messages: [{ role: "system", content: systemPrompt }, ...messages.map((m) => ({ role: m.role, content: m.content }))],
+        }),
+      });
+      const data = await res.json();
+      if (data.error) return { error: data.error.message };
+      return { content: data.choices?.[0]?.message?.content || "", provider: "groq" };
+    }
+
+    if (provider === "cohere") {
+      const res = await fetch("https://api.cohere.com/v2/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: "command-r",
+          messages: [{ role: "system", content: systemPrompt }, ...messages.map((m) => ({ role: m.role, content: m.content }))],
+        }),
+      });
+      const data = await res.json();
+      if (data.message) return { error: data.message };
+      return { content: data.message?.content?.[0]?.text || data.text || "", provider: "cohere" };
+    }
+
+    return { error: `Provider "${provider}" no soportado.` };
   } catch (err) {
     return { error: err.message };
   }
