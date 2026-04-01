@@ -46,7 +46,8 @@ import { KanbanView } from "@/components/tiptap-node/kanban-node/KanbanView"
 // import { WhiteboardBlock } from "@/components/tiptap-node/whiteboard-node/whiteboard-extension"
 // import { WhiteboardView } from "@/components/tiptap-node/whiteboard-node/WhiteboardView"
 import { EmojiShortcode } from "@/components/tiptap-node/emoji-shortcode-extension"
-import { WikiLink } from "@/components/tiptap-node/wiki-link-node/wiki-link-extension"
+import { WikiLink, buildPageMentionExtension } from "@/components/tiptap-node/wiki-link-node/wiki-link-extension"
+import { PageMentionMenu } from "@/components/tiptap-node/wiki-link-node/PageMentionMenu"
 import { TableOfContents } from "@/components/tiptap-node/toc-node/toc-node-extension"
 import { TocView } from "@/components/tiptap-node/toc-node/TocView"
 import { ReactNodeViewRenderer } from "@tiptap/react"
@@ -206,7 +207,7 @@ const MobileToolbarContent = ({
   </>
 )
 
-export function SimpleEditor({ initialContent, onContentChange, onWikiLinkClick }) {
+export function SimpleEditor({ initialContent, onContentChange, onWikiLinkClick, pages = [] }) {
   const isMobile = useIsBreakpoint()
   const { height } = useWindowSize()
   const [mobileView, setMobileView] = useState("main")
@@ -226,6 +227,20 @@ export function SimpleEditor({ initialContent, onContentChange, onWikiLinkClick 
       onOpen: handleSlashOpen,
       onUpdate: handleSlashUpdate,
       onClose: handleSlashClose,
+    })
+  ).current
+
+  // ── Page mention (@) state ──
+  const [mentionMenu, setMentionMenu] = useState(null)
+  const pagesRef = useRef(pages)
+  pagesRef.current = pages
+
+  const mentionExtension = useRef(
+    buildPageMentionExtension({
+      getPages: () => pagesRef.current,
+      onOpen: (props) => setMentionMenu(props),
+      onUpdate: (props) => setMentionMenu(props),
+      onClose: () => setMentionMenu(null),
     })
   ).current
 
@@ -324,6 +339,7 @@ export function SimpleEditor({ initialContent, onContentChange, onWikiLinkClick 
       }),
       EmojiShortcode,
       WikiLink,
+      mentionExtension,
       TableOfContents.extend({
         addNodeView() {
           return ReactNodeViewRenderer(TocView);
@@ -415,6 +431,14 @@ export function SimpleEditor({ initialContent, onContentChange, onWikiLinkClick 
             ref={slashMenuRef}
             suggestionProps={slashMenu}
             onClose={handleSlashClose}
+          />
+        )}
+
+        {mentionMenu && mentionMenu.items?.length > 0 && (
+          <PageMentionMenu
+            items={mentionMenu.items}
+            command={mentionMenu.command}
+            clientRect={mentionMenu.clientRect}
           />
         )}
 
