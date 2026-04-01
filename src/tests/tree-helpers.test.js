@@ -197,15 +197,22 @@ describe("renderMarkdownPreview", () => {
     const html = renderMarkdownPreview("> quote text");
     expect(html).toContain("<blockquote");
   });
-  it("renders tables with colon separators", () => {
-    // Note: the regex /^\|[\s:-|]+\|$/ treats :-| as a char range (58-124)
-    // which excludes `-` (char 45). Only `:` and space-based separators work.
+  it("renders tables with dash separators", () => {
     const md = `| a | b |
-| : | : |
+| --- | --- |
 | 1 | 2 |`;
     const html = renderMarkdownPreview(md);
     expect(html).toContain("<table");
     expect(html).toContain("<th>");
+    expect(html).toContain("<td>");
+  });
+
+  it("renders tables with colon-aligned separators", () => {
+    const md = `| left | center | right |
+| :--- | :---: | ---: |
+| x | y | z |`;
+    const html = renderMarkdownPreview(md);
+    expect(html).toContain("<table");
   });
   it("renders horizontal rule", () => {
     const html = renderMarkdownPreview("---");
