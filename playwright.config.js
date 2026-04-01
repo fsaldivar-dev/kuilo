@@ -12,6 +12,14 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
 
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.02,
+    },
+  },
+
+  snapshotPathTemplate: "{testDir}/{testFileDir}/{testFileName}-snapshots/{arg}{ext}",
+
   projects: [
     {
       // Web mode: runs against Vite dev server (fast, no Electron needed)
