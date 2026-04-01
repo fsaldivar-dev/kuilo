@@ -14,8 +14,20 @@ export function WorkflowBoard({ workflow, allWorkflows, pages, onOpenDoc, onCrea
   const pageMap = {};
   for (const p of pages) pageMap[p.title.toLowerCase()] = p;
 
+  // Normalize: v1 workflows have docTypes (strings), v2 have docs (objects)
+  const stages = workflow.stages.map((s) => ({
+    ...s,
+    docs: s.docs || (s.docTypes || []).map((dt) => ({
+      id: `legacy-${typeof dt === "string" ? dt : dt.docType}`,
+      docType: typeof dt === "string" ? dt : dt.docType,
+      status: "not-started",
+      pagePath: null,
+      dependsOn: [],
+    })),
+  }));
+
   // Count progress
-  const allDocs = workflow.stages.flatMap((s) => s.docs);
+  const allDocs = stages.flatMap((s) => s.docs);
   const doneDocs = allDocs.filter((d) => d.status === "done").length;
   const totalDocs = allDocs.length;
   const progressPercent = totalDocs > 0 ? Math.round((doneDocs / totalDocs) * 100) : 0;
@@ -47,7 +59,7 @@ export function WorkflowBoard({ workflow, allWorkflows, pages, onOpenDoc, onCrea
       </div>
 
       <div className="wf-columns">
-        {workflow.stages.map((stage) => {
+        {stages.map((stage) => {
           const stageDone = stage.docs.every((d) => d.status === "done");
           const stageProgress = stage.docs.filter((d) => d.status === "done").length;
 
