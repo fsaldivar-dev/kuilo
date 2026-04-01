@@ -39,18 +39,18 @@ Kuilo es un IDE de documentacion tecnica para equipos de una persona. Documenta 
 | **Templates** | [TEMPLATES.md](docs/TEMPLATES.md) | PRD, RFC, Sprint, Runbook, Lean Canvas, y mas |
 | **MCP Server** | [MCP.md](docs/MCP.md) | 13 herramientas para conectar con Claude, Cursor, Windsurf |
 | **Export** | [EXPORT.md](docs/EXPORT.md) | Markdown, HTML, PDF, libro PDF completo |
-| **Publish-to-web** | — | Genera sitio estatico HTML desde el vault (gratis, sin hosting) |
+| **Publish-to-web** | [EXPORT.md](docs/EXPORT.md) | Genera sitio estatico HTML desde el vault (gratis, sin hosting) |
 | **Git Backup** | [BACKUP.md](docs/BACKUP.md) | Auto-backup con isomorphic-git a cualquier repo |
 | **Project Wizard** | [PROJECT-WIZARD.md](docs/PROJECT-WIZARD.md) | Wizard guiado que crea proyectos con documentos pre-llenados |
-| **Cmd+K** | — | Command palette para navegacion rapida y acciones |
-| **@Mention links** | — | Escribe `@` para enlazar paginas entre si |
-| **Backlinks** | — | Ve que paginas enlazan al documento actual |
-| **Template picker** | — | Elige plantilla al crear nueva pagina |
-| **Version diff** | — | Compara versiones con diff visual bloque a bloque |
-| **Tabs** | — | Multiples documentos abiertos simultaneamente |
-| **Favoritos** | — | Marca paginas con estrella para acceso rapido |
-| **Duplicar pagina** | — | Copia un documento con todo su contenido |
-| **Atajos de teclado** | — | Panel de referencia con Cmd+/ |
+| **Cmd+K** | [COMMAND-PALETTE.md](docs/COMMAND-PALETTE.md) | Command palette para navegacion rapida y acciones |
+| **@Mention links** | [WIKI-LINKS.md](docs/WIKI-LINKS.md) | Escribe `@` para enlazar paginas entre si |
+| **Backlinks** | [WIKI-LINKS.md](docs/WIKI-LINKS.md) | Ve que paginas enlazan al documento actual |
+| **Template picker** | [TEMPLATES.md](docs/TEMPLATES.md) | Elige plantilla al crear nueva pagina |
+| **Version diff** | [VERSION-DIFF.md](docs/VERSION-DIFF.md) | Compara versiones con diff visual bloque a bloque |
+| **Tabs** | [COMMAND-PALETTE.md](docs/COMMAND-PALETTE.md) | Multiples documentos abiertos simultaneamente |
+| **Favoritos** | [COMMAND-PALETTE.md](docs/COMMAND-PALETTE.md) | Marca paginas con estrella para acceso rapido |
+| **Duplicar pagina** | [COMMAND-PALETTE.md](docs/COMMAND-PALETTE.md) | Copia un documento con todo su contenido |
+| **Atajos de teclado** | [COMMAND-PALETTE.md](docs/COMMAND-PALETTE.md) | Panel de referencia con Cmd+/ |
 
 ---
 
