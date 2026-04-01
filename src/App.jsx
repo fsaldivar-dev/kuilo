@@ -11,6 +11,7 @@ import { ConnectorsModal } from "@/components/modals/ConnectorsModal";
 import { CommandPalette, buildPaletteCommands } from "@/components/command-palette/CommandPalette";
 import { TemplatePickerModal } from "@/components/modals/TemplatePickerModal";
 import { ShortcutsModal } from "@/components/modals/ShortcutsModal";
+import { AiChat } from "@/components/ai-chat/AiChat";
 import { useEditorState } from "@/hooks/use-editor-state";
 import { useVault } from "@/hooks/use-vault";
 import { useBackup } from "@/hooks/use-backup";
@@ -35,6 +36,7 @@ function App() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [templatePicker, setTemplatePicker] = useState(null);
 
   // ── Export book ──
@@ -112,6 +114,16 @@ function App() {
     }
   };
 
+  // ── Vault context for AI chat ──
+  const vaultContext = useMemo(() => {
+    const pkgs = vault.packages.map((pkg) => {
+      const pages = (pkg.pages || []).map((p) => p.title).join(", ");
+      return `- ${pkg.name}: ${pages || "(vacío)"}`;
+    }).join("\n");
+    const active = vault.activeDoc ? `Documento activo: ${vault.activeDoc.title} (${vault.activeDoc.packageName})` : "Sin documento activo";
+    return `Vault: ${vault.vaultPath || "local"}\nPaquetes:\n${pkgs}\n${active}`;
+  }, [vault.packages, vault.activeDoc]);
+
   // ── Tab-aware doc opener ──
   const openDocWithTab = (doc) => {
     tabs.openTab(doc);
@@ -177,6 +189,7 @@ function App() {
         onPublishSite={publishSite}
         onOpenWizard={() => setWizardOpen(true)}
         onOpenConnectors={connectors.openConnectors}
+        onOpenChat={() => setChatOpen(true)}
         onOpenWorkflow={wf.loadWorkflow}
       />
 
@@ -215,6 +228,11 @@ function App() {
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
         commands={paletteCommands}
+      />
+      <AiChat
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+        vaultContext={vaultContext}
       />
     </div>
   );
