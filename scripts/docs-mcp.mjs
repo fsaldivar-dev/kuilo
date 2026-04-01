@@ -264,6 +264,81 @@ async function appendBlocks(packageName, pagePath, blocks) {
   return updateDocument(packageName, pagePath, [...(existing.blocks || []), ...blocks]);
 }
 
+async function deleteDocument(packageName, pagePath) {
+  if (!pagePath.endsWith("page.json")) throw new Error("Solo se pueden eliminar documentos page.json");
+  const pkgDir = packageName === "__root__" ? VAULT_ROOT : safeResolve(VAULT_ROOT, packageName);
+  const filePath = safeResolve(pkgDir, pagePath);
+  const docDir = path.dirname(filePath);
+  await fs.rm(docDir, { recursive: true, force: true });
+  return { deleted: true, packageName, pagePath };
+}
+
+async function renameDocument(packageName, pagePath, title) {
+  if (!pagePath.endsWith("page.json")) throw new Error("Solo se pueden renombrar documentos page.json");
+  if (!title || !title.trim()) throw new Error("El título no puede estar vacío");
+  const pkgDir = packageName === "__root__" ? VAULT_ROOT : safeResolve(VAULT_ROOT, packageName);
+  const filePath = safeResolve(pkgDir, pagePath);
+  const existing = await readJson(filePath);
+  const updated = {
+    ...existing,
+    meta: { ...existing.meta, title: title.trim(), updated_at: new Date().toISOString() },
+  };
+  await fs.writeFile(filePath, JSON.stringify(updated, null, 2), "utf8");
+  return { packageName, pagePath, title: title.trim() };
+}
+
+async function updateMeta(packageName, pagePath, meta) {
+  if (!pagePath.endsWith("page.json")) throw new Error("Solo page.json soportado");
+  const pkgDir = packageName === "__root__" ? VAULT_ROOT : safeResolve(VAULT_ROOT, packageName);
+  const filePath = safeResolve(pkgDir, pagePath);
+  const existing = await readJson(filePath);
+  const updated = {
+    ...existing,
+    meta: { ...existing.meta, ...meta, updated_at: new Date().toISOString() },
+  };
+  await fs.writeFile(filePath, JSON.stringify(updated, null, 2), "utf8");
+  return { packageName, pagePath, meta: updated.meta };
+}
+
+async function listVersions(packageName, pagePath) {
+  if (!pagePath.endsWith("page.json")) throw new Error("Solo page.json soportado");
+  const pkgDir = packageName === "__root__" ? VAULT_ROOT : safeResolve(VAULT_ROOT, packageName);
+  const filePath = safeResolve(pkgDir, pagePath);
+  const versionsDir = path.join(path.dirname(filePath), "versions");
+  let files;
+  try { files = await fs.readdir(versionsDir); } catch { return []; }
+  const versions = [];
+  for (const f of files.filter(f => f.endsWith(".json")).sort().reverse()) {
+    try {
+      const data = await readJson(path.join(versionsDir, f));
+      versions.push({ fileName: f, savedAt: data.savedAt, version: data.document?.document_version });
+    } catch {}
+  }
+  return versions;
+}
+
+function validateDocument(document) {
+  const errors = [];
+  if (!document || typeof document !== "object") return { valid: false, errors: ["document must be an object"] };
+  if (!document.meta || typeof document.meta !== "object") errors.push("missing meta object");
+  else {
+    if (!document.meta.title) errors.push("meta.title is required");
+    if (!document.meta.created_at) errors.push("meta.created_at is required");
+  }
+  if (!Array.isArray(document.blocks)) errors.push("blocks must be an array");
+  else {
+    for (let i = 0; i < document.blocks.length; i++) {
+      const b = document.blocks[i];
+      if (!b || typeof b !== "object") { errors.push(`blocks[${i}] must be an object`); continue; }
+      if (!b.type || typeof b.type !== "string") errors.push(`blocks[${i}].type is required`);
+    }
+  }
+  if (document.document_version !== undefined && typeof document.document_version !== "number") {
+    errors.push("document_version must be a number");
+  }
+  return { valid: errors.length === 0, errors };
+}
+
 /** Safe text extraction from a single block — handles both formats */
 function blockText(block) {
   try {
@@ -382,6 +457,37 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       inputSchema: { type: "object", required: ["packageName", "pagePath"],
         properties: { packageName: { type: "string" }, pagePath: { type: "string" } } },
     },
+    {
+      name: "delete_document",
+      description: "Elimina un documento page.json y su carpeta completa (incluyendo versions y assets).",
+      inputSchema: { type: "object", required: ["packageName", "pagePath"],
+        properties: { packageName: { type: "string" }, pagePath: { type: "string" } } },
+    },
+    {
+      name: "rename_document",
+      description: "Cambia el título de un documento page.json (actualiza meta.title).",
+      inputSchema: { type: "object", required: ["packageName", "pagePath", "title"],
+        properties: { packageName: { type: "string" }, pagePath: { type: "string" }, title: { type: "string" } } },
+    },
+    {
+      name: "update_meta",
+      description: "Actualiza campos de meta (icon, cover, title) sin tocar los bloques. Merge parcial.",
+      inputSchema: { type: "object", required: ["packageName", "pagePath", "meta"],
+        properties: { packageName: { type: "string" }, pagePath: { type: "string" },
+          meta: { type: "object", description: "Campos a actualizar: { title, icon, cover }" } } },
+    },
+    {
+      name: "list_versions",
+      description: "Lista snapshots históricos de un documento page.json.",
+      inputSchema: { type: "object", required: ["packageName", "pagePath"],
+        properties: { packageName: { type: "string" }, pagePath: { type: "string" } } },
+    },
+    {
+      name: "validate_document",
+      description: "Valida la estructura de un documento page.json. Devuelve { valid, errors }.",
+      inputSchema: { type: "object", required: ["packageName", "pagePath"],
+        properties: { packageName: { type: "string" }, pagePath: { type: "string" } } },
+    },
   ],
 }));
 
@@ -401,6 +507,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     if (name === "update_document") return json(await updateDocument(args.packageName, args.pagePath, args.blocks));
     if (name === "append_blocks") return json(await appendBlocks(args.packageName, args.pagePath, args.blocks));
     if (name === "get_document_context") return json(await getDocumentContext(args.packageName, args.pagePath));
+    if (name === "delete_document") return json(await deleteDocument(args.packageName, args.pagePath));
+    if (name === "rename_document") return json(await renameDocument(args.packageName, args.pagePath, args.title));
+    if (name === "update_meta") return json(await updateMeta(args.packageName, args.pagePath, args.meta));
+    if (name === "list_versions") return json(await listVersions(args.packageName, args.pagePath));
+    if (name === "validate_document") {
+      const { document } = await readDocument(args.packageName, args.pagePath);
+      return json(validateDocument(document));
+    }
 
     throw new Error(`Tool desconocida: ${name}`);
   } catch (err) {
