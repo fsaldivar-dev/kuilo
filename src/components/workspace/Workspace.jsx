@@ -16,11 +16,24 @@ import { Breadcrumb } from "@/components/page-identity/Breadcrumb";
 import { DiffView } from "@/components/workspace/DiffView";
 import { BacklinksPanel } from "@/components/workspace/BacklinksPanel";
 import { resolveWikiLink } from "@/lib/wiki-links";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 const api = window.notesApi;
 
+function flattenPages(packages) {
+  const result = [];
+  const walk = (pages, packageName) => {
+    for (const page of pages) {
+      result.push({ title: page.title, packageName, pagePath: page.pagePath });
+      if (page.children?.length) walk(page.children, packageName);
+    }
+  };
+  for (const pkg of packages) walk(pkg.pages || [], pkg.name);
+  return result;
+}
+
 export function Workspace({ vault, editor, sidebarCollapsed, onExpandSidebar }) {
+  const allPages = useMemo(() => flattenPages(vault.packages), [vault.packages]);
   const [backlinksOpen, setBacklinksOpen] = useState(false);
   const [backlinks, setBacklinks] = useState([]);
 
@@ -92,6 +105,7 @@ export function Workspace({ vault, editor, sidebarCollapsed, onExpandSidebar }) 
                 initialContent={editor.editorHtml}
                 onContentChange={editor.handleEditorChange}
                 onWikiLinkClick={handleWikiLinkClick}
+                pages={allPages}
               />
             )}
 
