@@ -29,6 +29,7 @@ contextBridge.exposeInMainWorld("notesApi", {
   // Export
   exportPdf: (payload) => ipcRenderer.invoke("notes:export-pdf", payload),
   exportBook: (payload) => ipcRenderer.invoke("notes:export-book", payload),
+  publishSite: (payload) => ipcRenderer.invoke("notes:publish-site", payload),
   // MCP Connectors
   getMcpInfo: () => ipcRenderer.invoke("notes:get-mcp-info"),
   configureAiConnector: (payload) => ipcRenderer.invoke("notes:configure-ai-connector", payload),
