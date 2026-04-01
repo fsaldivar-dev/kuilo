@@ -488,6 +488,40 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
       inputSchema: { type: "object", required: ["packageName", "pagePath"],
         properties: { packageName: { type: "string" }, pagePath: { type: "string" } } },
     },
+    {
+      name: "get_execution_graph",
+      description: "Grafo de ejecución de documentación: muestra las 7 fases en orden, qué docs van en cada fase, y las dependencias cross-área. Usar para guiar al usuario sobre por dónde empezar.",
+      inputSchema: { type: "object", properties: {} },
+    },
+    {
+      name: "get_next_actions",
+      description: "Analiza todos los workflows del vault y devuelve las siguientes acciones concretas por área: qué docs crear, cuáles pasar a review, cuáles aprobar. Incluye progreso por área.",
+      inputSchema: { type: "object", properties: {} },
+    },
+    {
+      name: "get_methodology",
+      description: "Lee la guía de una metodología (shape-up, stage-gate, lean-startup, etc.). Explica qué es, cuándo usarla, etapas, y definition of done.",
+      inputSchema: { type: "object", required: ["name"],
+        properties: { name: { type: "string", description: "Nombre del archivo sin .md: shape-up, stage-gate, lean-startup" } } },
+    },
+    {
+      name: "get_tutorial",
+      description: "Lee el tutorial de cómo escribir un tipo de documento (how-to-write-prd, how-to-write-rfc, how-to-write-lean-canvas, etc.).",
+      inputSchema: { type: "object", required: ["name"],
+        properties: { name: { type: "string", description: "Nombre del tutorial sin .md" } } },
+    },
+    {
+      name: "get_rules",
+      description: "Lee las reglas del vault (definition-of-done, review-checklist). Define cuándo un doc está listo para review o done.",
+      inputSchema: { type: "object", required: ["name"],
+        properties: { name: { type: "string", description: "Nombre de la regla sin .md: definition-of-done, review-checklist" } } },
+    },
+    {
+      name: "get_workflow_status",
+      description: "Estado completo del workflow de un paquete: progreso, docs por status, acciones siguientes, docs bloqueados y por qué.",
+      inputSchema: { type: "object", required: ["packageName"],
+        properties: { packageName: { type: "string" } } },
+    },
   ],
 }));
 
@@ -516,12 +550,110 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       return json(validateDocument(document));
     }
 
+    // ── Knowledge base tools ──
+    if (name === "get_execution_graph") return json(await getExecutionGraph());
+    if (name === "get_next_actions") return json(await getNextActions());
+    if (name === "get_methodology") return json(await getKnowledge("methodologies", args.name));
+    if (name === "get_tutorial") return json(await getKnowledge("tutorials", args.name));
+    if (name === "get_rules") return json(await getKnowledge("rules", args.name));
+    if (name === "get_workflow_status") return json(await getWorkflowStatus(args.packageName));
+
     throw new Error(`Tool desconocida: ${name}`);
   } catch (err) {
     process.stderr.write(`[kuilo-mcp] tool ${name} error: ${err.message}\n${err.stack}\n`);
     return { content: [{ type: "text", text: JSON.stringify({ error: err.message }) }], isError: true };
   }
 });
+
+// ─── Knowledge base functions ────────────────────────────────────────────────
+
+const KNOWLEDGE_DIR = path.join(path.dirname(VAULT_ROOT), "_knowledge");
+
+async function getExecutionGraph() {
+  const graphPath = path.join(KNOWLEDGE_DIR, "graph.json");
+  if (!(await exists(graphPath))) return { error: "No graph.json found. Create a project first." };
+  return readJson(graphPath);
+}
+
+async function getKnowledge(category, name) {
+  const filePath = path.join(KNOWLEDGE_DIR, category, `${name}.md`);
+  if (!(await exists(filePath))) {
+    // List available files
+    try {
+      const files = await fs.readdir(path.join(KNOWLEDGE_DIR, category));
+      return { error: `"${name}" not found. Available: ${files.filter(f => f.endsWith(".md")).map(f => f.replace(".md", "")).join(", ")}` };
+    } catch {
+      return { error: `Category "${category}" not found.` };
+    }
+  }
+  return { name, category, content: await fs.readFile(filePath, "utf8") };
+}
+
+async function getWorkflowStatus(packageName) {
+  const pkgDir = packageName === "__root__" ? VAULT_ROOT : safeResolve(VAULT_ROOT, packageName);
+  const wfPath = path.join(pkgDir, "workflow.json");
+  if (!(await exists(wfPath))) return { error: `No workflow.json found in ${packageName}` };
+
+  const wf = await readJson(wfPath);
+  const allDocs = (wf.stages || []).flatMap(s => (s.docs || []).map(d => ({ ...d, stage: s.title })));
+  const byStatus = { "not-started": 0, "draft": 0, "review": 0, "done": 0 };
+  for (const d of allDocs) byStatus[d.status || "not-started"]++;
+
+  const blocked = [];
+  const nextActions = [];
+
+  for (const d of allDocs) {
+    if (d.status === "done") continue;
+    const hasUnmetDeps = (d.dependsOn || []).some(dep => {
+      const depDoc = allDocs.find(x => x.docType === dep.docType);
+      if (!depDoc) return true;
+      const order = { "not-started": 0, "draft": 1, "review": 2, "done": 3 };
+      return (order[depDoc.status] || 0) < (order[dep.requiredStatus] || 0);
+    });
+
+    if (hasUnmetDeps) {
+      blocked.push({ docType: d.docType, stage: d.stage, blockedBy: d.dependsOn });
+    } else if (d.status !== "done") {
+      nextActions.push({ docType: d.docType, stage: d.stage, currentStatus: d.status || "not-started", action: d.status === "not-started" ? "Crear documento" : d.status === "draft" ? "Completar y pasar a review" : "Revisar y aprobar" });
+    }
+  }
+
+  return {
+    packageName,
+    framework: wf.framework,
+    author: wf.author,
+    totalDocs: allDocs.length,
+    byStatus,
+    progress: allDocs.length > 0 ? Math.round((byStatus.done / allDocs.length) * 100) : 0,
+    nextActions: nextActions.slice(0, 5),
+    blocked,
+  };
+}
+
+async function getNextActions() {
+  const packages = await listAllPackages();
+  const actions = [];
+
+  for (const pkg of packages) {
+    const pkgDir = pkg.packageName === "__root__" ? VAULT_ROOT : safeResolve(VAULT_ROOT, pkg.packageName);
+    const wfPath = path.join(pkgDir, "workflow.json");
+    if (!(await exists(wfPath))) continue;
+
+    const status = await getWorkflowStatus(pkg.packageName);
+    if (status.nextActions?.length) {
+      actions.push({ area: pkg.packageName, framework: status.framework, progress: status.progress, actions: status.nextActions });
+    }
+  }
+
+  // Also read the graph to suggest phase-level guidance
+  let graphAdvice = null;
+  try {
+    const graph = await readJson(path.join(KNOWLEDGE_DIR, "graph.json"));
+    graphAdvice = graph.execution_order?.map(p => ({ phase: p.phase, name: p.name, description: p.description, docs: p.parallel.length }));
+  } catch {}
+
+  return { perArea: actions, executionPhases: graphAdvice };
+}
 
 await fs.mkdir(VAULT_ROOT, { recursive: true });
 const transport = new StdioServerTransport();

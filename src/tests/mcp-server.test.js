@@ -79,18 +79,17 @@ describe("MCP Server", () => {
 
   // ── tools/list ──
 
-  it("lists 13 tools", async () => {
+  it("lists 19 tools", async () => {
     const { tools } = await client.listTools();
-    expect(tools).toHaveLength(13);
+    expect(tools).toHaveLength(19);
     const names = tools.map(t => t.name);
     expect(names).toContain("get_vault_summary");
-    expect(names).toContain("read_document");
-    expect(names).toContain("get_document_context");
-    expect(names).toContain("delete_document");
-    expect(names).toContain("rename_document");
-    expect(names).toContain("update_meta");
-    expect(names).toContain("list_versions");
-    expect(names).toContain("validate_document");
+    expect(names).toContain("get_execution_graph");
+    expect(names).toContain("get_next_actions");
+    expect(names).toContain("get_methodology");
+    expect(names).toContain("get_tutorial");
+    expect(names).toContain("get_rules");
+    expect(names).toContain("get_workflow_status");
   });
 
   // ── get_vault_summary ──
