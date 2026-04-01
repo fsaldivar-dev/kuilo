@@ -1,39 +1,54 @@
-import { useState } from "react";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { ArrowLeft, FileText, Plus, Trash2, X } from "lucide-react";
+import { ArrowLeft, FileText, Plus, CheckCircle, Circle } from "lucide-react";
 
-export function WorkflowBoard({ workflow, progress, onMoveCard, onAddInitiative, onRemoveInitiative, onAddCard, onRemoveCard, onOpenDoc, onClose }) {
-  const [showInitiativeForm, setShowInitiativeForm] = useState(false);
-  const [initiativeDraft, setInitiativeDraft] = useState("");
+/**
+ * WorkflowBoard — auto-populated from existing docs in the package.
+ *
+ * Each stage shows:
+ * - Docs that already exist (clickable, navigates to editor)
+ * - Doc types that are missing (button to create from template)
+ * - Progress indicator per stage
+ */
+export function WorkflowBoard({ workflow, pages, onOpenDoc, onCreateDoc, onClose }) {
+  // Map existing docs to stages by matching doc title/type to stage docTypes
+  const docsByStage = {};
+  const matchedDocs = new Set();
 
-  const handleDragEnd = (result) => {
-    if (!result.destination) return;
-    const [initId, cardId] = result.draggableId.split("/");
-    const newStageId = result.destination.droppableId;
-    onMoveCard(initId, cardId, newStageId);
-  };
+  for (const stage of workflow.stages) {
+    docsByStage[stage.id] = { existing: [], missing: [] };
 
-  const handleAddInitiative = () => {
-    if (!initiativeDraft.trim()) return;
-    onAddInitiative(initiativeDraft.trim());
-    setInitiativeDraft("");
-    setShowInitiativeForm(false);
-  };
+    for (const docType of stage.docTypes || []) {
+      const dtLower = docType.toLowerCase();
+      const match = pages.find((p) =>
+        !matchedDocs.has(p.pagePath) && (
+          p.title.toLowerCase().includes(dtLower) ||
+          dtLower.includes(p.title.toLowerCase().split(" ")[0])
+        )
+      );
 
-  // Flatten all cards by stage
-  const cardsByStage = {};
-  for (const stage of workflow.stages) cardsByStage[stage.id] = [];
-  for (const init of workflow.initiatives) {
-    for (const card of init.cards) {
-      if (cardsByStage[card.stageId]) {
-        cardsByStage[card.stageId].push({ ...card, initiativeId: init.id, initiativeTitle: init.title });
+      if (match) {
+        matchedDocs.add(match.pagePath);
+        docsByStage[stage.id].existing.push({ ...match, docType });
+      } else {
+        docsByStage[stage.id].missing.push(docType);
       }
     }
   }
 
+  // Unmatched docs go in the first stage
+  const unmatchedDocs = pages.filter((p) => !matchedDocs.has(p.pagePath));
+  if (unmatchedDocs.length && workflow.stages[0]) {
+    for (const doc of unmatchedDocs) {
+      docsByStage[workflow.stages[0].id].existing.push({ ...doc, docType: "Doc" });
+    }
+  }
+
+  // Progress
+  const totalDocTypes = workflow.stages.reduce((sum, s) => sum + (s.docTypes?.length || 0), 0);
+  const totalExisting = Object.values(docsByStage).reduce((sum, s) => sum + s.existing.length, 0);
+  const progressPercent = totalDocTypes > 0 ? Math.round((totalExisting / totalDocTypes) * 100) : 0;
+
   return (
     <div className="wf-board">
-      {/* Header */}
       <div className="wf-header">
         <button className="wf-back" onClick={onClose}>
           <ArrowLeft size={14} /> Volver
@@ -42,105 +57,72 @@ export function WorkflowBoard({ workflow, progress, onMoveCard, onAddInitiative,
           <h2>{workflow.framework}</h2>
           <span className="wf-author">{workflow.author}</span>
         </div>
-        <div className="wf-actions">
-          {showInitiativeForm ? (
-            <div className="wf-init-form">
-              <input
-                type="text"
-                placeholder="Nombre de la iniciativa..."
-                value={initiativeDraft}
-                onChange={(e) => setInitiativeDraft(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") handleAddInitiative(); if (e.key === "Escape") setShowInitiativeForm(false); }}
-                autoFocus
-              />
-              <button className="wf-init-submit" onClick={handleAddInitiative}>Crear</button>
-              <button className="wf-init-cancel" onClick={() => setShowInitiativeForm(false)}><X size={12} /></button>
-            </div>
-          ) : (
-            <button className="wf-add-init" onClick={() => setShowInitiativeForm(true)}>
-              <Plus size={13} /> Nueva iniciativa
-            </button>
-          )}
+        <div className="wf-progress-label">
+          {totalExisting}/{totalDocTypes} docs · {progressPercent}%
         </div>
       </div>
 
       {/* Progress bar */}
-      {progress && progress.total > 0 && (
-        <div className="wf-progress">
-          {workflow.stages.map((stage) => {
-            const sp = progress.byStage[stage.id];
-            return sp?.percent > 0 ? (
-              <div key={stage.id} className="wf-progress-segment" style={{ width: `${sp.percent}%`, background: stage.color }} title={`${stage.title}: ${sp.count}`} />
-            ) : null;
-          })}
-        </div>
-      )}
+      <div className="wf-progress">
+        <div className="wf-progress-fill" style={{ width: `${progressPercent}%` }} />
+      </div>
 
-      {/* Initiatives list */}
-      {workflow.initiatives.length > 0 && (
-        <div className="wf-initiatives">
-          {workflow.initiatives.map((init) => (
-            <span key={init.id} className="wf-init-badge">
-              {init.title} ({init.cards.length})
-              <button className="wf-init-remove" onClick={() => onRemoveInitiative(init.id)}><X size={9} /></button>
-            </span>
-          ))}
-        </div>
-      )}
+      {/* Stages */}
+      <div className="wf-columns">
+        {workflow.stages.map((stage) => {
+          const data = docsByStage[stage.id];
+          const stageComplete = data.missing.length === 0 && data.existing.length > 0;
 
-      {/* Board columns */}
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="wf-columns">
-          {workflow.stages.map((stage) => (
+          return (
             <div className="wf-column" key={stage.id}>
               <div className="wf-column-header" style={{ borderTopColor: stage.color }}>
                 <span className="wf-column-title">{stage.title}</span>
-                <span className="wf-column-count">{cardsByStage[stage.id].length}</span>
-              </div>
-              <Droppable droppableId={stage.id}>
-                {(provided, snapshot) => (
-                  <div
-                    className={`wf-column-body ${snapshot.isDraggingOver ? "drag-over" : ""}`}
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                  >
-                    {cardsByStage[stage.id].map((card, index) => (
-                      <Draggable key={`${card.initiativeId}/${card.id}`} draggableId={`${card.initiativeId}/${card.id}`} index={index}>
-                        {(prov, snap) => (
-                          <div
-                            className={`wf-card ${snap.isDragging ? "dragging" : ""}`}
-                            ref={prov.innerRef}
-                            {...prov.draggableProps}
-                            {...prov.dragHandleProps}
-                            onClick={() => card.docRef && onOpenDoc(card.docRef)}
-                          >
-                            <div className="wf-card-type">{card.docType}</div>
-                            <div className="wf-card-title">{card.title}</div>
-                            <div className="wf-card-init">{card.initiativeTitle}</div>
-                            <button className="wf-card-remove" onClick={(e) => { e.stopPropagation(); onRemoveCard(card.initiativeId, card.id); }}>
-                              <Trash2 size={10} />
-                            </button>
-                          </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-
-                    {/* Suggested doc types for this stage */}
-                    {stage.docTypes?.length > 0 && cardsByStage[stage.id].length === 0 && (
-                      <div className="wf-stage-hints">
-                        {stage.docTypes.map((dt) => (
-                          <span key={dt} className="wf-hint">{dt}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                {stageComplete ? (
+                  <CheckCircle size={13} style={{ color: stage.color }} />
+                ) : (
+                  <span className="wf-column-count">{data.existing.length}/{data.existing.length + data.missing.length}</span>
                 )}
-              </Droppable>
+              </div>
+              <div className="wf-column-body">
+                {/* Existing docs */}
+                {data.existing.map((doc) => (
+                  <button
+                    key={doc.pagePath}
+                    className="wf-card wf-card-exists"
+                    onClick={() => onOpenDoc(doc)}
+                  >
+                    <CheckCircle size={12} className="wf-card-check" />
+                    <div className="wf-card-content">
+                      <span className="wf-card-type">{doc.docType}</span>
+                      <span className="wf-card-title">{doc.title}</span>
+                    </div>
+                  </button>
+                ))}
+
+                {/* Missing docs — create buttons */}
+                {data.missing.map((docType) => (
+                  <button
+                    key={docType}
+                    className="wf-card wf-card-missing"
+                    onClick={() => onCreateDoc(workflow.areaId, docType)}
+                  >
+                    <Circle size={12} className="wf-card-circle" />
+                    <div className="wf-card-content">
+                      <span className="wf-card-type">{docType}</span>
+                      <span className="wf-card-action">Click para crear</span>
+                    </div>
+                    <Plus size={12} className="wf-card-plus" />
+                  </button>
+                ))}
+
+                {data.existing.length === 0 && data.missing.length === 0 && (
+                  <div className="wf-empty">Sin documentos para esta etapa</div>
+                )}
+              </div>
             </div>
-          ))}
-        </div>
-      </DragDropContext>
+          );
+        })}
+      </div>
     </div>
   );
 }
