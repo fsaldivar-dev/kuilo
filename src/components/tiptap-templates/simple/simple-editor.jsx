@@ -46,6 +46,8 @@ import { KanbanView } from "@/components/tiptap-node/kanban-node/KanbanView"
 // import { WhiteboardBlock } from "@/components/tiptap-node/whiteboard-node/whiteboard-extension"
 // import { WhiteboardView } from "@/components/tiptap-node/whiteboard-node/WhiteboardView"
 import { EmojiShortcode } from "@/components/tiptap-node/emoji-shortcode-extension"
+import { WikiLink, buildPageMentionExtension } from "@/components/tiptap-node/wiki-link-node/wiki-link-extension"
+import { PageMentionMenu } from "@/components/tiptap-node/wiki-link-node/PageMentionMenu"
 import { TableOfContents } from "@/components/tiptap-node/toc-node/toc-node-extension"
 import { TocView } from "@/components/tiptap-node/toc-node/TocView"
 import { ReactNodeViewRenderer } from "@tiptap/react"
@@ -205,7 +207,7 @@ const MobileToolbarContent = ({
   </>
 )
 
-export function SimpleEditor({ initialContent, onContentChange }) {
+export function SimpleEditor({ initialContent, onContentChange, onWikiLinkClick, pages = [] }) {
   const isMobile = useIsBreakpoint()
   const { height } = useWindowSize()
   const [mobileView, setMobileView] = useState("main")
@@ -225,6 +227,20 @@ export function SimpleEditor({ initialContent, onContentChange }) {
       onOpen: handleSlashOpen,
       onUpdate: handleSlashUpdate,
       onClose: handleSlashClose,
+    })
+  ).current
+
+  // ── Page mention (@) state ──
+  const [mentionMenu, setMentionMenu] = useState(null)
+  const pagesRef = useRef(pages)
+  pagesRef.current = pages
+
+  const mentionExtension = useRef(
+    buildPageMentionExtension({
+      getPages: () => pagesRef.current,
+      onOpen: (props) => setMentionMenu(props),
+      onUpdate: (props) => setMentionMenu(props),
+      onClose: () => setMentionMenu(null),
     })
   ).current
 
@@ -322,6 +338,8 @@ export function SimpleEditor({ initialContent, onContentChange }) {
         },
       }),
       EmojiShortcode,
+      WikiLink,
+      mentionExtension,
       TableOfContents.extend({
         addNodeView() {
           return ReactNodeViewRenderer(TocView);
@@ -360,17 +378,27 @@ export function SimpleEditor({ initialContent, onContentChange }) {
   }, [isMobile, mobileView])
 
   // Click en el chevron del toggle (pseudo-element ::before, izquierda del summary)
-  const handleToggleClick = useCallback((e) => {
+  const handleEditorClick = useCallback((e) => {
     if (!editor) return
+
+    // Wiki link click
+    const wikiLink = e.target.closest("a[data-wiki-link]")
+    if (wikiLink) {
+      e.preventDefault()
+      const title = wikiLink.getAttribute("title") || wikiLink.textContent
+      onWikiLinkClick?.(title)
+      return
+    }
+
+    // Toggle click
     const summary = e.target.closest('[data-type="toggle-summary"]')
     if (!summary) return
     const rect = summary.getBoundingClientRect()
-    // El chevron ocupa los primeros 22px desde el borde izquierdo
     if (e.clientX - rect.left <= 22) {
       e.preventDefault()
       editor.commands.toggleOpen()
     }
-  }, [editor])
+  }, [editor, onWikiLinkClick])
 
   return (
     <div className="simple-editor-wrapper">
@@ -396,13 +424,21 @@ export function SimpleEditor({ initialContent, onContentChange }) {
           )}
         </Toolbar>
 
-        <EditorContent editor={editor} role="presentation" className="simple-editor-content" onClick={handleToggleClick} />
+        <EditorContent editor={editor} role="presentation" className="simple-editor-content" onClick={handleEditorClick} />
 
         {slashMenu && (
           <SlashCommandMenu
             ref={slashMenuRef}
             suggestionProps={slashMenu}
             onClose={handleSlashClose}
+          />
+        )}
+
+        {mentionMenu && mentionMenu.items?.length > 0 && (
+          <PageMentionMenu
+            items={mentionMenu.items}
+            command={mentionMenu.command}
+            clientRect={mentionMenu.clientRect}
           />
         )}
 
