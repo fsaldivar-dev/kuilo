@@ -6,6 +6,7 @@ import {
   FileCode2,
   FileText,
   FolderOpen,
+  Globe,
   FolderPlus,
   FolderTree,
   Pencil,
@@ -22,6 +23,7 @@ export function Sidebar({
   search,
   onAddDoc,
   onExportBook,
+  onPublishSite,
   onOpenWizard,
   onOpenConnectors,
 }) {
@@ -116,6 +118,7 @@ export function Sidebar({
           <SidebarFooter
             vault={vault}
             onExportBook={onExportBook}
+            onPublishSite={onPublishSite}
             onOpenWizard={onOpenWizard}
             onOpenConnectors={onOpenConnectors}
           />
@@ -151,7 +154,7 @@ function SearchResults({ search, onOpenDoc }) {
   );
 }
 
-function SidebarFooter({ vault, onExportBook, onOpenWizard, onOpenConnectors }) {
+function SidebarFooter({ vault, onExportBook, onPublishSite, onOpenWizard, onOpenConnectors }) {
   if (vault.packageFormOpen) {
     return (
       <div className="sidebar-footer">
@@ -217,6 +220,10 @@ function SidebarFooter({ vault, onExportBook, onOpenWizard, onOpenConnectors }) 
       <button className="footer-btn book-btn" onClick={onExportBook}>
         <Download size={13} />
         Exportar libro PDF
+      </button>
+      <button className="footer-btn publish-btn" onClick={onPublishSite}>
+        <Globe size={13} />
+        Publicar en web
       </button>
       <button className="footer-btn wizard-btn" onClick={onOpenWizard}>
         <Plus size={13} />

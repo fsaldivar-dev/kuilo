@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { buildBookHtml, BOOK_CSS } from "@/lib/export-book";
+import { generateSite } from "@/lib/publish-site";
 import { generateProject } from "@/lib/project-generator";
 import { ProjectWizard } from "@/components/project-wizard/ProjectWizard";
 import { Sidebar } from "@/components/sidebar/Sidebar";
@@ -40,6 +41,20 @@ function App() {
     const vaultName = vault.vaultPath ? vault.vaultPath.split("/").pop() : "book";
     const result = await api.exportBook({ html: bookHtml, title: vaultName, css: BOOK_CSS });
     editor.setSaveState(result?.ok ? "Libro exportado" : "Cancelado");
+  };
+
+  // ── Publish to Web ──
+  const publishSite = async () => {
+    if (!api?.publishSite || !vault.packages.length) return;
+    editor.setSaveState("Generando sitio…");
+    const vaultName = vault.vaultPath ? vault.vaultPath.split("/").pop() : "docs";
+    const { files } = await generateSite(
+      vault.packages, vaultName,
+      (done, total, title) => editor.setSaveState(`Publicando ${done}/${total}: ${title}`)
+    );
+    editor.setSaveState("Eligiendo carpeta…");
+    const result = await api.publishSite({ files });
+    editor.setSaveState(result?.ok ? `Sitio publicado (${result.totalFiles} archivos)` : "Cancelado");
   };
 
   // ── Project Wizard ──
@@ -102,6 +117,7 @@ function App() {
       onOpenWizard: () => setWizardOpen(true),
       onOpenConnectors: connectors.openConnectors,
       onExportBook: exportBook,
+      onPublishSite: publishSite,
     }),
     [vault.packages]
   );
@@ -115,6 +131,7 @@ function App() {
         search={search}
         onAddDoc={addDocWithTemplate}
         onExportBook={exportBook}
+        onPublishSite={publishSite}
         onOpenWizard={() => setWizardOpen(true)}
         onOpenConnectors={connectors.openConnectors}
       />
