@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { buildBookHtml, BOOK_CSS } from "@/lib/export-book";
 import { generateSite } from "@/lib/publish-site";
 import { generateProject } from "@/lib/project-generator";
+import { generateWorkflow } from "@/lib/workflow-definitions";
 import { ProjectWizard } from "@/components/project-wizard/ProjectWizard";
 import { Sidebar } from "@/components/sidebar/Sidebar";
 import { Workspace } from "@/components/workspace/Workspace";
@@ -17,6 +18,7 @@ import { useConnectors } from "@/hooks/use-connectors";
 import { useSearch } from "@/hooks/use-search";
 import { useTabs } from "@/hooks/use-tabs";
 import { useFavorites } from "@/hooks/use-favorites";
+import { useWorkflow } from "@/hooks/use-workflow";
 
 const api = window.notesApi;
 
@@ -27,6 +29,7 @@ function App() {
   const connectors = useConnectors(backup.refreshBackupStatus);
   const search = useSearch(vault.packages);
   const tabs = useTabs();
+  const wf = useWorkflow();
   const { favorites, toggleFavorite } = useFavorites();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -78,6 +81,16 @@ function App() {
           await api.saveDoc({ packageName: pkg.packageName, pagePath: result.pagePath, sourceType: "page-json", document });
         } catch (err) {
           console.error(`Error creating ${doc.title}:`, err);
+        }
+      }
+    }
+
+    // Generate workflow.json for each area package
+    if (api?.saveWorkflow) {
+      for (const pkg of packages) {
+        const workflow = generateWorkflow(pkg.packageName);
+        if (workflow) {
+          await api.saveWorkflow({ packageName: pkg.packageName, workflow });
         }
       }
     }
@@ -164,6 +177,7 @@ function App() {
         onPublishSite={publishSite}
         onOpenWizard={() => setWizardOpen(true)}
         onOpenConnectors={connectors.openConnectors}
+        onOpenWorkflow={wf.loadWorkflow}
       />
 
       <Workspace
@@ -176,6 +190,7 @@ function App() {
         onCloseTab={handleCloseTab}
         sidebarCollapsed={sidebarCollapsed}
         onExpandSidebar={() => setSidebarCollapsed(false)}
+        workflow={wf}
       />
 
       {wizardOpen && (
