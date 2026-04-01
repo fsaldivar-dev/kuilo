@@ -1,6 +1,6 @@
-import { Mark } from "@tiptap/core";
-import { Extension } from "@tiptap/core";
+import { Mark, Extension } from "@tiptap/core";
 import Suggestion from "@tiptap/suggestion";
+import { PluginKey } from "@tiptap/pm/state";
 
 /**
  * WikiLink Mark — renders page mentions as clickable internal links.
@@ -101,6 +101,7 @@ export const buildPageMentionExtension = ({ getPages, onOpen, onUpdate, onClose 
       return [
         Suggestion({
           editor: this.editor,
+          pluginKey: new PluginKey("pageMention"),
           ...this.options.suggestion,
         }),
       ];
