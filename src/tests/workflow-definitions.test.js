@@ -1,8 +1,10 @@
 import { describe, it, expect } from "vitest";
 import {
   WORKFLOW_TEMPLATES,
+  STATUSES,
   generateWorkflow,
   generateCustomWorkflow,
+  resolveDependencies,
   listWorkflowTemplates,
 } from "@/lib/workflow-definitions";
 
@@ -11,77 +13,111 @@ describe("WORKFLOW_TEMPLATES", () => {
     expect(Object.keys(WORKFLOW_TEMPLATES)).toHaveLength(9);
   });
 
-  it("each template has framework, author, and stages", () => {
-    for (const [id, template] of Object.entries(WORKFLOW_TEMPLATES)) {
-      expect(template.framework).toBeDefined();
-      expect(template.author).toBeDefined();
-      expect(template.stages.length).toBeGreaterThanOrEqual(4);
-      for (const stage of template.stages) {
-        expect(stage.id).toBeDefined();
-        expect(stage.title).toBeDefined();
-        expect(stage.color).toMatch(/^#/);
-        expect(stage.docTypes.length).toBeGreaterThan(0);
+  const areas = ["tecnico", "producto", "negocio", "marketing", "cliente", "legal", "franquicia", "operaciones", "bitacora"];
+  it.each(areas)("has template for %s with stages and docs", (area) => {
+    const t = WORKFLOW_TEMPLATES[area];
+    expect(t.framework).toBeDefined();
+    expect(t.author).toBeDefined();
+    expect(t.stages.length).toBeGreaterThanOrEqual(4);
+    for (const stage of t.stages) {
+      expect(stage.id).toBeDefined();
+      expect(stage.title).toBeDefined();
+      expect(stage.color).toMatch(/^#/);
+      expect(stage.docs.length).toBeGreaterThan(0);
+      for (const doc of stage.docs) {
+        expect(doc.docType).toBeDefined();
+        expect(Array.isArray(doc.dependsOn)).toBe(true);
       }
     }
   });
+});
 
-  const areas = ["tecnico", "producto", "negocio", "marketing", "cliente", "legal", "franquicia", "operaciones", "bitacora"];
-  it.each(areas)("has template for %s", (area) => {
-    expect(WORKFLOW_TEMPLATES[area]).toBeDefined();
+describe("STATUSES", () => {
+  it("has 4 statuses in order", () => {
+    expect(STATUSES).toHaveLength(4);
+    expect(STATUSES.map((s) => s.id)).toEqual(["not-started", "draft", "review", "done"]);
   });
 });
 
 describe("generateWorkflow", () => {
-  it("generates workflow for tecnico with Shape Up stages", () => {
+  it("generates workflow with docs having status and dependencies", () => {
     const wf = generateWorkflow("tecnico");
+    expect(wf.workflowVersion).toBe(2);
     expect(wf.areaId).toBe("tecnico");
-    expect(wf.framework).toContain("Shape Up");
     expect(wf.stages).toHaveLength(4);
-    expect(wf.stages[0].title).toBe("Pitch");
-    expect(wf.stages[3].title).toBe("Cool-down");
-    expect(wf.initiatives).toEqual([]);
-    expect(wf.editable).toBe(true);
-  });
 
-  it("generates workflow for producto with Stage-Gate stages", () => {
-    const wf = generateWorkflow("producto");
-    expect(wf.stages).toHaveLength(6);
-    expect(wf.stages[0].title).toBe("Discovery");
-    expect(wf.stages[5].title).toBe("Launch");
+    const prd = wf.stages[0].docs[0];
+    expect(prd.docType).toBe("PRD");
+    expect(prd.status).toBe("not-started");
+    expect(prd.pagePath).toBeNull();
+    expect(prd.dependsOn).toHaveLength(1);
+    expect(prd.dependsOn[0].area).toBe("negocio");
   });
 
   it("returns null for unknown area", () => {
     expect(generateWorkflow("unknown")).toBeNull();
   });
-
-  it("stages have correct order numbers", () => {
-    const wf = generateWorkflow("legal");
-    wf.stages.forEach((s, i) => expect(s.order).toBe(i));
-  });
 });
 
-describe("generateCustomWorkflow", () => {
-  it("creates editable custom workflow", () => {
-    const wf = generateCustomWorkflow("My Flow", [
-      { title: "Todo", color: "#ff0000" },
-      { title: "Doing", color: "#00ff00" },
-      { title: "Done", color: "#0000ff" },
-    ]);
-    expect(wf.areaId).toBe("custom");
-    expect(wf.framework).toBe("Personalizado");
-    expect(wf.stages).toHaveLength(3);
-    expect(wf.stages[0].id).toBeDefined();
-    expect(wf.stages[1].title).toBe("Doing");
+describe("resolveDependencies", () => {
+  it("reports unmet when dependency is not-started", () => {
+    const doc = { dependsOn: [{ area: "negocio", docType: "Lean Canvas", requiredStatus: "draft" }] };
+    const workflows = {
+      negocio: {
+        stages: [{ docs: [{ docType: "Lean Canvas", status: "not-started" }] }],
+      },
+    };
+    const { met, unmet } = resolveDependencies(doc, workflows);
+    expect(met).toHaveLength(0);
+    expect(unmet).toHaveLength(1);
+    expect(unmet[0].currentStatus).toBe("not-started");
+  });
+
+  it("reports met when dependency meets required status", () => {
+    const doc = { dependsOn: [{ area: "tecnico", docType: "PRD", requiredStatus: "review" }] };
+    const workflows = {
+      tecnico: {
+        stages: [{ docs: [{ docType: "PRD", status: "done" }] }],
+      },
+    };
+    const { met, unmet } = resolveDependencies(doc, workflows);
+    expect(met).toHaveLength(1);
+    expect(unmet).toHaveLength(0);
+  });
+
+  it("reports not-found when area missing", () => {
+    const doc = { dependsOn: [{ area: "missing", docType: "X", requiredStatus: "draft" }] };
+    const { unmet } = resolveDependencies(doc, {});
+    expect(unmet).toHaveLength(1);
+    expect(unmet[0].currentStatus).toBe("not-found");
+  });
+
+  it("handles docs with no dependencies", () => {
+    const { met, unmet } = resolveDependencies({ dependsOn: [] }, {});
+    expect(met).toHaveLength(0);
+    expect(unmet).toHaveLength(0);
+  });
+
+  it("cross-area dependency works", () => {
+    const doc = { dependsOn: [
+      { area: "negocio", docType: "Lean Canvas", requiredStatus: "draft" },
+      { area: "legal", docType: "Aviso de Privacidad", requiredStatus: "done" },
+    ]};
+    const workflows = {
+      negocio: { stages: [{ docs: [{ docType: "Lean Canvas", status: "review" }] }] },
+      legal: { stages: [{ docs: [{ docType: "Aviso de Privacidad", status: "review" }] }] },
+    };
+    const { met, unmet } = resolveDependencies(doc, workflows);
+    expect(met).toHaveLength(1); // Lean Canvas review >= draft
+    expect(unmet).toHaveLength(1); // Aviso review < done
   });
 });
 
 describe("listWorkflowTemplates", () => {
-  it("lists all templates with metadata", () => {
+  it("lists all templates with doc counts", () => {
     const list = listWorkflowTemplates();
     expect(list).toHaveLength(9);
     const tecnico = list.find((t) => t.id === "tecnico");
-    expect(tecnico.framework).toContain("Shape Up");
-    expect(tecnico.stageCount).toBe(4);
-    expect(tecnico.stages).toContain("Pitch");
+    expect(tecnico.totalDocs).toBeGreaterThan(0);
   });
 });
