@@ -79,13 +79,18 @@ describe("MCP Server", () => {
 
   // ── tools/list ──
 
-  it("lists 8 tools", async () => {
+  it("lists 13 tools", async () => {
     const { tools } = await client.listTools();
-    expect(tools).toHaveLength(8);
+    expect(tools).toHaveLength(13);
     const names = tools.map(t => t.name);
     expect(names).toContain("get_vault_summary");
     expect(names).toContain("read_document");
     expect(names).toContain("get_document_context");
+    expect(names).toContain("delete_document");
+    expect(names).toContain("rename_document");
+    expect(names).toContain("update_meta");
+    expect(names).toContain("list_versions");
+    expect(names).toContain("validate_document");
   });
 
   // ── get_vault_summary ──
@@ -230,5 +235,98 @@ describe("MCP Server", () => {
     });
     const data = JSON.parse(result.content[0].text);
     expect(data.document.blocks.length).toBeGreaterThanOrEqual(2);
+  });
+
+  // ── rename_document ──
+
+  it("rename_document changes title in meta", async () => {
+    const result = await client.callTool({
+      name: "rename_document",
+      arguments: { packageName: "test-pkg", pagePath: "api-docs/page.json", title: "New API Title" },
+    });
+    const data = JSON.parse(result.content[0].text);
+    expect(data.title).toBe("New API Title");
+
+    // Verify persisted
+    const read = await client.callTool({
+      name: "read_document",
+      arguments: { packageName: "test-pkg", pagePath: "api-docs/page.json" },
+    });
+    expect(JSON.parse(read.content[0].text).document.meta.title).toBe("New API Title");
+  });
+
+  it("rename_document rejects empty title", async () => {
+    const result = await client.callTool({
+      name: "rename_document",
+      arguments: { packageName: "test-pkg", pagePath: "api-docs/page.json", title: "" },
+    });
+    expect(result.isError).toBe(true);
+  });
+
+  // ── update_meta ──
+
+  it("update_meta patches icon and cover without touching blocks", async () => {
+    const result = await client.callTool({
+      name: "update_meta",
+      arguments: {
+        packageName: "test-pkg", pagePath: "api-docs/page.json",
+        meta: { icon: "rocket", cover: { type: "color", value: "#ff0000" } },
+      },
+    });
+    const data = JSON.parse(result.content[0].text);
+    expect(data.meta.icon).toBe("rocket");
+    expect(data.meta.cover.value).toBe("#ff0000");
+    expect(data.meta.title).toBe("New API Title"); // title preserved from rename test
+  });
+
+  // ── list_versions ──
+
+  it("list_versions returns snapshots after updates", async () => {
+    const result = await client.callTool({
+      name: "list_versions",
+      arguments: { packageName: "test-pkg", pagePath: "intro/page.json" },
+    });
+    const data = JSON.parse(result.content[0].text);
+    expect(data.length).toBeGreaterThanOrEqual(1); // update + append created snapshots
+    expect(data[0].fileName).toBeDefined();
+    expect(data[0].savedAt).toBeDefined();
+  });
+
+  // ── validate_document ──
+
+  it("validate_document passes for valid doc", async () => {
+    const result = await client.callTool({
+      name: "validate_document",
+      arguments: { packageName: "test-pkg", pagePath: "api-docs/page.json" },
+    });
+    const data = JSON.parse(result.content[0].text);
+    expect(data.valid).toBe(true);
+    expect(data.errors).toHaveLength(0);
+  });
+
+  // ── delete_document ──
+  // Run last since it removes a doc
+
+  it("delete_document removes doc and folder", async () => {
+    // Create a throwaway doc first
+    const created = await client.callTool({
+      name: "create_document",
+      arguments: { packageName: "test-pkg", title: "To Delete" },
+    });
+    const { pagePath } = JSON.parse(created.content[0].text);
+
+    const result = await client.callTool({
+      name: "delete_document",
+      arguments: { packageName: "test-pkg", pagePath },
+    });
+    const data = JSON.parse(result.content[0].text);
+    expect(data.deleted).toBe(true);
+
+    // Verify it's gone
+    const read = await client.callTool({
+      name: "read_document",
+      arguments: { packageName: "test-pkg", pagePath },
+    });
+    expect(read.isError).toBe(true);
   });
 });
