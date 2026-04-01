@@ -8,10 +8,15 @@
  * - Se inserta via slash command "/toggle"
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { Editor } from "@tiptap/core";
 import { StarterKit } from "@tiptap/starter-kit";
 import { ToggleListNode, ToggleSummaryNode } from "@/components/tiptap-node/toggle-node/toggle-node-extension";
+
+// ProseMirror DOMObserver uses setTimeout(flush, 50) which fires after
+// jsdom cleanup. Use fake timers to flush pending timers before destroy.
+beforeEach(() => vi.useFakeTimers());
+afterEach(() => vi.useRealTimers());
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -52,6 +57,10 @@ describe("toggle node in editor", () => {
   let editor;
   beforeEach(() => {
     editor = makeEditor();
+  });
+  afterEach(() => {
+    vi.advanceTimersByTime(100);
+    editor?.destroy();
   });
 
   it("editor initializes with toggle extensions registered", () => {
@@ -94,6 +103,10 @@ describe("toggle open/closed state", () => {
   beforeEach(() => {
     editor = makeEditor();
     editor.commands.insertToggleList();
+  });
+  afterEach(() => {
+    vi.advanceTimersByTime(100);
+    editor?.destroy();
   });
 
   it("toggle is open by default", () => {
