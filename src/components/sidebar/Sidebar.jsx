@@ -8,6 +8,7 @@ import {
   FileText,
   FolderOpen,
   Globe,
+  LayoutGrid,
   Star,
   StarOff,
   FolderPlus,
@@ -33,6 +34,7 @@ export function Sidebar({
   onPublishSite,
   onOpenWizard,
   onOpenConnectors,
+  onOpenWorkflow,
 }) {
   const addDoc = onAddDoc || vault.addDocToPackage;
   const openDoc = onOpenDoc || vault.openDoc;
@@ -90,6 +92,15 @@ export function Sidebar({
                       <FolderTree size={11} />
                       <span>{pkg.name}</span>
                     </button>
+                    {onOpenWorkflow && (
+                      <button
+                        className="icon-btn"
+                        onClick={() => onOpenWorkflow(pkg.name)}
+                        title="Workflow board"
+                      >
+                        <LayoutGrid size={11} />
+                      </button>
+                    )}
                     <button
                       className="icon-btn"
                       onClick={() => addDoc(pkg.name)}
