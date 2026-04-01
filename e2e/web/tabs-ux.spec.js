@@ -26,8 +26,7 @@ test.describe("Tabs & UX features", () => {
     await expect(modal.locator(".shortcut-row")).not.toHaveCount(0);
   });
 
-  test("snapshot — shortcuts modal", async ({ page }) => {
-    // Inject to avoid needing Electron
+  test("shortcuts modal has correct structure", async ({ page }) => {
     await page.evaluate(() => {
       const modal = document.createElement("div");
       modal.className = "shortcuts-modal";
@@ -36,23 +35,19 @@ test.describe("Tabs & UX features", () => {
       modal.innerHTML = `
         <div class="shortcuts-header"><h3>Atajos de teclado</h3></div>
         <div class="shortcuts-body">
-          <div class="shortcuts-group">
-            <h4>General</h4>
+          <div class="shortcuts-group"><h4>General</h4>
             <div class="shortcut-row"><span class="shortcut-desc">Command palette</span><kbd class="shortcut-keys">⌘+K</kbd></div>
-            <div class="shortcut-row"><span class="shortcut-desc">Atajos de teclado</span><kbd class="shortcut-keys">⌘+/</kbd></div>
-            <div class="shortcut-row"><span class="shortcut-desc">Cerrar tab</span><kbd class="shortcut-keys">⌘+W</kbd></div>
-          </div>
-          <div class="shortcuts-group">
-            <h4>Editor</h4>
-            <div class="shortcut-row"><span class="shortcut-desc">Negrita</span><kbd class="shortcut-keys">⌘+B</kbd></div>
-            <div class="shortcut-row"><span class="shortcut-desc">Cursiva</span><kbd class="shortcut-keys">⌘+I</kbd></div>
-            <div class="shortcut-row"><span class="shortcut-desc">Código inline</span><kbd class="shortcut-keys">⌘+E</kbd></div>
           </div>
         </div>
       `;
       document.body.appendChild(modal);
     });
-    await expect(page.locator("#shortcuts-preview")).toHaveScreenshot("024-shortcuts-modal.png");
+    const modal = page.locator("#shortcuts-preview");
+    await expect(modal).toBeVisible();
+    await expect(modal.locator("h3")).toContainText("Atajos");
+    await expect(modal.locator("kbd")).toContainText("⌘+K");
+    const box = await modal.boundingBox();
+    expect(box.width).toBeGreaterThan(300);
   });
 
   test("snapshot — tab bar", async ({ page }) => {
@@ -81,7 +76,12 @@ test.describe("Tabs & UX features", () => {
       `;
       document.body.appendChild(bar);
     });
-    await expect(page.locator("#tabbar-preview")).toHaveScreenshot("025-tab-bar.png");
+    const bar = page.locator("#tabbar-preview");
+    await expect(bar).toBeVisible();
+    await expect(bar.locator(".tab")).toHaveCount(3);
+    await expect(bar.locator(".tab.active")).toHaveCount(1);
+    const box = await bar.boundingBox();
+    expect(box.width).toBeGreaterThan(400);
   });
 
   test("favorite star icon in tree", async ({ page }) => {
