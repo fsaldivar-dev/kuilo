@@ -5,8 +5,8 @@
  * Output: { files: [{ path, content }], index: string }
  */
 
-import { pageDocumentToHtml } from "@/lib/page-document";
 import { markdownToHtml } from "@/lib/markdown-bridge";
+import { blocksToMarkdown } from "@/lib/blocks-to-markdown";
 
 const api = window.notesApi;
 
@@ -26,7 +26,11 @@ async function readPageHtml(packageName, pagePath, sourceType) {
   try {
     const result = await api.readDoc({ packageName, pagePath });
     if (result.sourceType === "page-json" || sourceType === "page-json") {
-      return pageDocumentToHtml(result.document);
+      // Convert Tiptap JSON blocks → Markdown → HTML
+      // This preserves diagrams as mermaid code blocks, charts, kanban, etc.
+      const blocks = result.document?.blocks || [];
+      const md = blocksToMarkdown(blocks);
+      return markdownToHtml(md);
     }
     return markdownToHtml(result.content || "");
   } catch {
@@ -52,6 +56,12 @@ function buildNav(packages, allPages, activePath) {
 }
 
 function wrapPage(title, nav, content, vaultName) {
+  // Convert mermaid code blocks to <pre class="mermaid"> for mermaid.js
+  const processedContent = content.replace(
+    /<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g,
+    '<pre class="mermaid">$1</pre>'
+  );
+
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -68,9 +78,11 @@ function wrapPage(title, nav, content, vaultName) {
   </aside>
   <main class="site-content">
     <h1>${title}</h1>
-    ${content}
+    ${processedContent}
   </main>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"><\/script>
+<script>mermaid.initialize({ startOnLoad: true, theme: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'default' });<\/script>
 </body>
 </html>`;
 }
