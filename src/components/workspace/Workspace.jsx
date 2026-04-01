@@ -16,6 +16,7 @@ import { Breadcrumb } from "@/components/page-identity/Breadcrumb";
 import { DiffView } from "@/components/workspace/DiffView";
 import { BacklinksPanel } from "@/components/workspace/BacklinksPanel";
 import { resolveWikiLink } from "@/lib/wiki-links";
+import { TabBar } from "@/components/workspace/TabBar";
 import { useState, useEffect, useMemo } from "react";
 
 const api = window.notesApi;
@@ -32,7 +33,7 @@ function flattenPages(packages) {
   return result;
 }
 
-export function Workspace({ vault, editor, sidebarCollapsed, onExpandSidebar }) {
+export function Workspace({ vault, editor, tabs, favorites, onToggleFavorite, onSwitchTab, onCloseTab, sidebarCollapsed, onExpandSidebar }) {
   const allPages = useMemo(() => flattenPages(vault.packages), [vault.packages]);
   const [backlinksOpen, setBacklinksOpen] = useState(false);
   const [backlinks, setBacklinks] = useState([]);
@@ -59,6 +60,17 @@ export function Workspace({ vault, editor, sidebarCollapsed, onExpandSidebar }) 
 
   return (
     <main className="workspace">
+      {tabs && (
+        <TabBar
+          tabs={tabs.tabs}
+          activeTabId={tabs.activeTabId}
+          onSwitch={onSwitchTab}
+          onClose={onCloseTab}
+          onCloseOthers={tabs.closeOtherTabs}
+          favorites={favorites}
+          onToggleFavorite={onToggleFavorite}
+        />
+      )}
       {sidebarCollapsed && (
         <button
           className="sidebar-expand-btn"
