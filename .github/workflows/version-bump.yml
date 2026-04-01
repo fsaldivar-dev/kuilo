@@ -32,13 +32,22 @@ jobs:
             echo "bump=none" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Bump version
+      - name: Bump version and create release
         if: steps.label.outputs.bump != 'none'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
           npm version ${{ steps.label.outputs.bump }} -m "v%s"
+          VERSION=$(node -p "require('./package.json').version")
           git push --follow-tags
+
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          gh release create "v${VERSION}" \
+            --title "Kuilo v${VERSION} — ${PR_TITLE}" \
+            --generate-notes
 
       - name: Skip — no version label
         if: steps.label.outputs.bump == 'none'
