@@ -28,6 +28,7 @@ import { generateProject } from "@/lib/project-generator";
 import { EmojiPicker } from "@/components/page-identity/EmojiPicker";
 import { CoverImage } from "@/components/page-identity/CoverImage";
 import { Breadcrumb } from "@/components/page-identity/Breadcrumb";
+import { useEditorState } from "@/hooks/use-editor-state";
 import { useVault } from "@/hooks/use-vault";
 
 const api = window.notesApi;
@@ -35,7 +36,8 @@ const api = window.notesApi;
 // ─── App ─────────────────────────────────────────────────────────────
 
 function App() {
-  const vault = useVault();
+  const editor = useEditorState();
+  const vault = useVault(editor);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [connectorsOpen, setConnectorsOpen] = useState(false);
   const [mcpInfo, setMcpInfo] = useState(null);
@@ -47,25 +49,25 @@ function App() {
   // ── Export book ──
   const exportBook = async () => {
     if (!api?.exportBook || !vault.packages.length) return;
-    vault.setSaveState("Preparando libro…");
+    editor.setSaveState("Preparando libro…");
     const bookHtml = await buildBookHtml(
       vault.packages,
       vault.vaultPath ? vault.vaultPath.split("/").pop() : "Documentación",
-      (done, total, title) => vault.setSaveState(`Leyendo ${done}/${total}: ${title}`)
+      (done, total, title) => editor.setSaveState(`Leyendo ${done}/${total}: ${title}`)
     );
-    vault.setSaveState("Generando PDF…");
+    editor.setSaveState("Generando PDF…");
     const vaultName = vault.vaultPath ? vault.vaultPath.split("/").pop() : "book";
     const result = await api.exportBook({ html: bookHtml, title: vaultName, css: BOOK_CSS });
-    vault.setSaveState(result?.ok ? "Libro exportado" : "Cancelado");
+    editor.setSaveState(result?.ok ? "Libro exportado" : "Cancelado");
   };
 
   // ── Project Wizard ──
   const handleWizardComplete = async ({ projectName, projectDesc, vaultPath: newVault, areas, githubUrl, githubToken }) => {
     setWizardOpen(false);
 
-    if (newVault) vault.setSaveState("Creando proyecto…");
+    if (newVault) editor.setSaveState("Creando proyecto…");
 
-    vault.setSaveState("Creando proyecto…");
+    editor.setSaveState("Creando proyecto…");
     const packages = generateProject(projectName, areas);
 
     for (const pkg of packages) {
@@ -84,17 +86,17 @@ function App() {
     await vault.refreshTree();
 
     if (githubUrl && githubToken && api?.backupInit && api?.backupCommit && api?.backupPush) {
-      vault.setSaveState("Configurando backup…");
+      editor.setSaveState("Configurando backup…");
       try {
         await api.backupInit();
         await api.backupCommit({ message: `Proyecto "${projectName}" creado` });
         await api.backupPush({ url: githubUrl, token: githubToken });
-        vault.setSaveState(`Proyecto creado + backup en GitHub`);
+        editor.setSaveState(`Proyecto creado + backup en GitHub`);
       } catch (err) {
-        vault.setSaveState(`Proyecto creado (backup falló: ${err.message})`);
+        editor.setSaveState(`Proyecto creado (backup falló: ${err.message})`);
       }
     } else {
-      vault.setSaveState(`Proyecto "${projectName}" creado`);
+      editor.setSaveState(`Proyecto "${projectName}" creado`);
     }
   };
 
@@ -109,21 +111,21 @@ function App() {
 
   const doBackupCommit = async () => {
     if (!api?.backupCommit) return;
-    vault.setSaveState("Haciendo backup…");
+    editor.setSaveState("Haciendo backup…");
     await api.backupCommit({ message: `Manual backup ${new Date().toLocaleString("es-MX")}` });
     await refreshBackupStatus();
-    vault.setSaveState("Backup guardado");
+    editor.setSaveState("Backup guardado");
   };
 
   const doBackupPush = async () => {
     if (!api?.backupPush || !backupRemoteUrl || !backupToken) return;
-    vault.setSaveState("Subiendo a remoto…");
+    editor.setSaveState("Subiendo a remoto…");
     try {
       await api.backupPush({ url: backupRemoteUrl, token: backupToken });
       await refreshBackupStatus();
-      vault.setSaveState("Push completado");
+      editor.setSaveState("Push completado");
     } catch (err) {
-      vault.setSaveState(`Error: ${err.message}`);
+      editor.setSaveState(`Error: ${err.message}`);
     }
   };
 
@@ -361,8 +363,8 @@ function App() {
             {/* Cover image */}
             {vault.sourceType === "page-json" && (
               <CoverImage
-                cover={vault.pageMeta.cover}
-                onChange={(cover) => vault.handleMetaChange({ cover })}
+                cover={editor.pageMeta.cover}
+                onChange={(cover) => editor.handleMetaChange({ cover })}
               />
             )}
 
@@ -373,8 +375,8 @@ function App() {
                 <div className="doc-title-row">
                   {vault.sourceType === "page-json" && (
                     <EmojiPicker
-                      value={vault.pageMeta.icon}
-                      onChange={(icon) => vault.handleMetaChange({ icon })}
+                      value={editor.pageMeta.icon}
+                      onChange={(icon) => editor.handleMetaChange({ icon })}
                     />
                   )}
                   <h1 className="doc-title">{vault.activeDoc.title}</h1>
@@ -382,8 +384,8 @@ function App() {
               </div>
               <div className="doc-controls">
                 <span className="save-indicator">
-                  <span className={`save-dot ${vault.saveState === "Guardando..." || vault.saveState === "Restaurando..." ? "saving" : ""}`} />
-                  {vault.saveState}
+                  <span className={`save-dot ${editor.saveState === "Guardando..." || editor.saveState === "Restaurando..." ? "saving" : ""}`} />
+                  {editor.saveState}
                 </span>
                 <span className={`source-badge ${vault.sourceType || "none"}`}>
                   {vault.sourceType === "page-json" ? "Structured" : vault.sourceType === "legacy-markdown" ? "Legacy" : "—"}
@@ -400,16 +402,16 @@ function App() {
                 {vault.sourceType === "page-json" && (
                   <>
                     <button
-                      className={`control-btn ${vault.jsonViewOpen ? "active" : ""}`}
-                      onClick={() => vault.setJsonViewOpen((c) => !c)}
+                      className={`control-btn ${editor.jsonViewOpen ? "active" : ""}`}
+                      onClick={() => editor.setJsonViewOpen((c) => !c)}
                       title="Ver JSON"
                     >
                       <FileCode2 size={13} />
                       JSON
                     </button>
                     <button
-                      className={`control-btn ${vault.historyOpen ? "active" : ""}`}
-                      onClick={() => vault.setHistoryOpen((c) => !c)}
+                      className={`control-btn ${editor.historyOpen ? "active" : ""}`}
+                      onClick={() => editor.setHistoryOpen((c) => !c)}
                       title="Historial de versiones"
                     >
                       <History size={13} />
@@ -422,8 +424,8 @@ function App() {
                     <button
                       className="control-btn"
                       onClick={() => {
-                        if (vault.sourceType === "page-json" && vault.pageDocument?.blocks) {
-                          const md = blocksToMarkdown(vault.pageDocument.blocks);
+                        if (vault.sourceType === "page-json" && editor.pageDocument?.blocks) {
+                          const md = blocksToMarkdown(editor.pageDocument.blocks);
                           const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
                           const url = URL.createObjectURL(blob);
                           const a = document.createElement("a"); a.href = url;
@@ -454,9 +456,9 @@ function App() {
                         const el = document.querySelector(".simple-editor");
                         if (!el) return;
                         if (api?.exportPdf) {
-                          vault.setSaveState("Generando PDF…");
+                          editor.setSaveState("Generando PDF…");
                           const result = await api.exportPdf({ html: el.innerHTML, title: vault.activeDoc.title });
-                          vault.setSaveState(result?.ok ? "PDF exportado" : "Cancelado");
+                          editor.setSaveState(result?.ok ? "PDF exportado" : "Cancelado");
                         } else {
                           exportPdf(el.innerHTML, vault.activeDoc.title);
                         }
@@ -472,32 +474,32 @@ function App() {
 
             {/* Editor area */}
             <div className="editor-area">
-              {vault.sourceType === "page-json" && vault.jsonViewOpen ? (
+              {vault.sourceType === "page-json" && editor.jsonViewOpen ? (
                 <div className="json-canvas">
-                  <pre>{JSON.stringify(vault.pageDocument, null, 2)}</pre>
+                  <pre>{JSON.stringify(editor.pageDocument, null, 2)}</pre>
                 </div>
               ) : (
                 <SimpleEditor
                   key={vault.activeDoc?.pagePath}
-                  initialContent={vault.editorHtml}
-                  onContentChange={vault.handleEditorChange}
+                  initialContent={editor.editorHtml}
+                  onContentChange={editor.handleEditorChange}
                 />
               )}
 
               {/* History panel */}
-              {vault.historyOpen && vault.sourceType === "page-json" && (
+              {editor.historyOpen && vault.sourceType === "page-json" && (
                 <aside className="history-panel">
                   <div className="history-header">
                     <h3>Historial</h3>
-                    <button className="history-close" onClick={() => vault.setHistoryOpen(false)}>
+                    <button className="history-close" onClick={() => editor.setHistoryOpen(false)}>
                       <X size={13} />
                     </button>
                   </div>
                   <div className="history-list">
-                    {vault.versions.length === 0 ? (
+                    {editor.versions.length === 0 ? (
                       <p className="history-empty">Aún no hay snapshots guardados.</p>
                     ) : (
-                      vault.versions.map((version) => (
+                      editor.versions.map((version) => (
                         <div className="history-item" key={version.id}>
                           <div className="history-item-info">
                             <strong>v{version.version}</strong>
@@ -514,7 +516,7 @@ function App() {
                           </div>
                           <button
                             className="restore-btn"
-                            onClick={() => vault.restoreVersion(version.fileName)}
+                            onClick={() => editor.restoreVersion(version.fileName)}
                           >
                             Restaurar
                           </button>
