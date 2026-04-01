@@ -12,6 +12,7 @@ import { blocksToMarkdown } from "@/lib/blocks-to-markdown";
 import { EmojiPicker } from "@/components/page-identity/EmojiPicker";
 import { CoverImage } from "@/components/page-identity/CoverImage";
 import { Breadcrumb } from "@/components/page-identity/Breadcrumb";
+import { DiffView } from "@/components/workspace/DiffView";
 
 const api = window.notesApi;
 
@@ -48,7 +49,13 @@ export function Workspace({ vault, editor, sidebarCollapsed, onExpandSidebar }) 
 
           {/* Editor area */}
           <div className="editor-area">
-            {vault.sourceType === "page-json" && editor.jsonViewOpen ? (
+            {editor.diffEntries ? (
+              <DiffView
+                entries={editor.diffEntries}
+                versionLabel={editor.diffVersionLabel}
+                onClose={editor.closeDiff}
+              />
+            ) : vault.sourceType === "page-json" && editor.jsonViewOpen ? (
               <div className="json-canvas">
                 <pre>{JSON.stringify(editor.pageDocument, null, 2)}</pre>
               </div>
@@ -212,6 +219,12 @@ function HistoryPanel({ editor, sourceType }) {
                     : "Sin fecha"}
                 </time>
               </div>
+              <button
+                className="compare-btn"
+                onClick={() => editor.compareVersion(version.fileName, `v${version.version}`)}
+              >
+                Comparar
+              </button>
               <button
                 className="restore-btn"
                 onClick={() => editor.restoreVersion(version.fileName)}
