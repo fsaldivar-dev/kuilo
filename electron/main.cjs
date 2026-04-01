@@ -715,6 +715,110 @@ safeHandle("notes:search-content", async (_, { query }) => {
   return results;
 });
 
+// ─── AI Chat ─────────────────────────────────────────────────────────────────
+
+safeHandle("notes:ai-chat", async (_, { messages, provider, apiKey, vaultContext }) => {
+  if (!apiKey) return { error: "API key requerida. Configúrala en Conectores AI." };
+
+  const systemPrompt = `Eres el asistente de documentación de Kuilo. Responde de forma concisa y práctica en español.
+
+Contexto del vault:
+${vaultContext || "Sin contexto disponible."}
+
+Reglas:
+- Responde basándote SOLO en el contexto del vault cuando sea relevante
+- Si no sabes algo, dilo — no inventes
+- Cuando menciones un documento del vault, usa el formato [[título del documento]] para que sea clickeable. Ejemplo: "Revisa [[Customer Persona]] para más detalles"
+- Sugiere documentos del vault cuando sea útil
+- Respuestas cortas, directo al punto`;
+
+  try {
+    if (provider === "anthropic") {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 1024,
+          system: systemPrompt,
+          messages: messages.map((m) => ({ role: m.role, content: m.content })),
+        }),
+      });
+      const data = await res.json();
+      if (data.error) return { error: data.error.message };
+      return { content: data.content?.[0]?.text || "", provider: "anthropic" };
+    }
+
+    if (provider === "openai") {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: "gpt-4o-mini",
+          max_tokens: 1024,
+          messages: [{ role: "system", content: systemPrompt }, ...messages.map((m) => ({ role: m.role, content: m.content }))],
+        }),
+      });
+      const data = await res.json();
+      if (data.error) return { error: data.error.message };
+      return { content: data.choices?.[0]?.message?.content || "", provider: "openai" };
+    }
+
+    if (provider === "gemini") {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: systemPrompt }] },
+          contents: messages.map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] })),
+        }),
+      });
+      const data = await res.json();
+      if (data.error) return { error: data.error.message };
+      return { content: data.candidates?.[0]?.content?.parts?.[0]?.text || "", provider: "gemini" };
+    }
+
+    if (provider === "groq") {
+      // Groq uses OpenAI-compatible API
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: "llama-3.3-70b-versatile",
+          max_tokens: 1024,
+          messages: [{ role: "system", content: systemPrompt }, ...messages.map((m) => ({ role: m.role, content: m.content }))],
+        }),
+      });
+      const data = await res.json();
+      if (data.error) return { error: data.error.message };
+      return { content: data.choices?.[0]?.message?.content || "", provider: "groq" };
+    }
+
+    if (provider === "cohere") {
+      const res = await fetch("https://api.cohere.com/v2/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: "command-r",
+          messages: [{ role: "system", content: systemPrompt }, ...messages.map((m) => ({ role: m.role, content: m.content }))],
+        }),
+      });
+      const data = await res.json();
+      if (data.message) return { error: data.message };
+      return { content: data.message?.content?.[0]?.text || data.text || "", provider: "cohere" };
+    }
+
+    return { error: `Provider "${provider}" no soportado.` };
+  } catch (err) {
+    return { error: err.message };
+  }
+});
+
+safeHandle("notes:open-external-window", async (_, { url }) => {
+  shell.openExternal(url);
+  return { ok: true };
+});
+
 // ─── MCP Connectors ──────────────────────────────────────────────────────────
 
 const isMac = process.platform === "darwin";

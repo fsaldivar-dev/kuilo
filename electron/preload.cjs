@@ -33,6 +33,9 @@ contextBridge.exposeInMainWorld("notesApi", {
   // Workflow
   readWorkflow: (payload) => ipcRenderer.invoke("notes:read-workflow", payload),
   saveWorkflow: (payload) => ipcRenderer.invoke("notes:save-workflow", payload),
+  // AI Chat
+  aiChat: (payload) => ipcRenderer.invoke("notes:ai-chat", payload),
+  openExternalWindow: (payload) => ipcRenderer.invoke("notes:open-external-window", payload),
   // MCP Connectors
   getMcpInfo: () => ipcRenderer.invoke("notes:get-mcp-info"),
   configureAiConnector: (payload) => ipcRenderer.invoke("notes:configure-ai-connector", payload),
