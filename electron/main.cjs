@@ -783,14 +783,8 @@ Reglas:
   }
 });
 
-safeHandle("notes:open-external-window", async (_, { url, title }) => {
-  const win = new BrowserWindow({
-    width: 1000,
-    height: 700,
-    title: title || "Kuilo",
-    webPreferences: { nodeIntegration: false, contextIsolation: true },
-  });
-  win.loadURL(url);
+safeHandle("notes:open-external-window", async (_, { url }) => {
+  shell.openExternal(url);
   return { ok: true };
 });
 
