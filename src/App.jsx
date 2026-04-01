@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { buildBookHtml, BOOK_CSS } from "@/lib/export-book";
 import { generateSite } from "@/lib/publish-site";
 import { generateProject } from "@/lib/project-generator";
+import { generateWorkflow } from "@/lib/workflow-definitions";
 import { ProjectWizard } from "@/components/project-wizard/ProjectWizard";
 import { Sidebar } from "@/components/sidebar/Sidebar";
 import { Workspace } from "@/components/workspace/Workspace";
@@ -80,6 +81,16 @@ function App() {
           await api.saveDoc({ packageName: pkg.packageName, pagePath: result.pagePath, sourceType: "page-json", document });
         } catch (err) {
           console.error(`Error creating ${doc.title}:`, err);
+        }
+      }
+    }
+
+    // Generate workflow.json for each area package
+    if (api?.saveWorkflow) {
+      for (const pkg of packages) {
+        const workflow = generateWorkflow(pkg.packageName);
+        if (workflow) {
+          await api.saveWorkflow({ packageName: pkg.packageName, workflow });
         }
       }
     }
