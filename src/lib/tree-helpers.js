@@ -116,7 +116,7 @@ export const renderMarkdownPreview = (markdown = "") => {
       continue;
     }
 
-    if (/^\|(.+)\|$/.test(line) && /^\|[\s:-|]+\|$/.test(lines[index + 1] || "")) {
+    if (/^\|(.+)\|$/.test(line) && /^\|[\s:\-|]+\|$/.test(lines[index + 1] || "")) {
       const headers = line.split("|").slice(1, -1).map((cell) => `<th>${renderInlineMarkdown(cell.trim())}</th>`).join("");
       index += 2;
       const rows = [];
