@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Send, Bot, User, Settings, Loader } from "lucide-react";
+import { X, Send, Bot, User, Settings, Loader, ExternalLink } from "lucide-react";
 
 const api = window.notesApi;
 
 const PROVIDERS = [
-  { id: "gemini", label: "Gemini Flash (Google)", placeholder: "AIza..." },
-  { id: "anthropic", label: "Claude Haiku (Anthropic)", placeholder: "sk-ant-..." },
-  { id: "openai", label: "GPT-4o mini (OpenAI)", placeholder: "sk-..." },
+  { id: "gemini", label: "Gemini Flash (Google)", placeholder: "AIza...", keyUrl: "https://aistudio.google.com/apikey", keyLabel: "Obtener API key gratis →" },
+  { id: "anthropic", label: "Claude Haiku (Anthropic)", placeholder: "sk-ant-...", keyUrl: "https://console.anthropic.com/settings/keys", keyLabel: "Crear API key →" },
+  { id: "openai", label: "GPT-4o mini (OpenAI)", placeholder: "sk-...", keyUrl: "https://platform.openai.com/api-keys", keyLabel: "Crear API key →" },
 ];
 
 const STORAGE_KEY = "kuilo-ai-config";
@@ -99,6 +99,14 @@ export function AiChat({ open, onClose, vaultContext }) {
             value={apiKey}
             onChange={(e) => { const c = { ...config, apiKey: e.target.value }; setConfig(c); saveConfig(c); }}
           />
+          {(() => {
+            const prov = PROVIDERS.find((p) => p.id === provider);
+            return prov?.keyUrl && (
+              <a className="ai-chat-key-link" href={prov.keyUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink size={11} /> {prov.keyLabel}
+              </a>
+            );
+          })()}
           <p className="ai-chat-hint">
             La key se guarda localmente. Nunca se envía a Kuilo — solo al provider que elijas.
           </p>
