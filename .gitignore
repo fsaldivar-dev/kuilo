@@ -9,8 +9,9 @@ npm-debug.log*
 !.claude/skills/
 !.claude/settings.json
 
-# User vault data (not source code — only screenshots are tracked)
+# User vault data (not source code — docs and screenshots are tracked)
 docs/*
+!docs/*.md
 !docs/screenshots/
 
 playwright-report/
