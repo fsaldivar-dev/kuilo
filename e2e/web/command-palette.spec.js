@@ -65,8 +65,8 @@ test.describe("Command Palette — Cmd+K", () => {
     await expect(page.locator(".palette-item").nth(1)).toHaveClass(/selected/);
   });
 
-  test("screenshot — palette open", async ({ page }) => {
+  test("visual snapshot — palette open", async ({ page }) => {
     await page.keyboard.press("Meta+k");
-    await page.screenshot({ path: "e2e/screenshots/018-command-palette.png" });
+    await expect(page).toHaveScreenshot("018-command-palette.png");
   });
 });
