@@ -4,6 +4,7 @@ import {
   htmlToPageDocument,
 } from "@/lib/page-document";
 import { markdownToHtml, htmlToMarkdown } from "@/lib/markdown-bridge";
+import { diffBlocks } from "@/lib/block-diff";
 
 const api = window.notesApi;
 
@@ -16,6 +17,8 @@ export function useEditorState() {
   const [versions, setVersions] = useState([]);
   const [jsonViewOpen, setJsonViewOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [diffEntries, setDiffEntries] = useState(null);
+  const [diffVersionLabel, setDiffVersionLabel] = useState("");
 
   const saveTimeoutRef = useRef(null);
   const pageDocumentRef = useRef(null);
@@ -142,6 +145,25 @@ export function useEditorState() {
     setSaveState("Versión restaurada");
   };
 
+  const compareVersion = async (versionFileName, versionLabel) => {
+    const activeDoc = activeDocRef.current;
+    if (!activeDoc || !api?.readDocVersion) return;
+    const { document: oldDoc } = await api.readDocVersion({
+      packageName: activeDoc.packageName,
+      pagePath: activeDoc.pagePath,
+      versionFileName,
+    });
+    const oldBlocks = oldDoc?.blocks || [];
+    const currentBlocks = pageDocumentRef.current?.blocks || [];
+    setDiffEntries(diffBlocks(oldBlocks, currentBlocks));
+    setDiffVersionLabel(versionLabel || versionFileName);
+  };
+
+  const closeDiff = () => {
+    setDiffEntries(null);
+    setDiffVersionLabel("");
+  };
+
   return {
     // State
     saveState, setSaveState,
@@ -152,6 +174,7 @@ export function useEditorState() {
     versions,
     jsonViewOpen, setJsonViewOpen,
     historyOpen, setHistoryOpen,
+    diffEntries, diffVersionLabel,
     // Refs (vault writes to these)
     activeDocRef,
     sourceTypeRef,
@@ -164,5 +187,7 @@ export function useEditorState() {
     handleEditorChange,
     handleMetaChange,
     restoreVersion,
+    compareVersion,
+    closeDiff,
   };
 }

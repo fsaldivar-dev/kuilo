@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld("notesApi", {
   createDoc: (payload) => ipcRenderer.invoke("notes:create-doc", payload),
   saveDoc: (payload) => ipcRenderer.invoke("notes:save-doc", payload),
   restoreDocVersion: (payload) => ipcRenderer.invoke("notes:restore-doc-version", payload),
+  readDocVersion: (payload) => ipcRenderer.invoke("notes:read-doc-version", payload),
   promoteDoc: (payload) => ipcRenderer.invoke("notes:promote-doc", payload),
   deleteDoc: (payload) => ipcRenderer.invoke("notes:delete-doc", payload),
   renameDoc: (payload) => ipcRenderer.invoke("notes:rename-doc", payload),
