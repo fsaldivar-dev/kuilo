@@ -37,11 +37,13 @@ describe("generateSite", () => {
     expect(files.find((f) => f.path.includes("api-reference"))).toBeDefined();
   });
 
-  it("index.html redirects to first page", async () => {
+  it("index.html is a landing page with links", async () => {
     const { files } = await generateSite(packages, "Test");
     const index = files.find((f) => f.path === "index.html");
-    expect(index.content).toContain("meta http-equiv");
+    expect(index.content).toContain("Inicio");
     expect(index.content).toContain("getting-started.html");
+    expect(index.content).toContain("api-reference.html");
+    expect(index.content).toContain("site-nav");
   });
 
   it("each page has navigation sidebar", async () => {
