@@ -30,6 +30,9 @@ import { CoverImage } from "@/components/page-identity/CoverImage";
 import { Breadcrumb } from "@/components/page-identity/Breadcrumb";
 import { useEditorState } from "@/hooks/use-editor-state";
 import { useVault } from "@/hooks/use-vault";
+import { useBackup } from "@/hooks/use-backup";
+import { useConnectors } from "@/hooks/use-connectors";
+import { useSearch } from "@/hooks/use-search";
 
 const api = window.notesApi;
 
@@ -38,12 +41,10 @@ const api = window.notesApi;
 function App() {
   const editor = useEditorState();
   const vault = useVault(editor);
+  const backup = useBackup(editor.setSaveState);
+  const connectors = useConnectors(backup.refreshBackupStatus);
+  const search = useSearch(vault.packages);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [connectorsOpen, setConnectorsOpen] = useState(false);
-  const [mcpInfo, setMcpInfo] = useState(null);
-  const [backupStatus, setBackupStatus] = useState(null);
-  const [backupRemoteUrl, setBackupRemoteUrl] = useState("");
-  const [backupToken, setBackupToken] = useState("");
   const [wizardOpen, setWizardOpen] = useState(false);
 
   // ── Export book ──
@@ -100,59 +101,6 @@ function App() {
     }
   };
 
-  // ── Git Backup ──
-  const refreshBackupStatus = async () => {
-    if (!api?.backupStatus) return;
-    try {
-      const status = await api.backupStatus();
-      setBackupStatus(status);
-    } catch {}
-  };
-
-  const doBackupCommit = async () => {
-    if (!api?.backupCommit) return;
-    editor.setSaveState("Haciendo backup…");
-    await api.backupCommit({ message: `Manual backup ${new Date().toLocaleString("es-MX")}` });
-    await refreshBackupStatus();
-    editor.setSaveState("Backup guardado");
-  };
-
-  const doBackupPush = async () => {
-    if (!api?.backupPush || !backupRemoteUrl || !backupToken) return;
-    editor.setSaveState("Subiendo a remoto…");
-    try {
-      await api.backupPush({ url: backupRemoteUrl, token: backupToken });
-      await refreshBackupStatus();
-      editor.setSaveState("Push completado");
-    } catch (err) {
-      editor.setSaveState(`Error: ${err.message}`);
-    }
-  };
-
-  // ── Conectores AI / MCP ──
-  const openConnectors = async () => {
-    setConnectorsOpen(true);
-    if (api?.getMcpInfo) {
-      const info = await api.getMcpInfo();
-      setMcpInfo(info);
-    }
-    await refreshBackupStatus();
-  };
-
-  const connectTarget = async (target) => {
-    if (!api?.configureAiConnector) return;
-    await api.configureAiConnector({ target });
-    const info = await api.getMcpInfo();
-    setMcpInfo(info);
-  };
-
-  const disconnectTarget = async (target) => {
-    if (!api?.disconnectAiConnector) return;
-    await api.disconnectAiConnector({ target });
-    const info = await api.getMcpInfo();
-    setMcpInfo(info);
-  };
-
   // ─── Render ───────────────────────────────────────────────────────
 
   return (
@@ -180,25 +128,25 @@ function App() {
               <input
                 type="text"
                 placeholder="Buscar en títulos y contenido..."
-                value={vault.searchQuery}
-                onChange={(e) => vault.handleSearch(e.target.value)}
+                value={search.searchQuery}
+                onChange={(e) => search.handleSearch(e.target.value)}
               />
             </div>
 
             {/* Search results */}
-            {vault.searchResults && vault.searchQuery.trim() && (
+            {search.searchResults && search.searchQuery.trim() && (
               <div className="search-results">
-                {vault.searchResults.length === 0 ? (
-                  <p className="search-empty">Sin resultados para "{vault.searchQuery}"</p>
+                {search.searchResults.length === 0 ? (
+                  <p className="search-empty">Sin resultados para "{search.searchQuery}"</p>
                 ) : (
-                  vault.searchResults.map((r, i) => (
+                  search.searchResults.map((r, i) => (
                     <button
                       key={i}
                       className="search-result-item"
                       onClick={() => {
                         vault.openDoc({ packageName: r.packageName, pagePath: r.pagePath, sourceType: r.sourceType });
-                        vault.setSearchQuery("");
-                        vault.handleSearch("");
+                        search.handleSearch("");
+                        search.handleSearch("");
                       }}
                     >
                       <span className="search-result-title">{r.title}</span>
@@ -210,13 +158,13 @@ function App() {
             )}
 
             {/* Package tree */}
-            <nav className="nav-tree" style={vault.searchResults && vault.searchQuery.trim() ? { display: "none" } : undefined}>
-              {vault.filteredPackages.length === 0 && (
+            <nav className="nav-tree" style={search.searchResults && search.searchQuery.trim() ? { display: "none" } : undefined}>
+              {search.filteredPackages.length === 0 && (
                 <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 12, padding: "8px 12px" }}>
                   Sin páginas aún
                 </p>
               )}
-              {vault.filteredPackages.map((pkg) => {
+              {search.filteredPackages.map((pkg) => {
                 const packageKey = `package:${pkg.name}`;
                 const packageExpanded = vault.expandedItems[packageKey];
                 return (
@@ -330,7 +278,7 @@ function App() {
                     <Plus size={13} />
                     Nuevo proyecto
                   </button>
-                  <button className="footer-btn connectors-btn" onClick={openConnectors}>
+                  <button className="footer-btn connectors-btn" onClick={connectors.openConnectors}>
                     <Plug size={13} />
                     Conectores AI
                   </button>
@@ -561,38 +509,38 @@ function App() {
       )}
 
       {/* ── Connectors modal ── */}
-      {connectorsOpen && (
-        <div className="connectors-overlay" onClick={() => setConnectorsOpen(false)}>
+      {connectors.connectorsOpen && (
+        <div className="connectors-overlay" onClick={() => connectors.setConnectorsOpen(false)}>
           <div className="connectors-modal" onClick={(e) => e.stopPropagation()}>
             <div className="connectors-header">
               <h2><Plug size={18} /> Conectores AI</h2>
-              <button className="connectors-close" onClick={() => setConnectorsOpen(false)}>
+              <button className="connectors-close" onClick={() => connectors.setConnectorsOpen(false)}>
                 <X size={16} />
               </button>
             </div>
 
-            {mcpInfo && (
+            {connectors.mcpInfo && (
               <div className="connectors-body">
                 <div className="connectors-info">
                   <div className="connectors-info-row">
                     <span className="connectors-label">Vault</span>
-                    <code className={`connectors-value ${mcpInfo.vaultExists ? "" : "error"}`}>
-                      {mcpInfo.vaultPath}
+                    <code className={`connectors-value ${connectors.mcpInfo.vaultExists ? "" : "error"}`}>
+                      {connectors.mcpInfo.vaultPath}
                     </code>
-                    {!mcpInfo.vaultExists && <span className="connectors-error-badge">No existe</span>}
+                    {!connectors.mcpInfo.vaultExists && <span className="connectors-error-badge">No existe</span>}
                   </div>
                   <div className="connectors-info-row">
                     <span className="connectors-label">MCP Script</span>
-                    <code className={`connectors-value ${mcpInfo.scriptExists ? "" : "error"}`}>
-                      {mcpInfo.scriptPath}
+                    <code className={`connectors-value ${connectors.mcpInfo.scriptExists ? "" : "error"}`}>
+                      {connectors.mcpInfo.scriptPath}
                     </code>
-                    {!mcpInfo.scriptExists && <span className="connectors-error-badge">No encontrado</span>}
+                    {!connectors.mcpInfo.scriptExists && <span className="connectors-error-badge">No encontrado</span>}
                   </div>
                 </div>
 
                 <h3>Conectar con</h3>
                 <div className="connectors-list">
-                  {mcpInfo.targets.map((t) => (
+                  {connectors.mcpInfo.targets.map((t) => (
                     <div className={`connector-item ${!t.installed ? "not-installed" : ""}`} key={t.name}>
                       <div className="connector-info">
                         <span className="connector-name">{t.label}</span>
@@ -609,8 +557,8 @@ function App() {
                       {t.installed && (
                         <button
                           className={`connector-action ${t.connected ? "disconnect" : "connect"}`}
-                          onClick={() => t.connected ? disconnectTarget(t.name) : connectTarget(t.name)}
-                          disabled={!mcpInfo.scriptExists || !mcpInfo.vaultExists}
+                          onClick={() => t.connected ? connectors.disconnectors.connectTarget(t.name) : connectors.connectTarget(t.name)}
+                          disabled={!connectors.mcpInfo.scriptExists || !connectors.mcpInfo.vaultExists}
                         >
                           {t.connected ? "Desconectar" : "Conectar"}
                         </button>
@@ -625,27 +573,27 @@ function App() {
                 </p>
 
                 <h3>Git Backup</h3>
-                {backupStatus && (
+                {backup.backupStatus && (
                   <div className="connectors-info" style={{ marginBottom: 12 }}>
                     <div className="connectors-info-row">
                       <span className="connectors-label">Estado</span>
-                      <span className={`connector-status ${backupStatus.hasChanges ? "warn" : "on"}`}>
-                        {backupStatus.hasChanges
-                          ? `${backupStatus.files?.length || 0} archivos sin backup`
+                      <span className={`connector-status ${backup.backupStatus.hasChanges ? "warn" : "on"}`}>
+                        {backup.backupStatus.hasChanges
+                          ? `${backup.backupStatus.files?.length || 0} archivos sin backup`
                           : "● Todo respaldado"}
                       </span>
                     </div>
-                    {backupStatus.log?.[0] && (
+                    {backup.backupStatus.log?.[0] && (
                       <div className="connectors-info-row">
                         <span className="connectors-label">Ultimo</span>
                         <code className="connectors-value">
-                          {backupStatus.log[0].message} — {new Date(backupStatus.log[0].date).toLocaleString("es-MX")}
+                          {backup.backupStatus.log[0].message} — {new Date(backup.backupStatus.log[0].date).toLocaleString("es-MX")}
                         </code>
                       </div>
                     )}
                   </div>
                 )}
-                <button className="connector-action connect" onClick={doBackupCommit} style={{ marginBottom: 10, width: "100%" }}>
+                <button className="connector-action connect" onClick={backup.doBackupCommit} style={{ marginBottom: 10, width: "100%" }}>
                   Hacer backup ahora
                 </button>
 
@@ -655,8 +603,8 @@ function App() {
                     <input
                       className="rename-input"
                       placeholder="https://github.com/user/repo.git"
-                      value={backupRemoteUrl}
-                      onChange={(e) => setBackupRemoteUrl(e.target.value)}
+                      value={backup.backupRemoteUrl}
+                      onChange={(e) => backup.setBackupRemoteUrl(e.target.value)}
                       style={{ fontSize: 12 }}
                     />
                   </div>
@@ -666,16 +614,16 @@ function App() {
                       className="rename-input"
                       type="password"
                       placeholder="ghp_xxx o token personal"
-                      value={backupToken}
-                      onChange={(e) => setBackupToken(e.target.value)}
+                      value={backup.backupToken}
+                      onChange={(e) => backup.setBackupToken(e.target.value)}
                       style={{ fontSize: 12 }}
                     />
                   </div>
                 </div>
                 <button
                   className="connector-action connect"
-                  onClick={doBackupPush}
-                  disabled={!backupRemoteUrl || !backupToken}
+                  onClick={backup.doBackupPush}
+                  disabled={!backup.backupRemoteUrl || !backup.backupToken}
                   style={{ width: "100%" }}
                 >
                   Push a remoto
@@ -687,7 +635,7 @@ function App() {
               </div>
             )}
 
-            {!mcpInfo && (
+            {!connectors.mcpInfo && (
               <div className="connectors-body">
                 <p className="connectors-hint">Ejecuta la app desde Electron para usar conectores.</p>
               </div>
