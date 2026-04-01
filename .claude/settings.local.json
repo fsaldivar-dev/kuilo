@@ -40,7 +40,8 @@
       "WebFetch(domain:www.npmjs.com)",
       "Bash(for dir:*)",
       "Bash(do basename:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(find /Users/fsaldivar/Documents/Personal/projects/NotesApp/src -type f \\\\\\(-name *.jsx -o -name *.js \\\\\\))"
     ]
   }
 }
