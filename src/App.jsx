@@ -120,9 +120,29 @@ function App() {
       const pages = (pkg.pages || []).map((p) => p.title).join(", ");
       return `- ${pkg.name}: ${pages || "(vacío)"}`;
     }).join("\n");
-    const active = vault.activeDoc ? `Documento activo: ${vault.activeDoc.title} (${vault.activeDoc.packageName})` : "Sin documento activo";
-    return `Vault: ${vault.vaultPath || "local"}\nPaquetes:\n${pkgs}\n${active}`;
-  }, [vault.packages, vault.activeDoc]);
+
+    let activeContent = "";
+    if (vault.activeDoc) {
+      activeContent = `\n\nDocumento activo: "${vault.activeDoc.title}" (paquete: ${vault.activeDoc.packageName})`;
+      if (editor.pageDocument?.blocks) {
+        // Extract plain text from Tiptap JSON blocks
+        const extractText = (nodes) => {
+          if (!Array.isArray(nodes)) return typeof nodes === "string" ? nodes : "";
+          return nodes.map((n) => n.text || extractText(n.content) || "").join("");
+        };
+        const text = (editor.pageDocument.blocks || []).map((b) => {
+          const t = extractText(b.content);
+          if (b.type === "heading") return `\n## ${t}`;
+          return t;
+        }).filter(Boolean).join("\n");
+        if (text) activeContent += `\nContenido:\n${text.slice(0, 3000)}`;
+      } else if (editor.legacyContent) {
+        activeContent += `\nContenido:\n${editor.legacyContent.slice(0, 3000)}`;
+      }
+    }
+
+    return `Vault: ${vault.vaultPath || "local"}\nPaquetes:\n${pkgs}${activeContent}`;
+  }, [vault.packages, vault.activeDoc, editor.pageDocument, editor.legacyContent]);
 
   // ── Tab-aware doc opener ──
   const openDocWithTab = (doc) => {
