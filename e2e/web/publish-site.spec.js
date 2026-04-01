@@ -55,6 +55,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
     </nav>
   </aside>
   <main class="site-content">
+    <div class="site-content-inner">
     <h1>Getting Started</h1>
     <p>Bienvenido a <strong>Mi Proyecto</strong>. Esta guía te ayudará a comenzar rápidamente.</p>
     <h2>Instalación</h2>
@@ -76,6 +77,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-
       <tr><td>Uptime</td><td>99.9%</td><td>✅ Excelente</td></tr>
       <tr><td>Errores/día</td><td>3</td><td>⚠️ Revisar</td></tr>
     </table>
+    </div>
   </main>
 </div>
 </body>
