@@ -97,9 +97,19 @@ export async function generateSite(packages, vaultName, onProgress) {
     files.push({ path: `${page.slug}.html`, content: html });
   }
 
-  // Index → redirect to first page
-  const firstSlug = allPages[0]?.slug || "index";
-  const indexHtml = `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${firstSlug}.html"></head><body></body></html>`;
+  // Index page — landing with links to all docs
+  const indexNav = buildNav(packages, allPages, "");
+  const indexContent = packages.map((pkg) => {
+    const pkgId = pkg.id || pkg.name;
+    const label = pkgId === "__root__" ? "General" : pkg.name;
+    const pages = allPages.filter((p) => p.packageName === pkgId);
+    if (!pages.length) return "";
+    const links = pages.map((p) =>
+      `<li><a href="${p.slug}.html">${p.title}</a></li>`
+    ).join("");
+    return `<h2>${label}</h2><ul>${links}</ul>`;
+  }).join("");
+  const indexHtml = wrapPage("Inicio", indexNav, indexContent, vaultName);
   files.push({ path: "index.html", content: indexHtml });
 
   return { files, totalPages: allPages.length };
