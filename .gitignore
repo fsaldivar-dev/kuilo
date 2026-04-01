@@ -11,3 +11,5 @@ npm-debug.log*
 docs/*
 !docs/screenshots/
 
+playwright-report/
+test-results/
