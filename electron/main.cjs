@@ -3,6 +3,20 @@ const path = require("path");
 const fs = require("fs/promises");
 const os = require("os");
 
+// ─── Safe IPC handler wrapper ────────────────────────────────────────────────
+// Wraps every handler in try/catch so unhandled errors never crash the app.
+
+function safeHandle(channel, handler) {
+  ipcMain.handle(channel, async (...args) => {
+    try {
+      return await handler(...args);
+    } catch (err) {
+      console.error(`[IPC] ${channel} error:`, err.message);
+      return { error: err.message };
+    }
+  });
+}
+
 const ROOT_PACKAGE_ID = "__root__";
 const ROOT_PACKAGE_LABEL = "docs";
 // Directorios que nunca deben indexarse como documentos
@@ -320,21 +334,21 @@ const buildUniquePagePath = async (packageDir, title, parentPath = null) => {
   }
 };
 
-ipcMain.handle("notes:list-tree", async () => listPackages());
+safeHandle("notes:list-tree", async () => listPackages());
 
-ipcMain.handle("notes:open-docs-folder", async () => {
+safeHandle("notes:open-docs-folder", async () => {
   const root = await getVaultRoot();
   const result = await shell.openPath(root);
   return { ok: result === "", path: root, error: result || null };
 });
 
-ipcMain.handle("notes:get-vault", async () => {
+safeHandle("notes:get-vault", async () => {
   const vaultPath = await getVaultRoot();
   const isDefault = vaultPath === getDefaultDocsRoot();
   return { vaultPath, isDefault };
 });
 
-ipcMain.handle("notes:open-vault-dialog", async () => {
+safeHandle("notes:open-vault-dialog", async () => {
   const result = await dialog.showOpenDialog({
     title: "Seleccionar carpeta vault",
     properties: ["openDirectory"],
@@ -350,7 +364,7 @@ ipcMain.handle("notes:open-vault-dialog", async () => {
   return { changed: true, vaultPath: newPath };
 });
 
-ipcMain.handle("notes:choose-or-create-folder", async () => {
+safeHandle("notes:choose-or-create-folder", async () => {
   // macOS showOpenDialog with createDirectory allows creating new folders in the dialog
   const result = await dialog.showOpenDialog({
     title: "Elegir o crear carpeta para el proyecto",
@@ -367,13 +381,13 @@ ipcMain.handle("notes:choose-or-create-folder", async () => {
   return { path: chosen };
 });
 
-ipcMain.handle("notes:reset-vault", async () => {
+safeHandle("notes:reset-vault", async () => {
   const defaultPath = getDefaultDocsRoot();
   await setVaultRoot(defaultPath);
   return { vaultPath: defaultPath };
 });
 
-ipcMain.handle("notes:read-doc", async (_, payload) => {
+safeHandle("notes:read-doc", async (_, payload) => {
   const packageDir = await getPackageDir(payload.packageName);
   const filePath = path.join(packageDir, payload.pagePath);
 
@@ -394,13 +408,13 @@ ipcMain.handle("notes:read-doc", async (_, payload) => {
   return { content: markdown, title: getTitleFromMarkdown(markdown), sourceType: "legacy-markdown" };
 });
 
-ipcMain.handle("notes:list-doc-versions", async (_, payload) => {
+safeHandle("notes:list-doc-versions", async (_, payload) => {
   const packageDir = await getPackageDir(payload.packageName);
   const versionsDir = getVersionsDirFromPagePath(packageDir, payload.pagePath);
   return listVersionEntries(versionsDir);
 });
 
-ipcMain.handle("notes:create-package", async (_, payload) => {
+safeHandle("notes:create-package", async (_, payload) => {
   const root = await ensureVaultRoot();
   const baseName = slugify(payload.name, "paquete");
   let packageName = baseName;
@@ -415,7 +429,7 @@ ipcMain.handle("notes:create-package", async (_, payload) => {
   return { id: packageName, name: packageName, pages: [] };
 });
 
-ipcMain.handle("notes:create-doc", async (_, payload) => {
+safeHandle("notes:create-doc", async (_, payload) => {
   const packageDir = await getPackageDir(payload.packageName);
   await fs.mkdir(packageDir, { recursive: true });
 
@@ -452,7 +466,7 @@ ipcMain.handle("notes:create-doc", async (_, payload) => {
   return { packageName: payload.packageName, pagePath, title, sourceType: "page-json", document: initialDocument };
 });
 
-ipcMain.handle("notes:save-doc", async (_, payload) => {
+safeHandle("notes:save-doc", async (_, payload) => {
   // Schedule auto-backup after save completes (defined below)
   if (typeof scheduleAutoBackup === "function") setTimeout(scheduleAutoBackup, 100);
   const packageDir = await getPackageDir(payload.packageName);
@@ -512,7 +526,7 @@ ipcMain.handle("notes:save-doc", async (_, payload) => {
   };
 });
 
-ipcMain.handle("notes:restore-doc-version", async (_, payload) => {
+safeHandle("notes:restore-doc-version", async (_, payload) => {
   const packageDir = await getPackageDir(payload.packageName);
   const filePath = path.join(packageDir, payload.pagePath);
   const versionsDir = getVersionsDirFromPagePath(packageDir, payload.pagePath);
@@ -542,7 +556,7 @@ ipcMain.handle("notes:restore-doc-version", async (_, payload) => {
   };
 });
 
-ipcMain.handle("notes:promote-doc", async (_, payload) => {
+safeHandle("notes:promote-doc", async (_, payload) => {
   // payload: { packageName, pagePath (.md), document (page.json blocks), title }
   const packageDir = await getPackageDir(payload.packageName);
 
@@ -587,7 +601,7 @@ ipcMain.handle("notes:promote-doc", async (_, payload) => {
 
 // ─── Delete document ─────────────────────────────────────────────────────────
 
-ipcMain.handle("notes:delete-doc", async (_, payload) => {
+safeHandle("notes:delete-doc", async (_, payload) => {
   const packageDir = await getPackageDir(payload.packageName);
   const fullPath = path.join(packageDir, payload.pagePath);
 
@@ -605,7 +619,7 @@ ipcMain.handle("notes:delete-doc", async (_, payload) => {
 
 // ─── Rename document ─────────────────────────────────────────────────────────
 
-ipcMain.handle("notes:rename-doc", async (_, payload) => {
+safeHandle("notes:rename-doc", async (_, payload) => {
   const packageDir = await getPackageDir(payload.packageName);
   const fullPath = path.join(packageDir, payload.pagePath);
 
@@ -623,7 +637,7 @@ ipcMain.handle("notes:rename-doc", async (_, payload) => {
 
 // ─── Search content ──────────────────────────────────────────────────────────
 
-ipcMain.handle("notes:search-content", async (_, { query }) => {
+safeHandle("notes:search-content", async (_, { query }) => {
   const root = await getVaultRoot();
   const q = (query || "").trim().toLowerCase();
   if (!q) return [];
@@ -789,7 +803,7 @@ async function inspectTarget(name, target, scriptPath, vaultPath) {
   };
 }
 
-ipcMain.handle("notes:get-mcp-info", async () => {
+safeHandle("notes:get-mcp-info", async () => {
   const vaultPath = await getVaultRoot();
   const scriptPath = await resolveScriptPath();
   const vaultExists = await pathExists(vaultPath);
@@ -809,7 +823,7 @@ ipcMain.handle("notes:get-mcp-info", async () => {
   };
 });
 
-ipcMain.handle("notes:configure-ai-connector", async (_, { target }) => {
+safeHandle("notes:configure-ai-connector", async (_, { target }) => {
   const vaultPath = await getVaultRoot();
   const scriptPath = await resolveScriptPath();
 
@@ -841,7 +855,7 @@ ipcMain.handle("notes:configure-ai-connector", async (_, { target }) => {
   return { ok: true, configPath: t.configPath, verification };
 });
 
-ipcMain.handle("notes:disconnect-ai-connector", async (_, { target }) => {
+safeHandle("notes:disconnect-ai-connector", async (_, { target }) => {
   const t = AI_TARGETS[target];
   if (!t) throw new Error(`Target desconocido: ${target}`);
 
@@ -858,7 +872,7 @@ ipcMain.handle("notes:disconnect-ai-connector", async (_, { target }) => {
 
 // ─── PDF Export ──────────────────────────────────────────────────────────────
 
-ipcMain.handle("notes:export-pdf", async (_, { html, title, css }) => {
+safeHandle("notes:export-pdf", async (_, { html, title, css }) => {
   // Ask user where to save
   const slug = (title || "document").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   const { filePath, canceled } = await dialog.showSaveDialog({
@@ -1033,7 +1047,7 @@ ipcMain.handle("notes:export-pdf", async (_, { html, title, css }) => {
   return { ok: true, filePath };
 });
 
-ipcMain.handle("notes:export-book", async (_, { html, title, css }) => {
+safeHandle("notes:export-book", async (_, { html, title, css }) => {
   const slug = (title || "book").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   const { filePath, canceled } = await dialog.showSaveDialog({
     defaultPath: path.join(app.getPath("documents"), `${slug}.pdf`),
@@ -1089,14 +1103,14 @@ async function loadGitBackup() {
   return gitBackup;
 }
 
-ipcMain.handle("notes:backup-init", async () => {
+safeHandle("notes:backup-init", async () => {
   const vaultPath = await getVaultRoot();
   const backup = await loadGitBackup();
   await backup.initRepo(vaultPath);
   return { ok: true, vaultPath };
 });
 
-ipcMain.handle("notes:backup-status", async () => {
+safeHandle("notes:backup-status", async () => {
   const vaultPath = await getVaultRoot();
   const backup = await loadGitBackup();
   const status = await backup.getStatus(vaultPath);
@@ -1104,20 +1118,20 @@ ipcMain.handle("notes:backup-status", async () => {
   return { ...status, log, vaultPath };
 });
 
-ipcMain.handle("notes:backup-commit", async (_, { message }) => {
+safeHandle("notes:backup-commit", async (_, { message }) => {
   const vaultPath = await getVaultRoot();
   const backup = await loadGitBackup();
   await backup.initRepo(vaultPath);
   return backup.commitAll(vaultPath, message || `Backup ${new Date().toISOString().split("T")[0]}`);
 });
 
-ipcMain.handle("notes:backup-push", async (_, { url, token }) => {
+safeHandle("notes:backup-push", async (_, { url, token }) => {
   const vaultPath = await getVaultRoot();
   const backup = await loadGitBackup();
   return backup.pushToRemote(vaultPath, { url, token });
 });
 
-ipcMain.handle("notes:backup-log", async () => {
+safeHandle("notes:backup-log", async () => {
   const vaultPath = await getVaultRoot();
   const backup = await loadGitBackup();
   return backup.getLog(vaultPath, 20);
