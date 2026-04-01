@@ -4,6 +4,7 @@ import {
   FileCode2,
   FileText,
   History,
+  Link,
   X,
 } from "lucide-react";
 import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
@@ -13,10 +14,49 @@ import { EmojiPicker } from "@/components/page-identity/EmojiPicker";
 import { CoverImage } from "@/components/page-identity/CoverImage";
 import { Breadcrumb } from "@/components/page-identity/Breadcrumb";
 import { DiffView } from "@/components/workspace/DiffView";
+import { BacklinksPanel } from "@/components/workspace/BacklinksPanel";
+import { resolveWikiLink } from "@/lib/wiki-links";
+import { useState, useEffect, useMemo } from "react";
 
 const api = window.notesApi;
 
+function flattenPages(packages) {
+  const result = [];
+  const walk = (pages, packageName) => {
+    for (const page of pages) {
+      result.push({ title: page.title, packageName, pagePath: page.pagePath });
+      if (page.children?.length) walk(page.children, packageName);
+    }
+  };
+  for (const pkg of packages) walk(pkg.pages || [], pkg.name);
+  return result;
+}
+
 export function Workspace({ vault, editor, sidebarCollapsed, onExpandSidebar }) {
+  const allPages = useMemo(() => flattenPages(vault.packages), [vault.packages]);
+  const [backlinksOpen, setBacklinksOpen] = useState(false);
+  const [backlinks, setBacklinks] = useState([]);
+
+  const handleWikiLinkClick = (title) => {
+    const target = resolveWikiLink(vault.packages, title);
+    if (target) vault.openDoc(target);
+  };
+
+  // Fetch backlinks when panel opens or active doc changes
+  useEffect(() => {
+    if (!backlinksOpen || !vault.activeDoc?.title || !api?.searchContent) {
+      setBacklinks([]);
+      return;
+    }
+    api.searchContent({ query: vault.activeDoc.title }).then((results) => {
+      // Exclude self from results
+      const filtered = (results || []).filter(
+        (r) => !(r.packageName === vault.activeDoc.packageName && r.pagePath === vault.activeDoc.pagePath)
+      );
+      setBacklinks(filtered);
+    });
+  }, [backlinksOpen, vault.activeDoc?.pagePath]);
+
   return (
     <main className="workspace">
       {sidebarCollapsed && (
@@ -45,7 +85,7 @@ export function Workspace({ vault, editor, sidebarCollapsed, onExpandSidebar }) 
           )}
 
           {/* Document header */}
-          <DocHeader vault={vault} editor={editor} />
+          <DocHeader vault={vault} editor={editor} backlinksOpen={backlinksOpen} onToggleBacklinks={() => setBacklinksOpen((c) => !c)} />
 
           {/* Editor area */}
           <div className="editor-area">
@@ -64,11 +104,22 @@ export function Workspace({ vault, editor, sidebarCollapsed, onExpandSidebar }) 
                 key={vault.activeDoc?.pagePath}
                 initialContent={editor.editorHtml}
                 onContentChange={editor.handleEditorChange}
+                onWikiLinkClick={handleWikiLinkClick}
+                pages={allPages}
               />
             )}
 
             {/* History panel */}
             <HistoryPanel editor={editor} sourceType={vault.sourceType} />
+
+            {/* Backlinks panel */}
+            {backlinksOpen && (
+              <BacklinksPanel
+                backlinks={backlinks}
+                onNavigate={(bl) => vault.openDoc(bl)}
+                onClose={() => setBacklinksOpen(false)}
+              />
+            )}
           </div>
         </>
       )}
@@ -76,7 +127,7 @@ export function Workspace({ vault, editor, sidebarCollapsed, onExpandSidebar }) 
   );
 }
 
-function DocHeader({ vault, editor }) {
+function DocHeader({ vault, editor, backlinksOpen, onToggleBacklinks }) {
   return (
     <div className="doc-header">
       <div className="doc-meta">
@@ -128,6 +179,14 @@ function DocHeader({ vault, editor }) {
             </button>
           </>
         )}
+        <button
+          className={`control-btn ${backlinksOpen ? "active" : ""}`}
+          onClick={onToggleBacklinks}
+          title="Ver qué páginas enlazan aquí"
+        >
+          <Link size={13} />
+          Backlinks
+        </button>
         {vault.activeDoc && (
           <ExportButtons vault={vault} editor={editor} />
         )}
