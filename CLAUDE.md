@@ -5,18 +5,23 @@ Electron + React (Vite) app for structured documentation. No frameworks (no Next
 ## Architecture (post Sprint 8.2)
 
 ```
-App.jsx (109 lines — shell only)
-├── useEditorState()     → editor: save, content, meta, versions, JSON/history toggles
-├── useVault(editor)     → vault: packages, activeDoc, CRUD, tree, rename, promote
+App.jsx (shell only)
+├── useEditorState()     → editor: save, content, meta, versions, diff, JSON/history toggles
+├── useVault(editor)     → vault: packages, activeDoc, CRUD, tree, rename, promote, duplicate
 ├── useBackup(setSave)   → backup: git commit/push/status
 ├── useConnectors(refreshBackup) → connectors: MCP targets, connect/disconnect
 ├── useSearch(packages)  → search: query, results, filteredPackages
+├── useTabs()            → tabs: open/close/switch tabs, activeTab
+├── useFavorites()       → favorites: star/unstar pages (localStorage)
 │
-├── <Sidebar />          → src/components/sidebar/Sidebar.jsx (4 components inside)
-├── <Workspace />        → src/components/workspace/Workspace.jsx (4 components inside)
-├── <RenameModal />      → src/components/modals/RenameModal.jsx
-├── <ConnectorsModal />  → src/components/modals/ConnectorsModal.jsx
-└── <ProjectWizard />    → src/components/project-wizard/ProjectWizard.jsx (pre-existing)
+├── <Sidebar />          → sidebar/Sidebar.jsx (4 components: Sidebar, SearchResults, SidebarFooter, PageTreeNode)
+├── <Workspace />        → workspace/Workspace.jsx (5 components: Workspace, DocHeader, ExportButtons, HistoryPanel, TabBar)
+├── <RenameModal />      → modals/RenameModal.jsx
+├── <ConnectorsModal />  → modals/ConnectorsModal.jsx
+├── <ShortcutsModal />   → modals/ShortcutsModal.jsx (Cmd+/)
+├── <TemplatePickerModal /> → modals/TemplatePickerModal.jsx
+├── <CommandPalette />   → command-palette/CommandPalette.jsx (Cmd+K)
+└── <ProjectWizard />    → project-wizard/ProjectWizard.jsx
 ```
 
 ### Hook dependency chain
