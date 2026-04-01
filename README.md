@@ -13,8 +13,8 @@
   <img src="https://img.shields.io/badge/plataforma-macOS-blue" />
   <img src="https://img.shields.io/badge/stack-Electron%20%2B%20React%20%2B%20Tiptap-purple" />
   <img src="https://img.shields.io/badge/licencia-MIT-green" />
-  <img src="https://img.shields.io/badge/MCP-8%20herramientas-orange" />
-  <img src="https://img.shields.io/badge/tests-256%20passing-brightgreen" />
+  <img src="https://img.shields.io/badge/MCP-13%20herramientas-orange" />
+  <img src="https://img.shields.io/badge/tests-378%20unit%20%2B%2054%20E2E-brightgreen" />
 </p>
 
 ---
@@ -37,10 +37,16 @@ Kuilo es un IDE de documentacion tecnica para equipos de una persona. Documenta 
 | **Kanban** | [KANBAN.md](docs/KANBAN.md) | Tablero de tareas con drag & drop |
 | **API Blocks** | [API-BLOCKS.md](docs/API-BLOCKS.md) | Documentar endpoints REST visualmente |
 | **Templates** | [TEMPLATES.md](docs/TEMPLATES.md) | PRD, RFC, Sprint, Runbook, Lean Canvas, y mas |
-| **MCP Server** | [MCP.md](docs/MCP.md) | 8 herramientas para conectar con Claude, Cursor, Windsurf |
+| **MCP Server** | [MCP.md](docs/MCP.md) | 13 herramientas para conectar con Claude, Cursor, Windsurf |
 | **Export** | [EXPORT.md](docs/EXPORT.md) | Markdown, HTML, PDF, libro PDF completo |
+| **Publish-to-web** | — | Genera sitio estatico HTML desde el vault (gratis, sin hosting) |
 | **Git Backup** | [BACKUP.md](docs/BACKUP.md) | Auto-backup con isomorphic-git a cualquier repo |
 | **Project Wizard** | [PROJECT-WIZARD.md](docs/PROJECT-WIZARD.md) | Wizard guiado que crea proyectos con documentos pre-llenados |
+| **Cmd+K** | — | Command palette para navegacion rapida y acciones |
+| **@Mention links** | — | Escribe `@` para enlazar paginas entre si |
+| **Backlinks** | — | Ve que paginas enlazan al documento actual |
+| **Template picker** | — | Elige plantilla al crear nueva pagina |
+| **Version diff** | — | Compara versiones con diff visual bloque a bloque |
 
 ---
 
@@ -105,9 +111,22 @@ Campos estructurados: selects con opciones precargadas, datepicker, texto libre.
 }
 ```
 
-8 herramientas: `get_vault_summary`, `list_documents`, `read_document`, `search_documents`, `create_document`, `update_document`, `append_blocks`, `get_document_context`.
+13 herramientas: `get_vault_summary`, `list_documents`, `read_document`, `search_documents`, `create_document`, `update_document`, `append_blocks`, `get_document_context`, `delete_document`, `rename_document`, `update_meta`, `list_versions`, `validate_document`.
 
 Conecta con un click desde la app: Claude Desktop, Cursor, Windsurf.
+
+---
+
+## Publish-to-web
+
+Un click genera un sitio estatico HTML con:
+- Sidebar de navegacion por paquete
+- Diseno identico a la app (dark mode automatico)
+- Diagramas mermaid renderizados con mermaid.js
+- Responsive (mobile-friendly)
+- Deployable a GitHub Pages, Netlify, o cualquier hosting
+
+Obsidian cobra $8/mes por esto. Kuilo lo hace gratis.
 
 ---
 
@@ -138,8 +157,10 @@ Recharts             graficas
 @hello-pangea/dnd    kanban drag & drop
 isomorphic-git       backup sin CLI
 KaTeX                ecuaciones
-Mermaid              diagramas (fallback)
+Mermaid              diagramas (fallback + publish)
 MCP SDK              server MCP
+Playwright           E2E tests
+Vitest               unit tests
 ```
 
 ---
@@ -148,11 +169,19 @@ MCP SDK              server MCP
 
 ```bash
 npm install
-npm run dev          # Vite dev server
-npm run build        # Build
-npm run desktop      # Electron
-npm test             # 256 tests
+npm run dev              # Vite dev server
+npm run build            # Build
+npm run desktop          # Electron
+npm test                 # 378 unit tests
+npm run test:e2e:web     # 54 E2E tests (Playwright)
+npm run test:e2e:ui      # Playwright UI
 ```
+
+### CI/CD
+
+- **GitHub Actions**: unit tests (Node 20+22), E2E (Playwright), lint
+- **Auto versioning**: labels `major`/`minor`/`patch` en PR → bump + release automatico al merge
+- **Visual regression**: snapshots con `toHaveScreenshot()` — CI falla si hay cambios visuales
 
 ---
 
