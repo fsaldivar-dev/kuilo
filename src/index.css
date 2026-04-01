@@ -624,6 +624,17 @@ input, textarea, select { font: inherit; }
 .ai-chat-send:hover { background: #0062cc; }
 .ai-chat-send:disabled { opacity: 0.4; }
 
+.ai-chat-doc-link {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 8px; margin: 1px 2px; border-radius: 5px;
+  background: rgba(0,113,227,0.08); color: #0071e3;
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  transition: background 0.08s;
+}
+.ai-chat-doc-link:hover { background: rgba(0,113,227,0.15); }
+.ai-chat-doc-notfound { color: #8e8e93; font-style: italic; font-size: 12px; }
+.dark .ai-chat-doc-link { background: rgba(100,210,255,0.1); color: #64d2ff; }
+.dark .ai-chat-doc-link:hover { background: rgba(100,210,255,0.18); }
 .ai-chat-btn { color: #0071e3 !important; }
 
 /* AI Chat — dark mode */

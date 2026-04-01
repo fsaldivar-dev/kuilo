@@ -253,6 +253,14 @@ function App() {
         open={chatOpen}
         onClose={() => setChatOpen(false)}
         vaultContext={vaultContext}
+        pages={vault.packages.flatMap((pkg) => {
+          const walk = (pages, pkgName) => pages.flatMap((p) => [
+            { title: p.title, packageName: pkgName, pagePath: p.pagePath },
+            ...walk(p.children || [], pkgName),
+          ]);
+          return walk(pkg.pages || [], pkg.name);
+        })}
+        onOpenDoc={openDocWithTab}
       />
     </div>
   );
