@@ -60,6 +60,7 @@
     "@tiptap/suggestion": "^3.21.0",
     "@types/katex": "^0.16.8",
     "@xyflow/react": "^12.10.2",
+    "dompurify": "^3.3.3",
     "isomorphic-git": "^1.37.4",
     "katex": "^0.16.44",
     "lodash.throttle": "^4.1.1",
