@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Send, Bot, User, Settings, Loader, ExternalLink } from "lucide-react";
+import { X, Send, Bot, User, Settings, Loader, ExternalLink, FileText } from "lucide-react";
 
 const api = window.notesApi;
 
@@ -20,7 +20,7 @@ function saveConfig(config) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
 }
 
-export function AiChat({ open, onClose, vaultContext }) {
+export function AiChat({ open, onClose, vaultContext, pages, onOpenDoc }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -141,7 +141,9 @@ export function AiChat({ open, onClose, vaultContext }) {
             <div className="ai-chat-msg-icon">
               {msg.role === "user" ? <User size={12} /> : <Bot size={12} />}
             </div>
-            <div className="ai-chat-msg-content">{msg.content}</div>
+            <div className="ai-chat-msg-content">
+              <ChatContent text={msg.content} pages={pages} onOpenDoc={onOpenDoc} />
+            </div>
           </div>
         ))}
         {loading && (
@@ -169,4 +171,37 @@ export function AiChat({ open, onClose, vaultContext }) {
       </div>
     </div>
   );
+}
+
+/**
+ * Renders chat text with [[doc links]] as clickable buttons.
+ */
+function ChatContent({ text, pages, onOpenDoc }) {
+  if (!text) return null;
+
+  // Split on [[...]] pattern
+  const parts = text.split(/(\[\[[^\]]+\]\])/g);
+
+  return parts.map((part, i) => {
+    const match = part.match(/^\[\[(.+)\]\]$/);
+    if (!match) return <span key={i}>{part}</span>;
+
+    const title = match[1];
+    const page = (pages || []).find((p) => p.title.toLowerCase() === title.toLowerCase());
+
+    if (page) {
+      return (
+        <button
+          key={i}
+          className="ai-chat-doc-link"
+          onClick={() => onOpenDoc?.(page)}
+        >
+          <FileText size={11} /> {page.title}
+        </button>
+      );
+    }
+
+    // Doc not found — render as plain text with brackets
+    return <span key={i} className="ai-chat-doc-notfound">[[{title}]]</span>;
+  });
 }

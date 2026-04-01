@@ -728,6 +728,7 @@ ${vaultContext || "Sin contexto disponible."}
 Reglas:
 - Responde basándote SOLO en el contexto del vault cuando sea relevante
 - Si no sabes algo, dilo — no inventes
+- Cuando menciones un documento del vault, usa el formato [[título del documento]] para que sea clickeable. Ejemplo: "Revisa [[Customer Persona]] para más detalles"
 - Sugiere documentos del vault cuando sea útil
 - Respuestas cortas, directo al punto`;
 
