@@ -108,6 +108,21 @@ export function useVault(editor) {
     await openDoc({ ...nextActive, sourceType: result.sourceType || "page-json" });
   };
 
+  const duplicateDoc = async (doc) => {
+    if (!activeDoc || !api?.readDoc) return;
+    const source = await api.readDoc({ packageName: doc.packageName, pagePath: doc.pagePath });
+    const title = `${doc.title} (copia)`;
+    const result = await api.createDoc({ packageName: doc.packageName, parentPath: null, title });
+    if (source.sourceType === "page-json" && source.document) {
+      const newDoc = { ...source.document, meta: { ...source.document.meta, title } };
+      await api.saveDoc({ packageName: doc.packageName, pagePath: result.pagePath, sourceType: "page-json", document: newDoc });
+    }
+    const nextActive = { packageName: result.packageName, pagePath: result.pagePath, title };
+    await refreshTree(nextActive);
+    await openDoc({ ...nextActive, sourceType: result.sourceType || "page-json" });
+    editor.setSaveState("Página duplicada");
+  };
+
   const handleChangeVault = async () => {
     if (!api?.openVaultDialog) return;
     const result = await api.openVaultDialog();
@@ -237,6 +252,7 @@ export function useVault(editor) {
     refreshTree,
     addPackage,
     addDocToPackage,
+    duplicateDoc,
     handleChangeVault,
     openDocsFolder,
     deleteDoc,
