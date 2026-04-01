@@ -8,7 +8,7 @@
  * - Se inserta via slash command "/toggle"
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { Editor } from "@tiptap/core";
 import { StarterKit } from "@tiptap/starter-kit";
 import { ToggleListNode, ToggleSummaryNode } from "@/components/tiptap-node/toggle-node/toggle-node-extension";
@@ -53,6 +53,9 @@ describe("toggle node in editor", () => {
   beforeEach(() => {
     editor = makeEditor();
   });
+  afterEach(() => {
+    editor?.destroy();
+  });
 
   it("editor initializes with toggle extensions registered", () => {
     expect(editor.schema.nodes.toggleList).toBeDefined();
@@ -94,6 +97,9 @@ describe("toggle open/closed state", () => {
   beforeEach(() => {
     editor = makeEditor();
     editor.commands.insertToggleList();
+  });
+  afterEach(() => {
+    editor?.destroy();
   });
 
   it("toggle is open by default", () => {
