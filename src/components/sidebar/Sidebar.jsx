@@ -4,9 +4,12 @@ import {
   ChevronRight,
   Download,
   FileCode2,
+  Copy,
   FileText,
   FolderOpen,
   Globe,
+  Star,
+  StarOff,
   FolderPlus,
   FolderTree,
   Pencil,
@@ -21,13 +24,18 @@ export function Sidebar({
   onToggleCollapsed,
   vault,
   search,
+  onOpenDoc,
   onAddDoc,
+  onDuplicateDoc,
+  favorites,
+  onToggleFavorite,
   onExportBook,
   onPublishSite,
   onOpenWizard,
   onOpenConnectors,
 }) {
   const addDoc = onAddDoc || vault.addDocToPackage;
+  const openDoc = onOpenDoc || vault.openDoc;
   return (
     <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
       {/* Draggable titlebar */}
@@ -57,7 +65,7 @@ export function Sidebar({
           </div>
 
           {/* Search results */}
-          <SearchResults search={search} onOpenDoc={vault.openDoc} />
+          <SearchResults search={search} onOpenDoc={openDoc} />
 
           {/* Package tree */}
           <nav className="nav-tree" style={search.searchResults && search.searchQuery.trim() ? { display: "none" } : undefined}>
@@ -101,7 +109,10 @@ export function Sidebar({
                           activeDoc={vault.activeDoc}
                           expandedItems={vault.expandedItems}
                           onToggle={vault.toggleExpanded}
-                          onOpen={vault.openDoc}
+                          onOpen={openDoc}
+                          onDuplicate={onDuplicateDoc}
+                          favorites={favorites}
+                          onToggleFavorite={onToggleFavorite}
                           onAddChild={addDoc}
                           onDelete={vault.deleteDoc}
                           onRename={vault.startRename}
@@ -237,11 +248,13 @@ function SidebarFooter({ vault, onExportBook, onPublishSite, onOpenWizard, onOpe
   );
 }
 
-function PageTreeNode({ page, depth, activeDoc, expandedItems, onToggle, onOpen, onAddChild, onDelete, onRename }) {
+function PageTreeNode({ page, depth, activeDoc, expandedItems, onToggle, onOpen, onAddChild, onDelete, onRename, onDuplicate, favorites, onToggleFavorite }) {
   const key = `page:${page.packageName}/${page.pagePath}`;
+  const docId = `${page.packageName}/${page.pagePath}`;
   const expanded = expandedItems[key];
   const isActive = activeDoc?.packageName === page.packageName && activeDoc?.pagePath === page.pagePath;
   const hasChildren = page.children.length > 0;
+  const isFav = favorites?.has(docId);
 
   return (
     <div className="tree-node">
@@ -258,14 +271,21 @@ function PageTreeNode({ page, depth, activeDoc, expandedItems, onToggle, onOpen,
             : null}
         </button>
         <button
-          className={`doc-item ${isActive ? "active" : ""}`}
+          className={`doc-item ${isActive ? "active" : ""} ${isFav ? "favorite" : ""}`}
           onClick={() => onOpen(page)}
         >
+          {isFav && <Star size={9} className="fav-star" />}
           <FileText size={12} style={{ flexShrink: 0 }} />
           <span className="doc-label">{page.title}</span>
         </button>
+        <button className="icon-btn" onClick={() => onToggleFavorite?.(docId)} title={isFav ? "Quitar favorito" : "Favorito"}>
+          {isFav ? <StarOff size={10} /> : <Star size={10} />}
+        </button>
         <button className="icon-btn" onClick={() => onRename(page)} title="Renombrar">
           <Pencil size={10} />
+        </button>
+        <button className="icon-btn" onClick={() => onDuplicate?.(page)} title="Duplicar">
+          <Copy size={10} />
         </button>
         <button className="icon-btn" onClick={() => onAddChild(page.packageName, page.pagePath)} title="Nueva subpágina">
           <Plus size={11} />
@@ -289,6 +309,9 @@ function PageTreeNode({ page, depth, activeDoc, expandedItems, onToggle, onOpen,
               onAddChild={onAddChild}
               onDelete={onDelete}
               onRename={onRename}
+              onDuplicate={onDuplicate}
+              favorites={favorites}
+              onToggleFavorite={onToggleFavorite}
             />
           ))}
         </div>

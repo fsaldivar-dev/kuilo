@@ -47,6 +47,10 @@ Kuilo es un IDE de documentacion tecnica para equipos de una persona. Documenta 
 | **Backlinks** | — | Ve que paginas enlazan al documento actual |
 | **Template picker** | — | Elige plantilla al crear nueva pagina |
 | **Version diff** | — | Compara versiones con diff visual bloque a bloque |
+| **Tabs** | — | Multiples documentos abiertos simultaneamente |
+| **Favoritos** | — | Marca paginas con estrella para acceso rapido |
+| **Duplicar pagina** | — | Copia un documento con todo su contenido |
+| **Atajos de teclado** | — | Panel de referencia con Cmd+/ |
 
 ---
 

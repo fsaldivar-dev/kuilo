@@ -9,11 +9,14 @@ import { RenameModal } from "@/components/modals/RenameModal";
 import { ConnectorsModal } from "@/components/modals/ConnectorsModal";
 import { CommandPalette, buildPaletteCommands } from "@/components/command-palette/CommandPalette";
 import { TemplatePickerModal } from "@/components/modals/TemplatePickerModal";
+import { ShortcutsModal } from "@/components/modals/ShortcutsModal";
 import { useEditorState } from "@/hooks/use-editor-state";
 import { useVault } from "@/hooks/use-vault";
 import { useBackup } from "@/hooks/use-backup";
 import { useConnectors } from "@/hooks/use-connectors";
 import { useSearch } from "@/hooks/use-search";
+import { useTabs } from "@/hooks/use-tabs";
+import { useFavorites } from "@/hooks/use-favorites";
 
 const api = window.notesApi;
 
@@ -23,9 +26,12 @@ function App() {
   const backup = useBackup(editor.setSaveState);
   const connectors = useConnectors(backup.refreshBackupStatus);
   const search = useSearch(vault.packages);
+  const tabs = useTabs();
+  const { favorites, toggleFavorite } = useFavorites();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [templatePicker, setTemplatePicker] = useState(null);
 
   // ── Export book ──
@@ -93,26 +99,46 @@ function App() {
     }
   };
 
+  // ── Tab-aware doc opener ──
+  const openDocWithTab = (doc) => {
+    tabs.openTab(doc);
+    vault.openDoc(doc);
+  };
+
+  // When switching tabs, also open the doc
+  const handleSwitchTab = (tabId) => {
+    tabs.switchTab(tabId);
+    const tab = tabs.tabs.find((t) => t.id === tabId);
+    if (tab) vault.openDoc(tab);
+  };
+
+  // Close tab — if it was active, the hook picks the next one
+  const handleCloseTab = (tabId) => {
+    tabs.closeTab(tabId);
+    // After state update, the activeTab changes — we need to open it
+    // This is handled by the useEffect below
+  };
+
   // ── Template picker wrapper ──
   const addDocWithTemplate = (packageName, parentPath = null) => {
     setTemplatePicker({ packageName, parentPath });
   };
 
-  // ── Cmd+K global hotkey ──
+  // ── Global hotkeys ──
   useEffect(() => {
     const handler = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setPaletteOpen((c) => !c);
-      }
+      const mod = e.metaKey || e.ctrlKey;
+      if (mod && e.key === "k") { e.preventDefault(); setPaletteOpen((c) => !c); }
+      if (mod && e.key === "/") { e.preventDefault(); setShortcutsOpen((c) => !c); }
+      if (mod && e.key === "w") { e.preventDefault(); if (tabs.activeTabId) handleCloseTab(tabs.activeTabId); }
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, []);
+  }, [tabs.activeTabId]);
 
   const paletteCommands = useMemo(
     () => buildPaletteCommands({
-      vault,
+      vault: { ...vault, openDoc: openDocWithTab },
       search,
       onOpenWizard: () => setWizardOpen(true),
       onOpenConnectors: connectors.openConnectors,
@@ -129,7 +155,11 @@ function App() {
         onToggleCollapsed={() => setSidebarCollapsed((c) => !c)}
         vault={vault}
         search={search}
+        onOpenDoc={openDocWithTab}
         onAddDoc={addDocWithTemplate}
+        onDuplicateDoc={vault.duplicateDoc}
+        favorites={favorites}
+        onToggleFavorite={toggleFavorite}
         onExportBook={exportBook}
         onPublishSite={publishSite}
         onOpenWizard={() => setWizardOpen(true)}
@@ -139,6 +169,11 @@ function App() {
       <Workspace
         vault={vault}
         editor={editor}
+        tabs={tabs}
+        favorites={favorites}
+        onToggleFavorite={toggleFavorite}
+        onSwitchTab={handleSwitchTab}
+        onCloseTab={handleCloseTab}
         sidebarCollapsed={sidebarCollapsed}
         onExpandSidebar={() => setSidebarCollapsed(false)}
       />
@@ -160,6 +195,7 @@ function App() {
           onClose={() => setTemplatePicker(null)}
         />
       )}
+      <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <CommandPalette
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
