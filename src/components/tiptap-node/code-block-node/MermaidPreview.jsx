@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import DOMPurify from "dompurify";
 import mermaid from "mermaid";
+import { sanitizeSvg } from "@/lib/sanitize";
 import { sanitizeMermaidCode } from "@/lib/mermaid-utils";
 import "./mermaid-preview.scss";
 
@@ -128,7 +128,7 @@ function DiagramCanvas({ code, isDark, fullscreen = false, onExpand }) {
         <div
           className="mermaid-svg-area"
           style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` }}
-          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true, svgFilters: true } }) }}
+          dangerouslySetInnerHTML={{ __html: sanitizeSvg(svg) }}
         />
       ) : (
         <div className="mermaid-loading" contentEditable={false}>Rendering…</div>
