@@ -186,8 +186,12 @@ function ChatContent({ text, pages, onOpenDoc }) {
     const match = part.match(/^\[\[(.+)\]\]$/);
     if (!match) return <span key={i}>{part}</span>;
 
-    const title = match[1];
-    const page = (pages || []).find((p) => p.title.toLowerCase() === title.toLowerCase());
+    const title = match[1].trim();
+    const titleLower = title.toLowerCase();
+    // Exact match first, then partial (title contains or starts with)
+    const page = (pages || []).find((p) => p.title.toLowerCase() === titleLower)
+      || (pages || []).find((p) => p.title.toLowerCase().includes(titleLower))
+      || (pages || []).find((p) => titleLower.includes(p.title.toLowerCase()));
 
     if (page) {
       return (
