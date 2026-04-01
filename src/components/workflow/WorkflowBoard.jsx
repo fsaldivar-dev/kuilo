@@ -1,51 +1,31 @@
-import { ArrowLeft, FileText, Plus, CheckCircle, Circle } from "lucide-react";
+import { ArrowLeft, FileText, Plus, CheckCircle, Circle, Clock, AlertTriangle, Lock } from "lucide-react";
+import { STATUSES, resolveDependencies } from "@/lib/workflow-definitions";
 
 /**
- * WorkflowBoard — auto-populated from existing docs in the package.
+ * WorkflowBoard — shows doc status + dependency chain per stage.
  *
- * Each stage shows:
- * - Docs that already exist (clickable, navigates to editor)
- * - Doc types that are missing (button to create from template)
- * - Progress indicator per stage
+ * Each card shows:
+ * - Status badge (not-started / draft / review / done)
+ * - Linked doc (if exists) or create button
+ * - Dependency warnings (unmet preconditions)
  */
-export function WorkflowBoard({ workflow, pages, onOpenDoc, onCreateDoc, onClose }) {
-  // Map existing docs to stages by matching doc title/type to stage docTypes
-  const docsByStage = {};
-  const matchedDocs = new Set();
+export function WorkflowBoard({ workflow, allWorkflows, pages, onOpenDoc, onCreateDoc, onUpdateStatus, onLinkDoc, onClose }) {
+  // Map existing pages to workflow docs by title matching
+  const pageMap = {};
+  for (const p of pages) pageMap[p.title.toLowerCase()] = p;
 
-  for (const stage of workflow.stages) {
-    docsByStage[stage.id] = { existing: [], missing: [] };
+  // Count progress
+  const allDocs = workflow.stages.flatMap((s) => s.docs);
+  const doneDocs = allDocs.filter((d) => d.status === "done").length;
+  const totalDocs = allDocs.length;
+  const progressPercent = totalDocs > 0 ? Math.round((doneDocs / totalDocs) * 100) : 0;
 
-    for (const docType of stage.docTypes || []) {
-      const dtLower = docType.toLowerCase();
-      const match = pages.find((p) =>
-        !matchedDocs.has(p.pagePath) && (
-          p.title.toLowerCase().includes(dtLower) ||
-          dtLower.includes(p.title.toLowerCase().split(" ")[0])
-        )
-      );
-
-      if (match) {
-        matchedDocs.add(match.pagePath);
-        docsByStage[stage.id].existing.push({ ...match, docType });
-      } else {
-        docsByStage[stage.id].missing.push(docType);
-      }
-    }
-  }
-
-  // Unmatched docs go in the first stage
-  const unmatchedDocs = pages.filter((p) => !matchedDocs.has(p.pagePath));
-  if (unmatchedDocs.length && workflow.stages[0]) {
-    for (const doc of unmatchedDocs) {
-      docsByStage[workflow.stages[0].id].existing.push({ ...doc, docType: "Doc" });
-    }
-  }
-
-  // Progress
-  const totalDocTypes = workflow.stages.reduce((sum, s) => sum + (s.docTypes?.length || 0), 0);
-  const totalExisting = Object.values(docsByStage).reduce((sum, s) => sum + s.existing.length, 0);
-  const progressPercent = totalDocTypes > 0 ? Math.round((totalExisting / totalDocTypes) * 100) : 0;
+  const statusIcon = (status) => {
+    if (status === "done") return <CheckCircle size={13} className="wf-status-done" />;
+    if (status === "review") return <Clock size={13} className="wf-status-review" />;
+    if (status === "draft") return <FileText size={13} className="wf-status-draft" />;
+    return <Circle size={13} className="wf-status-not-started" />;
+  };
 
   return (
     <div className="wf-board">
@@ -58,66 +38,95 @@ export function WorkflowBoard({ workflow, pages, onOpenDoc, onCreateDoc, onClose
           <span className="wf-author">{workflow.author}</span>
         </div>
         <div className="wf-progress-label">
-          {totalExisting}/{totalDocTypes} docs · {progressPercent}%
+          {doneDocs}/{totalDocs} completados · {progressPercent}%
         </div>
       </div>
 
-      {/* Progress bar */}
       <div className="wf-progress">
         <div className="wf-progress-fill" style={{ width: `${progressPercent}%` }} />
       </div>
 
-      {/* Stages */}
       <div className="wf-columns">
         {workflow.stages.map((stage) => {
-          const data = docsByStage[stage.id];
-          const stageComplete = data.missing.length === 0 && data.existing.length > 0;
+          const stageDone = stage.docs.every((d) => d.status === "done");
+          const stageProgress = stage.docs.filter((d) => d.status === "done").length;
 
           return (
             <div className="wf-column" key={stage.id}>
               <div className="wf-column-header" style={{ borderTopColor: stage.color }}>
                 <span className="wf-column-title">{stage.title}</span>
-                {stageComplete ? (
-                  <CheckCircle size={13} style={{ color: stage.color }} />
+                {stageDone ? (
+                  <CheckCircle size={13} style={{ color: "#34c759" }} />
                 ) : (
-                  <span className="wf-column-count">{data.existing.length}/{data.existing.length + data.missing.length}</span>
+                  <span className="wf-column-count">{stageProgress}/{stage.docs.length}</span>
                 )}
               </div>
               <div className="wf-column-body">
-                {/* Existing docs */}
-                {data.existing.map((doc) => (
-                  <button
-                    key={doc.pagePath}
-                    className="wf-card wf-card-exists"
-                    onClick={() => onOpenDoc(doc)}
-                  >
-                    <CheckCircle size={12} className="wf-card-check" />
-                    <div className="wf-card-content">
-                      <span className="wf-card-type">{doc.docType}</span>
-                      <span className="wf-card-title">{doc.title}</span>
-                    </div>
-                  </button>
-                ))}
+                {stage.docs.map((doc) => {
+                  const deps = resolveDependencies(doc, allWorkflows || { [workflow.areaId]: workflow });
+                  const blocked = deps.unmet.length > 0;
+                  const linked = doc.pagePath ? pages.find((p) => p.pagePath === doc.pagePath) : null;
+                  const autoLinked = !linked ? pageMap[doc.docType.toLowerCase()] : null;
+                  const hasDoc = linked || autoLinked;
 
-                {/* Missing docs — create buttons */}
-                {data.missing.map((docType) => (
-                  <button
-                    key={docType}
-                    className="wf-card wf-card-missing"
-                    onClick={() => onCreateDoc(workflow.areaId, docType)}
-                  >
-                    <Circle size={12} className="wf-card-circle" />
-                    <div className="wf-card-content">
-                      <span className="wf-card-type">{docType}</span>
-                      <span className="wf-card-action">Click para crear</span>
-                    </div>
-                    <Plus size={12} className="wf-card-plus" />
-                  </button>
-                ))}
+                  return (
+                    <div key={doc.id} className={`wf-card ${blocked ? "wf-card-blocked" : ""} wf-card-${doc.status}`}>
+                      {/* Status + type */}
+                      <div className="wf-card-top">
+                        {blocked ? <Lock size={12} className="wf-status-blocked" /> : statusIcon(doc.status)}
+                        <span className="wf-card-type">{doc.docType}</span>
+                      </div>
 
-                {data.existing.length === 0 && data.missing.length === 0 && (
-                  <div className="wf-empty">Sin documentos para esta etapa</div>
-                )}
+                      {/* Linked doc or create */}
+                      {hasDoc ? (
+                        <button className="wf-card-doc" onClick={() => onOpenDoc(hasDoc)}>
+                          <FileText size={11} />
+                          <span>{hasDoc.title}</span>
+                        </button>
+                      ) : (
+                        <button
+                          className="wf-card-create"
+                          onClick={() => !blocked && onCreateDoc(workflow.areaId, doc.docType)}
+                          disabled={blocked}
+                        >
+                          <Plus size={11} />
+                          <span>{blocked ? "Bloqueado" : "Crear documento"}</span>
+                        </button>
+                      )}
+
+                      {/* Status selector */}
+                      {!blocked && (
+                        <div className="wf-card-statuses">
+                          {STATUSES.map((s) => (
+                            <button
+                              key={s.id}
+                              className={`wf-status-btn ${doc.status === s.id ? "active" : ""}`}
+                              style={doc.status === s.id ? { background: s.color, color: "white" } : {}}
+                              onClick={() => onUpdateStatus(stage.id, doc.id, s.id)}
+                              title={s.label}
+                            >
+                              {s.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Dependencies */}
+                      {deps.unmet.length > 0 && (
+                        <div className="wf-card-deps">
+                          <AlertTriangle size={10} />
+                          <span>Requiere: {deps.unmet.map((d) => `${d.docType} (${d.requiredStatus})`).join(", ")}</span>
+                        </div>
+                      )}
+                      {deps.met.length > 0 && deps.unmet.length === 0 && (
+                        <div className="wf-card-deps wf-card-deps-met">
+                          <CheckCircle size={10} />
+                          <span>Dependencias cumplidas</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           );

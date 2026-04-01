@@ -75,12 +75,15 @@ export function Workspace({ vault, editor, tabs, favorites, onToggleFavorite, on
       {workflow?.workflow && (
         <WorkflowBoard
           workflow={workflow.workflow}
+          allWorkflows={{ [workflow.workflow.areaId]: workflow.workflow }}
           pages={allPages.filter((p) => p.packageName === workflow.activePackage)}
           onOpenDoc={(doc) => { workflow.closeWorkflow(); vault.openDoc(doc); }}
           onCreateDoc={(packageName, title) => {
             workflow.closeWorkflow();
             vault.addDocToPackage(packageName, null, { title, blocks: [] });
           }}
+          onUpdateStatus={workflow.updateStatus}
+          onLinkDoc={workflow.linkDoc}
           onClose={workflow.closeWorkflow}
         />
       )}
