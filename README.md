@@ -13,8 +13,8 @@
   <img src="https://img.shields.io/badge/plataforma-macOS-blue" />
   <img src="https://img.shields.io/badge/stack-Electron%20%2B%20React%20%2B%20Tiptap-purple" />
   <img src="https://img.shields.io/badge/licencia-MIT-green" />
-  <img src="https://img.shields.io/badge/MCP-13%20herramientas-orange" />
-  <img src="https://img.shields.io/badge/tests-378%20unit%20%2B%2054%20E2E-brightgreen" />
+  <img src="https://img.shields.io/badge/MCP-19%20herramientas-orange" />
+  <img src="https://img.shields.io/badge/tests-397%20unit%20%2B%2060%20E2E-brightgreen" />
 </p>
 
 ---
@@ -52,6 +52,8 @@ Kuilo es un IDE de documentacion tecnica para equipos de una persona. Documenta 
 | **Duplicar pagina** | [COMMAND-PALETTE.md](docs/COMMAND-PALETTE.md) | Copia un documento con todo su contenido |
 | **Atajos de teclado** | [COMMAND-PALETTE.md](docs/COMMAND-PALETTE.md) | Panel de referencia con Cmd+/ |
 | **Workflow Pipeline** | [WORKFLOWS.md](docs/WORKFLOWS.md) | Flujos de documentacion por area con estados y dependencias cross-area |
+| **Kuilo AI** | [AI-CHAT.md](docs/AI-CHAT.md) | Chat con IA embebido — 5 providers, 3 gratis, doc links clickeables |
+| **Knowledge Base** | — | Metodologias (Shape Up, Stage-Gate, Lean), tutoriales, rules |
 
 ---
 
