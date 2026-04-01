@@ -783,6 +783,17 @@ Reglas:
   }
 });
 
+safeHandle("notes:open-external-window", async (_, { url, title }) => {
+  const win = new BrowserWindow({
+    width: 1000,
+    height: 700,
+    title: title || "Kuilo",
+    webPreferences: { nodeIntegration: false, contextIsolation: true },
+  });
+  win.loadURL(url);
+  return { ok: true };
+});
+
 // ─── MCP Connectors ──────────────────────────────────────────────────────────
 
 const isMac = process.platform === "darwin";
