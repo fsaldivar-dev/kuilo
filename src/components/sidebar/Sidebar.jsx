@@ -1,4 +1,5 @@
 import {
+  Bot,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -35,6 +36,7 @@ export function Sidebar({
   onOpenWizard,
   onOpenConnectors,
   onOpenWorkflow,
+  onOpenChat,
 }) {
   const addDoc = onAddDoc || vault.addDocToPackage;
   const openDoc = onOpenDoc || vault.openDoc;
@@ -143,6 +145,7 @@ export function Sidebar({
             onPublishSite={onPublishSite}
             onOpenWizard={onOpenWizard}
             onOpenConnectors={onOpenConnectors}
+            onOpenChat={onOpenChat}
           />
         </>
       )}
@@ -176,7 +179,7 @@ function SearchResults({ search, onOpenDoc }) {
   );
 }
 
-function SidebarFooter({ vault, onExportBook, onPublishSite, onOpenWizard, onOpenConnectors }) {
+function SidebarFooter({ vault, onExportBook, onPublishSite, onOpenWizard, onOpenConnectors, onOpenChat }) {
   if (vault.packageFormOpen) {
     return (
       <div className="sidebar-footer">
@@ -255,6 +258,12 @@ function SidebarFooter({ vault, onExportBook, onPublishSite, onOpenWizard, onOpe
         <Plug size={13} />
         Conectores AI
       </button>
+      {onOpenChat && (
+        <button className="footer-btn ai-chat-btn" onClick={onOpenChat}>
+          <Bot size={13} />
+          Kuilo AI
+        </button>
+      )}
     </div>
   );
 }
