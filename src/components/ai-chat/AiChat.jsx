@@ -24,8 +24,8 @@ export function AiChat({ open, onClose, vaultContext }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [config, setConfig] = useState(loadConfig);
+  const [showSettings, setShowSettings] = useState(!config.apiKey);
   const listRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -100,7 +100,13 @@ export function AiChat({ open, onClose, vaultContext }) {
             placeholder={PROVIDERS.find((p) => p.id === provider)?.placeholder}
             value={apiKey}
             onChange={(e) => { const c = { ...config, apiKey: e.target.value }; setConfig(c); saveConfig(c); }}
+            onKeyDown={(e) => { if (e.key === "Enter" && config.apiKey) setShowSettings(false); }}
           />
+          {apiKey && (
+            <button className="ai-chat-config-done" onClick={() => setShowSettings(false)}>
+              Listo
+            </button>
+          )}
           {(() => {
             const prov = PROVIDERS.find((p) => p.id === provider);
             return prov?.keyUrl && (
