@@ -5,7 +5,9 @@ npm-debug.log*
 *.log
 .env
 .env.local
-.claude/
+.claude/*
+!.claude/skills/
+!.claude/settings.json
 
 # User vault data (not source code — only screenshots are tracked)
 docs/*
