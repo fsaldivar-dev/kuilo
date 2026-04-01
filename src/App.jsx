@@ -7,6 +7,7 @@ import { Workspace } from "@/components/workspace/Workspace";
 import { RenameModal } from "@/components/modals/RenameModal";
 import { ConnectorsModal } from "@/components/modals/ConnectorsModal";
 import { CommandPalette, buildPaletteCommands } from "@/components/command-palette/CommandPalette";
+import { TemplatePickerModal } from "@/components/modals/TemplatePickerModal";
 import { useEditorState } from "@/hooks/use-editor-state";
 import { useVault } from "@/hooks/use-vault";
 import { useBackup } from "@/hooks/use-backup";
@@ -24,6 +25,7 @@ function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [templatePicker, setTemplatePicker] = useState(null);
 
   // ── Export book ──
   const exportBook = async () => {
@@ -76,6 +78,11 @@ function App() {
     }
   };
 
+  // ── Template picker wrapper ──
+  const addDocWithTemplate = (packageName, parentPath = null) => {
+    setTemplatePicker({ packageName, parentPath });
+  };
+
   // ── Cmd+K global hotkey ──
   useEffect(() => {
     const handler = (e) => {
@@ -106,6 +113,7 @@ function App() {
         onToggleCollapsed={() => setSidebarCollapsed((c) => !c)}
         vault={vault}
         search={search}
+        onAddDoc={addDocWithTemplate}
         onExportBook={exportBook}
         onOpenWizard={() => setWizardOpen(true)}
         onOpenConnectors={connectors.openConnectors}
@@ -127,6 +135,14 @@ function App() {
 
       <RenameModal vault={vault} />
       <ConnectorsModal connectors={connectors} backup={backup} />
+      {templatePicker && (
+        <TemplatePickerModal
+          packageName={templatePicker.packageName}
+          parentPath={templatePicker.parentPath}
+          onSelect={vault.addDocToPackage}
+          onClose={() => setTemplatePicker(null)}
+        />
+      )}
       <CommandPalette
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
