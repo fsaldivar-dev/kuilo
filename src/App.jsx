@@ -255,7 +255,7 @@ function App() {
         vaultContext={vaultContext}
         pages={vault.packages.flatMap((pkg) => {
           const walk = (pages, pkgName) => pages.flatMap((p) => [
-            { title: p.title, packageName: pkgName, pagePath: p.pagePath },
+            { title: p.title, packageName: pkgName, pagePath: p.pagePath, sourceType: p.sourceType },
             ...walk(p.children || [], pkgName),
           ]);
           return walk(pkg.pages || [], pkg.name);
