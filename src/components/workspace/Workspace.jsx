@@ -17,6 +17,7 @@ import { DiffView } from "@/components/workspace/DiffView";
 import { BacklinksPanel } from "@/components/workspace/BacklinksPanel";
 import { resolveWikiLink } from "@/lib/wiki-links";
 import { TabBar } from "@/components/workspace/TabBar";
+import { WorkflowBoard } from "@/components/workflow/WorkflowBoard";
 import { useState, useEffect, useMemo } from "react";
 
 const api = window.notesApi;
@@ -33,7 +34,7 @@ function flattenPages(packages) {
   return result;
 }
 
-export function Workspace({ vault, editor, tabs, favorites, onToggleFavorite, onSwitchTab, onCloseTab, sidebarCollapsed, onExpandSidebar }) {
+export function Workspace({ vault, editor, tabs, favorites, onToggleFavorite, onSwitchTab, onCloseTab, sidebarCollapsed, onExpandSidebar, workflow }) {
   const allPages = useMemo(() => flattenPages(vault.packages), [vault.packages]);
   const [backlinksOpen, setBacklinksOpen] = useState(false);
   const [backlinks, setBacklinks] = useState([]);
@@ -71,7 +72,22 @@ export function Workspace({ vault, editor, tabs, favorites, onToggleFavorite, on
           onToggleFavorite={onToggleFavorite}
         />
       )}
-      {sidebarCollapsed && (
+      {workflow?.workflow && (
+        <WorkflowBoard
+          workflow={workflow.workflow}
+          allWorkflows={{ [workflow.workflow.areaId]: workflow.workflow }}
+          pages={allPages.filter((p) => p.packageName === workflow.activePackage)}
+          onOpenDoc={(doc) => { workflow.closeWorkflow(); vault.openDoc(doc); }}
+          onCreateDoc={(packageName, title) => {
+            workflow.closeWorkflow();
+            vault.addDocToPackage(packageName, null, { title, blocks: [] });
+          }}
+          onUpdateStatus={workflow.updateStatus}
+          onLinkDoc={workflow.linkDoc}
+          onClose={workflow.closeWorkflow}
+        />
+      )}
+      {!workflow?.workflow && sidebarCollapsed && (
         <button
           className="sidebar-expand-btn"
           onClick={onExpandSidebar}
@@ -80,13 +96,14 @@ export function Workspace({ vault, editor, tabs, favorites, onToggleFavorite, on
           <ChevronRight size={14} />
         </button>
       )}
-      {!vault.activeDoc ? (
+      {!workflow?.workflow && !vault.activeDoc && (
         <div className="empty-state">
           <FileText size={52} />
           <h2>Sin página seleccionada</h2>
           <p>Elige una página del panel izquierdo o crea una nueva.</p>
         </div>
-      ) : (
+      )}
+      {!workflow?.workflow && vault.activeDoc && (
         <>
           {/* Cover image */}
           {vault.sourceType === "page-json" && (
