@@ -1104,14 +1104,14 @@ safeHandle("notes:export-book", async (_, { html, title, css }) => {
 // ─── Publish to Web ─────────────────────────────────────────────────────────
 
 safeHandle("notes:publish-site", async (_, { files }) => {
-  const { filePath, canceled } = await dialog.showOpenDialog({
+  const { filePaths, canceled } = await dialog.showOpenDialog({
     title: "Elegir carpeta para publicar",
     properties: ["openDirectory", "createDirectory"],
     buttonLabel: "Publicar aquí",
   });
-  if (canceled || !filePath?.[0]) return { ok: false };
+  if (canceled || !filePaths?.[0]) return { ok: false };
 
-  const outDir = filePath[0];
+  const outDir = filePaths[0];
   for (const file of files) {
     const fullPath = path.join(outDir, file.path);
     await fs.mkdir(path.dirname(fullPath), { recursive: true });
