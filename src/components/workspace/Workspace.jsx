@@ -75,13 +75,12 @@ export function Workspace({ vault, editor, tabs, favorites, onToggleFavorite, on
       {workflow?.workflow && (
         <WorkflowBoard
           workflow={workflow.workflow}
-          progress={workflow.progress}
-          onMoveCard={workflow.moveCard}
-          onAddInitiative={workflow.addInitiative}
-          onRemoveInitiative={workflow.removeInitiative}
-          onAddCard={workflow.addCard}
-          onRemoveCard={workflow.removeCard}
-          onOpenDoc={(docRef) => { workflow.closeWorkflow(); vault.openDoc(docRef); }}
+          pages={allPages.filter((p) => p.packageName === workflow.activePackage)}
+          onOpenDoc={(doc) => { workflow.closeWorkflow(); vault.openDoc(doc); }}
+          onCreateDoc={(packageName, title) => {
+            workflow.closeWorkflow();
+            vault.addDocToPackage(packageName, null, { title, blocks: [] });
+          }}
           onClose={workflow.closeWorkflow}
         />
       )}
