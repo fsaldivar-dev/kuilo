@@ -23,6 +23,7 @@ App.jsx (shell only)
 ├── <TemplatePickerModal /> → modals/TemplatePickerModal.jsx
 ├── <CommandPalette />   → command-palette/CommandPalette.jsx (Cmd+K)
 ├── <WorkflowBoard />    → workflow/WorkflowBoard.jsx (methodology-based pipeline)
+├── <AiChat />           → ai-chat/AiChat.jsx (5 providers, vault context, doc links)
 └── <ProjectWizard />    → project-wizard/ProjectWizard.jsx
 ```
 
