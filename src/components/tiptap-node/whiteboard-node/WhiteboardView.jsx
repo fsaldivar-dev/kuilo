@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { NodeViewWrapper } from "@tiptap/react";
+import DOMPurify from "dompurify";
 import { X } from "lucide-react";
 import "./whiteboard-node.scss";
 
@@ -66,7 +67,7 @@ export function WhiteboardView({ node, updateAttributes }) {
       {/* Preview */}
       <div className="whiteboard-preview" onClick={() => setEditorOpen(true)}>
         {svgPreview ? (
-          <div className="whiteboard-svg" dangerouslySetInnerHTML={{ __html: svgPreview }} />
+          <div className="whiteboard-svg" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(svgPreview, { USE_PROFILES: { svg: true } }) }} />
         ) : (
           <div className="whiteboard-empty">
             <span>Click para abrir whiteboard</span>
