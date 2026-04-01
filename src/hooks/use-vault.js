@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { htmlToPageDocument } from "@/lib/page-document";
 import {
   findPageInPackages,
-  filterPages,
   getFirstPage,
   getAncestorPagePaths,
   buildExpandedState,
@@ -18,8 +17,6 @@ export function useVault(editor) {
   const [sourceType, setSourceType] = useState(null);
   const [expandedItems, setExpandedItems] = useState({});
   const [vaultPath, setVaultPath] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState(null);
   const [packageDraft, setPackageDraft] = useState("");
   const [packageFormOpen, setPackageFormOpen] = useState(false);
   const [packageError, setPackageError] = useState("");
@@ -30,19 +27,6 @@ export function useVault(editor) {
   useEffect(() => { editor.activeDocRef.current = activeDoc; }, [activeDoc]);
   useEffect(() => { editor.sourceTypeRef.current = sourceType; }, [sourceType]);
   useEffect(() => { editor.setActiveDocRef.current = setActiveDoc; });
-
-  const filteredPackages = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query) return packages;
-    return packages
-      .map((pkg) => ({
-        ...pkg,
-        pages: pkg.name.toLowerCase().includes(query)
-          ? pkg.pages || []
-          : filterPages(pkg.pages || [], query),
-      }))
-      .filter((pkg) => pkg.name.toLowerCase().includes(query) || pkg.pages.length > 0);
-  }, [packages, searchQuery]);
 
   const expandPathToDoc = (doc) => {
     const keys = { [`package:${doc.packageName}`]: true };
@@ -176,17 +160,6 @@ export function useVault(editor) {
     editor.setSaveState("Renombrado");
   };
 
-  const handleSearch = async (query) => {
-    setSearchQuery(query);
-    if (!query.trim()) { setSearchResults(null); return; }
-    if (api?.searchContent) {
-      const results = await api.searchContent({ query: query.trim() });
-      setSearchResults(results);
-    } else {
-      setSearchResults(null);
-    }
-  };
-
   const collectLegacyDocs = (pages) => {
     const result = [];
     for (const page of pages) {
@@ -246,17 +219,13 @@ export function useVault(editor) {
     sourceType,
     expandedItems,
     vaultPath,
-    searchQuery,
-    searchResults,
     packageDraft,
     packageFormOpen,
     packageError,
     renameTarget,
     renameDraft,
-    filteredPackages,
 
     // Setters needed by UI
-    setSearchQuery,
     setPackageDraft,
     setPackageFormOpen,
     setPackageError,
@@ -273,7 +242,6 @@ export function useVault(editor) {
     deleteDoc,
     startRename,
     confirmRename,
-    handleSearch,
     promoteAllLegacy,
     promoteToStructured,
     toggleExpanded,
