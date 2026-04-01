@@ -102,9 +102,12 @@ export function AiChat({ open, onClose, vaultContext }) {
           {(() => {
             const prov = PROVIDERS.find((p) => p.id === provider);
             return prov?.keyUrl && (
-              <a className="ai-chat-key-link" href={prov.keyUrl} target="_blank" rel="noopener noreferrer">
+              <button
+                className="ai-chat-key-link"
+                onClick={() => api?.openExternalWindow?.({ url: prov.keyUrl, title: prov.label })}
+              >
                 <ExternalLink size={11} /> {prov.keyLabel}
-              </a>
+              </button>
             );
           })()}
           <p className="ai-chat-hint">
