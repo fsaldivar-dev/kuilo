@@ -1,0 +1,102 @@
+{
+  "version": 1,
+  "description": "Grafo de ejecución de documentación — define el orden óptimo para documentar un proyecto completo. Cada nodo es un doc type, las aristas son dependencias.",
+
+  "execution_order": [
+    {
+      "phase": 1,
+      "name": "Fundamentos",
+      "description": "Define el negocio y al cliente antes de construir nada",
+      "parallel": [
+        { "area": "negocio", "docType": "Lean Canvas", "why": "Sin modelo de negocio no hay dirección" },
+        { "area": "cliente", "docType": "Research Brief", "why": "Sin saber quién es tu cliente no puedes diseñar" },
+        { "area": "cliente", "docType": "User Interviews", "why": "Datos reales > suposiciones" }
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "Conocimiento del cliente",
+      "description": "Entiende a quién le vendes y cómo llega a ti",
+      "requires_phase": 1,
+      "parallel": [
+        { "area": "cliente", "docType": "Customer Persona", "why": "Necesitas un arquetipo concreto" },
+        { "area": "negocio", "docType": "Value Proposition", "why": "Qué ofreces vs qué necesitan" },
+        { "area": "negocio", "docType": "Interviews", "why": "Validar suposiciones del canvas" }
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "Producto y estrategia",
+      "description": "Define qué construir y cómo llegar al mercado",
+      "requires_phase": 2,
+      "parallel": [
+        { "area": "producto", "docType": "PRD", "why": "El contrato de qué vamos a construir" },
+        { "area": "cliente", "docType": "Journey Map", "why": "Mapa de touchpoints del cliente" },
+        { "area": "marketing", "docType": "Channel Strategy", "why": "Por dónde llegar al cliente" },
+        { "area": "legal", "docType": "Requisitos Legales", "why": "Qué necesitas cumplir antes de lanzar" }
+      ]
+    },
+    {
+      "phase": 4,
+      "name": "Diseño técnico",
+      "description": "Traduce el PRD a arquitectura y contratos técnicos",
+      "requires_phase": 3,
+      "parallel": [
+        { "area": "tecnico", "docType": "PRD", "why": "Versión técnica del PRD de producto" },
+        { "area": "tecnico", "docType": "RFC", "why": "Diseño técnico detallado" },
+        { "area": "producto", "docType": "Roadmap", "why": "Planificación de entregas" },
+        { "area": "legal", "docType": "Aviso de Privacidad", "why": "Redactar antes de que haya datos de usuarios" }
+      ]
+    },
+    {
+      "phase": 5,
+      "name": "Construcción",
+      "description": "Sprint planning, API specs, y ejecución",
+      "requires_phase": 4,
+      "parallel": [
+        { "area": "tecnico", "docType": "API Spec", "why": "Contratos antes de implementar" },
+        { "area": "tecnico", "docType": "Sprint Plan", "why": "Qué va en cada iteración" },
+        { "area": "marketing", "docType": "Content Calendar", "why": "Preparar contenido para lanzamiento" },
+        { "area": "operaciones", "docType": "Manual de Operaciones", "why": "Documentar procesos mientras se construyen" },
+        { "area": "legal", "docType": "Términos y Condiciones", "why": "Listos antes del lanzamiento" }
+      ]
+    },
+    {
+      "phase": 6,
+      "name": "Validación y lanzamiento",
+      "description": "Testing, compliance, y go-to-market",
+      "requires_phase": 5,
+      "parallel": [
+        { "area": "tecnico", "docType": "Runbook", "why": "Cómo operar en producción" },
+        { "area": "producto", "docType": "Launch Plan", "why": "Checklist de lanzamiento" },
+        { "area": "legal", "docType": "Review Checklist", "why": "Compliance final" },
+        { "area": "marketing", "docType": "Campaign Brief", "why": "Activar canales" }
+      ]
+    },
+    {
+      "phase": 7,
+      "name": "Operación y mejora",
+      "description": "Post-lanzamiento: medir, aprender, iterar",
+      "requires_phase": 6,
+      "parallel": [
+        { "area": "tecnico", "docType": "Retrospectiva", "why": "Qué salió bien y qué no" },
+        { "area": "negocio", "docType": "Métricas", "why": "Medir resultados del negocio" },
+        { "area": "marketing", "docType": "KPI Dashboard", "why": "Medir ROI de canales" },
+        { "area": "operaciones", "docType": "Métricas", "why": "Eficiencia operativa" },
+        { "area": "bitacora", "docType": "Entrada de Bitácora", "why": "Registrar aprendizajes" }
+      ]
+    }
+  ],
+
+  "cross_area_dependencies": [
+    { "from": { "area": "negocio", "docType": "Lean Canvas" }, "to": { "area": "producto", "docType": "PRD" }, "why": "El PRD necesita contexto de negocio" },
+    { "from": { "area": "negocio", "docType": "Lean Canvas" }, "to": { "area": "tecnico", "docType": "PRD" }, "why": "La versión técnica necesita el mismo contexto" },
+    { "from": { "area": "negocio", "docType": "Lean Canvas" }, "to": { "area": "legal", "docType": "Contratos" }, "why": "Los contratos se basan en el modelo de negocio" },
+    { "from": { "area": "cliente", "docType": "Customer Persona" }, "to": { "area": "marketing", "docType": "Channel Strategy" }, "why": "Los canales dependen de quién es el cliente" },
+    { "from": { "area": "cliente", "docType": "Customer Persona" }, "to": { "area": "producto", "docType": "Personas" }, "why": "Mismo arquetipo, distinto ángulo" },
+    { "from": { "area": "producto", "docType": "PRD" }, "to": { "area": "tecnico", "docType": "RFC" }, "why": "El RFC traduce el PRD a arquitectura" },
+    { "from": { "area": "tecnico", "docType": "RFC" }, "to": { "area": "tecnico", "docType": "API Spec" }, "why": "La API implementa lo que el RFC diseña" },
+    { "from": { "area": "legal", "docType": "Aviso de Privacidad" }, "to": { "area": "producto", "docType": "Launch Plan" }, "why": "No puedes lanzar sin compliance" },
+    { "from": { "area": "operaciones", "docType": "Manual de Operaciones" }, "to": { "area": "franquicia", "docType": "Manual de Franquicia" }, "why": "La franquicia se basa en las operaciones estándar" }
+  ]
+}
