@@ -17,6 +17,7 @@ import { useConnectors } from "@/hooks/use-connectors";
 import { useSearch } from "@/hooks/use-search";
 import { useTabs } from "@/hooks/use-tabs";
 import { useFavorites } from "@/hooks/use-favorites";
+import { useWorkflow } from "@/hooks/use-workflow";
 
 const api = window.notesApi;
 
@@ -27,6 +28,7 @@ function App() {
   const connectors = useConnectors(backup.refreshBackupStatus);
   const search = useSearch(vault.packages);
   const tabs = useTabs();
+  const wf = useWorkflow();
   const { favorites, toggleFavorite } = useFavorites();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -164,6 +166,7 @@ function App() {
         onPublishSite={publishSite}
         onOpenWizard={() => setWizardOpen(true)}
         onOpenConnectors={connectors.openConnectors}
+        onOpenWorkflow={wf.loadWorkflow}
       />
 
       <Workspace
@@ -176,6 +179,7 @@ function App() {
         onCloseTab={handleCloseTab}
         sidebarCollapsed={sidebarCollapsed}
         onExpandSidebar={() => setSidebarCollapsed(false)}
+        workflow={wf}
       />
 
       {wizardOpen && (

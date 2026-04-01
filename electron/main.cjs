@@ -1122,6 +1122,25 @@ safeHandle("notes:publish-site", async (_, { files }) => {
   return { ok: true, outDir, totalFiles: files.length };
 });
 
+// ─── Workflow Pipeline ──────────────────────────────────────────────────────
+
+safeHandle("notes:read-workflow", async (_, { packageName }) => {
+  const root = await ensureVaultRoot();
+  const pkgDir = packageName === "__root__" ? root : path.join(root, packageName);
+  const wfPath = path.join(pkgDir, "workflow.json");
+  if (!(await pathExists(wfPath))) return null;
+  return readJson(wfPath);
+});
+
+safeHandle("notes:save-workflow", async (_, { packageName, workflow }) => {
+  const root = await ensureVaultRoot();
+  const pkgDir = packageName === "__root__" ? root : path.join(root, packageName);
+  await fs.mkdir(pkgDir, { recursive: true });
+  const wfPath = path.join(pkgDir, "workflow.json");
+  await fs.writeFile(wfPath, JSON.stringify(workflow, null, 2), "utf8");
+  return { ok: true };
+});
+
 // ─── Git Backup ──────────────────────────────────────────────────────────────
 
 let gitBackup = null;
