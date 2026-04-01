@@ -20,10 +20,12 @@ export function Sidebar({
   onToggleCollapsed,
   vault,
   search,
+  onAddDoc,
   onExportBook,
   onOpenWizard,
   onOpenConnectors,
 }) {
+  const addDoc = onAddDoc || vault.addDocToPackage;
   return (
     <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
       {/* Draggable titlebar */}
@@ -80,7 +82,7 @@ export function Sidebar({
                     </button>
                     <button
                       className="icon-btn"
-                      onClick={() => vault.addDocToPackage(pkg.name)}
+                      onClick={() => addDoc(pkg.name)}
                       title="Nueva página"
                     >
                       <Plus size={12} />
@@ -98,7 +100,7 @@ export function Sidebar({
                           expandedItems={vault.expandedItems}
                           onToggle={vault.toggleExpanded}
                           onOpen={vault.openDoc}
-                          onAddChild={vault.addDocToPackage}
+                          onAddChild={addDoc}
                           onDelete={vault.deleteDoc}
                           onRename={vault.startRename}
                         />

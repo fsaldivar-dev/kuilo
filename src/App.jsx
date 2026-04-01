@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { buildBookHtml, BOOK_CSS } from "@/lib/export-book";
 import { generateProject } from "@/lib/project-generator";
 import { ProjectWizard } from "@/components/project-wizard/ProjectWizard";
@@ -6,6 +6,8 @@ import { Sidebar } from "@/components/sidebar/Sidebar";
 import { Workspace } from "@/components/workspace/Workspace";
 import { RenameModal } from "@/components/modals/RenameModal";
 import { ConnectorsModal } from "@/components/modals/ConnectorsModal";
+import { CommandPalette, buildPaletteCommands } from "@/components/command-palette/CommandPalette";
+import { TemplatePickerModal } from "@/components/modals/TemplatePickerModal";
 import { useEditorState } from "@/hooks/use-editor-state";
 import { useVault } from "@/hooks/use-vault";
 import { useBackup } from "@/hooks/use-backup";
@@ -22,6 +24,8 @@ function App() {
   const search = useSearch(vault.packages);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [templatePicker, setTemplatePicker] = useState(null);
 
   // ── Export book ──
   const exportBook = async () => {
@@ -74,6 +78,34 @@ function App() {
     }
   };
 
+  // ── Template picker wrapper ──
+  const addDocWithTemplate = (packageName, parentPath = null) => {
+    setTemplatePicker({ packageName, parentPath });
+  };
+
+  // ── Cmd+K global hotkey ──
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setPaletteOpen((c) => !c);
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
+
+  const paletteCommands = useMemo(
+    () => buildPaletteCommands({
+      vault,
+      search,
+      onOpenWizard: () => setWizardOpen(true),
+      onOpenConnectors: connectors.openConnectors,
+      onExportBook: exportBook,
+    }),
+    [vault.packages]
+  );
+
   return (
     <div className="app-shell">
       <Sidebar
@@ -81,6 +113,7 @@ function App() {
         onToggleCollapsed={() => setSidebarCollapsed((c) => !c)}
         vault={vault}
         search={search}
+        onAddDoc={addDocWithTemplate}
         onExportBook={exportBook}
         onOpenWizard={() => setWizardOpen(true)}
         onOpenConnectors={connectors.openConnectors}
@@ -102,6 +135,19 @@ function App() {
 
       <RenameModal vault={vault} />
       <ConnectorsModal connectors={connectors} backup={backup} />
+      {templatePicker && (
+        <TemplatePickerModal
+          packageName={templatePicker.packageName}
+          parentPath={templatePicker.parentPath}
+          onSelect={vault.addDocToPackage}
+          onClose={() => setTemplatePicker(null)}
+        />
+      )}
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        commands={paletteCommands}
+      />
     </div>
   );
 }
