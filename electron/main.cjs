@@ -414,6 +414,14 @@ safeHandle("notes:list-doc-versions", async (_, payload) => {
   return listVersionEntries(versionsDir);
 });
 
+safeHandle("notes:read-doc-version", async (_, payload) => {
+  const packageDir = await getPackageDir(payload.packageName);
+  const versionsDir = getVersionsDirFromPagePath(packageDir, payload.pagePath);
+  const versionPath = path.join(versionsDir, payload.versionFileName);
+  const snapshot = await readJson(versionPath);
+  return { document: snapshot.document, savedAt: snapshot.savedAt };
+});
+
 safeHandle("notes:create-package", async (_, payload) => {
   const root = await ensureVaultRoot();
   const baseName = slugify(payload.name, "paquete");
