@@ -846,10 +846,18 @@ safeHandle("notes:terminal-create", async (event, payload) => {
     args = [];
     env = { ...process.env, TERM: "xterm-256color" };
   } else if (mode === "claude") {
-    // Add MCP to .claude.json in vault dir for project-level config
-    const claudeMcp = path.join(root, ".mcp.json");
-    const mcpConfig = { mcpServers: { "kuilo-vault": { command: "node", args: [mcpScript, root] } } };
-    await fs.writeFile(claudeMcp, JSON.stringify(mcpConfig, null, 2), "utf8");
+    // Add kuilo-vault MCP to Claude's global config
+    const os = require("os");
+    const claudeConfigPath = path.join(os.homedir(), ".claude.json");
+    try {
+      const raw = await fs.readFile(claudeConfigPath, "utf8");
+      const claudeConfig = JSON.parse(raw);
+      if (!claudeConfig.mcpServers) claudeConfig.mcpServers = {};
+      claudeConfig.mcpServers["kuilo-vault"] = { command: "node", args: [mcpScript, root] };
+      await fs.writeFile(claudeConfigPath, JSON.stringify(claudeConfig, null, 2), "utf8");
+    } catch (e) {
+      process.stderr.write(`[terminal] Could not update claude config: ${e.message}\n`);
+    }
 
     cmd = "claude";
     args = [];
