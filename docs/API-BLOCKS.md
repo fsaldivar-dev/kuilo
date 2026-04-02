@@ -1,5 +1,8 @@
 # API Endpoint Blocks
 
+
+![API Blocks](screenshots/api-endpoint.png)
+
 Bloques visuales para documentar APIs REST directamente en el editor.
 
 ## Insertar

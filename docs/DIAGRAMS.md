@@ -1,5 +1,8 @@
 # Diagramas
 
+
+![Diagrams](screenshots/mermaid.png)
+
 Kuilo soporta diagramas visuales con dos motores: **React Flow** (editor visual) y **Mermaid** (fallback para tipos complejos).
 
 ## Editor visual (React Flow)
