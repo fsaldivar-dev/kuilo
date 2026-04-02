@@ -33,6 +33,13 @@ contextBridge.exposeInMainWorld("notesApi", {
   // Workflow
   readWorkflow: (payload) => ipcRenderer.invoke("notes:read-workflow", payload),
   saveWorkflow: (payload) => ipcRenderer.invoke("notes:save-workflow", payload),
+  // Terminal
+  terminalCreate: (payload) => ipcRenderer.invoke("notes:terminal-create", payload),
+  terminalWrite: (payload) => ipcRenderer.invoke("notes:terminal-write", payload),
+  terminalResize: (payload) => ipcRenderer.invoke("notes:terminal-resize", payload),
+  terminalKill: () => ipcRenderer.invoke("notes:terminal-kill"),
+  onTerminalData: (callback) => { ipcRenderer.on("terminal-data", (_, data) => callback(data)); },
+  onTerminalExit: (callback) => { ipcRenderer.on("terminal-exit", () => callback()); },
   // AI Chat
   aiChat: (payload) => ipcRenderer.invoke("notes:ai-chat", payload),
   openExternalWindow: (payload) => ipcRenderer.invoke("notes:open-external-window", payload),

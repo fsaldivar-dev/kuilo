@@ -24,6 +24,7 @@ App.jsx (shell only)
 ├── <CommandPalette />   → command-palette/CommandPalette.jsx (Cmd+K)
 ├── <WorkflowBoard />    → workflow/WorkflowBoard.jsx (methodology-based pipeline)
 ├── <AiChat />           → ai-chat/AiChat.jsx (5 providers, vault context, doc links)
+├── <TerminalPanel />    → terminal/Terminal.jsx (node-pty + xterm.js, Ctrl+`)
 └── <ProjectWizard />    → project-wizard/ProjectWizard.jsx
 ```
 
