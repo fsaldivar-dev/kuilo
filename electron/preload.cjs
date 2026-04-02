@@ -34,7 +34,7 @@ contextBridge.exposeInMainWorld("notesApi", {
   readWorkflow: (payload) => ipcRenderer.invoke("notes:read-workflow", payload),
   saveWorkflow: (payload) => ipcRenderer.invoke("notes:save-workflow", payload),
   // Terminal
-  terminalCreate: () => ipcRenderer.invoke("notes:terminal-create"),
+  terminalCreate: (payload) => ipcRenderer.invoke("notes:terminal-create", payload),
   terminalWrite: (payload) => ipcRenderer.invoke("notes:terminal-write", payload),
   terminalResize: (payload) => ipcRenderer.invoke("notes:terminal-resize", payload),
   terminalKill: () => ipcRenderer.invoke("notes:terminal-kill"),

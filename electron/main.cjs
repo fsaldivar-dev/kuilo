@@ -837,7 +837,7 @@ safeHandle("notes:terminal-create", async (event, payload) => {
 
   // Resolve full paths for CLIs (Electron doesn't inherit full shell PATH)
   const findBin = (name) => {
-    try { return execSync(`which ${name}`, { encoding: "utf8" }).trim(); } catch { return name; }
+    try { return execSync(`/bin/zsh -ilc "which ${name}" 2>/dev/null`, { encoding: "utf8" }).trim(); } catch { return name; }
   };
 
   const mode = payload?.mode || "shell";
