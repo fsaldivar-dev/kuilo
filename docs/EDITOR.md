@@ -1,5 +1,8 @@
 # Editor de bloques
 
+
+![Editor](screenshots/editor-with-content.png)
+
 Kuilo usa un editor visual basado en [Tiptap v3](https://tiptap.dev/) con soporte completo de Markdown.
 
 ## Bloques disponibles
