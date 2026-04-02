@@ -1,5 +1,8 @@
 # Tabs
 
+
+![Tabs](screenshots/tabs.png)
+
 Multiples documentos abiertos simultaneamente, como en VS Code.
 
 ## Uso
