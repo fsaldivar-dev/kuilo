@@ -824,22 +824,46 @@ safeHandle("notes:open-external-window", async (_, { url }) => {
 let ptyProcess = null;
 let ptyWebContents = null;
 
-safeHandle("notes:terminal-create", async (event) => {
+safeHandle("notes:terminal-create", async (event, payload) => {
   if (ptyProcess) { ptyProcess.kill(); ptyProcess = null; }
 
   const pty = require("node-pty");
-  const shell = process.platform === "win32" ? "powershell.exe" : process.env.SHELL || "/bin/zsh";
   const root = await ensureVaultRoot();
+  const mcpScript = path.join(__dirname, "..", "scripts", "docs-mcp.mjs");
 
-  // Store webContents reference before async operations
   ptyWebContents = event.sender;
 
-  ptyProcess = pty.spawn(shell, [], {
+  const mode = payload?.mode || "shell";
+  let cmd, args, env;
+
+  if (mode === "gemini") {
+    // Write temporary MCP config for Gemini CLI
+    const geminiMcpDir = path.join(root, ".gemini");
+    await fs.mkdir(geminiMcpDir, { recursive: true });
+    await fs.writeFile(path.join(geminiMcpDir, "settings.json"), JSON.stringify({
+      mcpServers: { "kuilo-vault": { command: "node", args: [mcpScript, root] } }
+    }, null, 2));
+
+    cmd = "gemini";
+    args = payload?.prompt ? ["-p", payload.prompt] : [];
+    env = { ...process.env, TERM: "xterm-256color" };
+  } else if (mode === "claude") {
+    cmd = "claude";
+    args = [];
+    env = { ...process.env, TERM: "xterm-256color" };
+    // Claude uses .claude/settings.json — the app's connector feature already handles this
+  } else {
+    cmd = process.platform === "win32" ? "powershell.exe" : process.env.SHELL || "/bin/zsh";
+    args = [];
+    env = { ...process.env, TERM: "xterm-256color" };
+  }
+
+  ptyProcess = pty.spawn(cmd, args, {
     name: "xterm-256color",
     cols: 80,
     rows: 24,
     cwd: root,
-    env: { ...process.env, TERM: "xterm-256color" },
+    env,
   });
 
   ptyProcess.onData((data) => {

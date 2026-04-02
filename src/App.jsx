@@ -269,6 +269,7 @@ function App() {
       <TerminalPanel
         open={terminalOpen}
         onClose={() => setTerminalOpen(false)}
+        activeDoc={vault.activeDoc}
       />
     </div>
   );
