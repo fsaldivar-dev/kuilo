@@ -1,23 +1,28 @@
 ---
 name: test
-description: Run all tests (unit + E2E) and report results
+description: Run all tests (unit + E2E) and report detailed results
 user_invocable: true
 ---
 
-Run all tests for the Kuilo project and report the results.
+Run all tests and report results with timing and error classification.
 
 ## Steps
 
-1. Run unit tests: `npm test`
-   - Report total files and tests passed
-   - If any fail, show the failure details
+1. **Unit tests:** `npm test 2>&1`
+   - Report: files passed/failed, tests passed/failed
+   - Report: total duration
+   - If failures: classify each as assertion error, timeout, or runtime error
+   - Show the failing test name + error message
 
-2. Run E2E web tests: `npx playwright test --project=web --reporter=line`
-   - Report total tests passed
-   - If any fail, show which tests and the error
+2. **E2E web tests:** `npx playwright test --project=web --reporter=line 2>&1`
+   - Report: tests passed/failed
+   - Report: total duration
+   - If failures: show test name + error type
+   - If snapshot mismatch: note which snapshots differ
 
-3. Report summary:
-   - "✅ X unit + Y E2E — all green" if all pass
-   - "❌ N failures" with details if any fail
+3. **Summary:**
+   - "X unit (Ys) + Z E2E (Ws) — all green" if all pass
+   - "N failures:" with classified details if any fail
+   - If unhandled errors detected, flag separately
 
 Do NOT create a PR or commit anything. Just run and report.
