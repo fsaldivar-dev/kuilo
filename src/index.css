@@ -690,8 +690,37 @@ input, textarea, select { font: inherit; }
 .terminal-body { flex: 1; overflow: hidden; padding: 4px 8px; }
 .terminal-body .xterm { height: 100%; }
 
-/* Terminal button in sidebar */
-.terminal-btn-sidebar { color: #34c759 !important; }
+/* Terminal mode picker */
+.terminal-picker {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.terminal-picker-hint { font-size: 12px; color: #98989d; margin-bottom: 4px; }
+.terminal-mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #2c2c2e;
+  color: #f2f2f7;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  transition: background 0.08s;
+}
+.terminal-mode-btn:hover { background: #3a3a3c; }
+.terminal-mode-icon { font-size: 16px; width: 24px; text-align: center; }
+.terminal-picker-context {
+  font-size: 11px;
+  color: #636366;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #3a3a3c;
+}
+.terminal-picker-context strong { color: #98989d; }
 
 /* ─── Tab Bar ────────────────────────────────────────────────────── */
 .tab-bar {

@@ -46,7 +46,9 @@
       "Bash(sed -i '' 's|DOMPurify.sanitize\\(svgPreview, { USE_PROFILES: { svg: true } }\\)|sanitizeSvg\\(svgPreview\\)|' src/components/tiptap-node/whiteboard-node/WhiteboardView.jsx)",
       "WebFetch(domain:docs.maestro.dev)",
       "Bash(curl -s http://localhost:5173)",
-      "Bash(curl -s http://localhost:5173/src/App.jsx)"
+      "Bash(curl -s http://localhost:5173/src/App.jsx)",
+      "Bash(gemini --help)",
+      "Bash(gemini mcp:*)"
     ]
   }
 }
