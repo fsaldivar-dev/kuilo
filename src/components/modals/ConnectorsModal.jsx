@@ -1,14 +1,19 @@
-import { Plug, X } from "lucide-react";
+import { useRef } from "react";
+import { Plug, X, Monitor, MessageSquare } from "lucide-react";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 
 export function ConnectorsModal({ connectors, backup }) {
+  const modalRef = useRef(null);
+  useFocusTrap(modalRef, connectors.connectorsOpen);
+
   if (!connectors.connectorsOpen) return null;
 
   return (
     <div className="connectors-overlay" onClick={() => connectors.setConnectorsOpen(false)}>
-      <div className="connectors-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="connectors-modal" ref={modalRef} onClick={(e) => e.stopPropagation()}>
         <div className="connectors-header">
           <h2><Plug size={18} /> Conectores AI</h2>
-          <button className="connectors-close" onClick={() => connectors.setConnectorsOpen(false)}>
+          <button className="connectors-close" onClick={() => connectors.setConnectorsOpen(false)} aria-label="Cerrar">
             <X size={16} />
           </button>
         </div>
@@ -131,7 +136,21 @@ export function ConnectorsModal({ connectors, backup }) {
 
         {!connectors.mcpInfo && (
           <div className="connectors-body">
-            <p className="connectors-hint">Ejecuta la app desde Electron para usar conectores.</p>
+            <div className="connectors-web-guide">
+              <h3><Monitor size={16} /> Conectores requieren la app de escritorio</h3>
+              <p className="connectors-hint" style={{ marginTop: 8 }}>
+                Los conectores MCP permiten que herramientas como Claude y Cursor
+                lean y escriban directamente en tu vault de Kuilo.
+              </p>
+              <p className="connectors-hint" style={{ marginTop: 8 }}>
+                Para usarlos, descarga la app de escritorio (Electron) desde el
+                repositorio del proyecto.
+              </p>
+              <div style={{ marginTop: 12, padding: "10px 12px", borderRadius: 8, background: "rgba(0,113,227,0.06)", fontSize: 13 }}>
+                <MessageSquare size={14} style={{ marginRight: 6, verticalAlign: -2 }} />
+                <strong>El AI Chat sí funciona en web</strong> — no necesitas Electron para chatear con tu documentación.
+              </div>
+            </div>
           </div>
         )}
       </div>

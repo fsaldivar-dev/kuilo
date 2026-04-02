@@ -11,6 +11,7 @@ import { ConnectorsModal } from "@/components/modals/ConnectorsModal";
 import { CommandPalette, buildPaletteCommands } from "@/components/command-palette/CommandPalette";
 import { TemplatePickerModal } from "@/components/modals/TemplatePickerModal";
 import { ShortcutsModal } from "@/components/modals/ShortcutsModal";
+import { ConfirmDialog } from "@/components/modals/ConfirmDialog";
 import { AiChat } from "@/components/ai-chat/AiChat";
 import { TerminalPanel } from "@/components/terminal/Terminal";
 import { useEditorState } from "@/hooks/use-editor-state";
@@ -40,6 +41,7 @@ function App() {
   const [chatOpen, setChatOpen] = useState(false);
   const [terminalOpen, setTerminalOpen] = useState(false);
   const [templatePicker, setTemplatePicker] = useState(null);
+  const [pendingCloseTabId, setPendingCloseTabId] = useState(null);
 
   // ── Export book ──
   const exportBook = async () => {
@@ -159,11 +161,14 @@ function App() {
     if (tab) vault.openDoc(tab);
   };
 
-  // Close tab — if it was active, the hook picks the next one
+  // Close tab — warn if active tab has unsaved changes
   const handleCloseTab = (tabId) => {
+    const isActiveTab = tabId === tabs.activeTabId;
+    if (isActiveTab && editor.isDirty) {
+      setPendingCloseTabId(tabId);
+      return;
+    }
     tabs.closeTab(tabId);
-    // After state update, the activeTab changes — we need to open it
-    // This is handled by the useEffect below
   };
 
   // ── Template picker wrapper ──
@@ -192,6 +197,8 @@ function App() {
       onOpenConnectors: connectors.openConnectors,
       onExportBook: exportBook,
       onPublishSite: publishSite,
+      onToggleTerminal: () => setTerminalOpen((c) => !c),
+      onOpenShortcuts: () => setShortcutsOpen(true),
     }),
     [vault.packages]
   );
@@ -248,6 +255,24 @@ function App() {
         />
       )}
       <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+      <ConfirmDialog
+        open={!!vault.deleteConfirm}
+        title="Eliminar documento"
+        message={`¿Eliminar "${vault.deleteConfirm?.title}"? Esta acción no se puede deshacer.`}
+        confirmLabel="Eliminar"
+        variant="danger"
+        onConfirm={vault.executeDelete}
+        onCancel={vault.cancelDelete}
+      />
+      <ConfirmDialog
+        open={!!pendingCloseTabId}
+        title="Cambios sin guardar"
+        message="Hay cambios sin guardar en esta pestaña. ¿Cerrar de todos modos?"
+        confirmLabel="Cerrar"
+        variant="danger"
+        onConfirm={() => { tabs.closeTab(pendingCloseTabId); setPendingCloseTabId(null); }}
+        onCancel={() => setPendingCloseTabId(null)}
+      />
       <CommandPalette
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}

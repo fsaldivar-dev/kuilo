@@ -5,7 +5,7 @@ export function BacklinksPanel({ backlinks, onNavigate, onClose }) {
     <aside className="backlinks-panel">
       <div className="backlinks-header">
         <h3><Link size={13} /> Backlinks</h3>
-        <button className="history-close" onClick={onClose}>
+        <button className="history-close" onClick={onClose} aria-label="Cerrar panel de backlinks">
           <X size={13} />
         </button>
       </div>

@@ -19,6 +19,7 @@ export function useEditorState() {
   const [historyOpen, setHistoryOpen] = useState(false);
   const [diffEntries, setDiffEntries] = useState(null);
   const [diffVersionLabel, setDiffVersionLabel] = useState("");
+  const [isDirty, setIsDirty] = useState(false);
 
   const saveTimeoutRef = useRef(null);
   const pageDocumentRef = useRef(null);
@@ -32,6 +33,7 @@ export function useEditorState() {
 
   const loadDoc = async (doc, result) => {
     setSaveState("Guardado");
+    setIsDirty(false);
     setJsonViewOpen(false);
 
     if (result.sourceType === "page-json") {
@@ -81,6 +83,7 @@ export function useEditorState() {
       if (result.versions) setVersions(result.versions);
       await refreshTreeRef.current?.(nextActive);
       setSaveState("Guardado");
+      setIsDirty(false);
     }, 450);
   };
 
@@ -95,11 +98,13 @@ export function useEditorState() {
       setActiveDocRef.current?.(nextActive);
       await refreshTreeRef.current?.(nextActive);
       setSaveState("Guardado");
+      setIsDirty(false);
     }, 450);
   };
 
   const handleEditorChange = (html, json) => {
     if (!activeDocRef.current) return;
+    setIsDirty(true);
 
     if (sourceTypeRef.current === "legacy-markdown") {
       const markdown = htmlToMarkdown(html);
@@ -174,6 +179,7 @@ export function useEditorState() {
     versions,
     jsonViewOpen, setJsonViewOpen,
     historyOpen, setHistoryOpen,
+    isDirty,
     diffEntries, diffVersionLabel,
     // Refs (vault writes to these)
     activeDocRef,
