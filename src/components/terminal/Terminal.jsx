@@ -77,11 +77,6 @@ export function TerminalPanel({ open, onClose }) {
 
       // User input → PTY
       term.onData((data) => {
-        if (!alive) {
-          // Restart if process exited
-          api.terminalCreate().then(() => setAlive(true));
-          return;
-        }
         api.terminalWrite({ data });
       });
 
