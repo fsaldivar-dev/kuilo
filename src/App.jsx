@@ -12,6 +12,7 @@ import { CommandPalette, buildPaletteCommands } from "@/components/command-palet
 import { TemplatePickerModal } from "@/components/modals/TemplatePickerModal";
 import { ShortcutsModal } from "@/components/modals/ShortcutsModal";
 import { AiChat } from "@/components/ai-chat/AiChat";
+import { TerminalPanel } from "@/components/terminal/Terminal";
 import { useEditorState } from "@/hooks/use-editor-state";
 import { useVault } from "@/hooks/use-vault";
 import { useBackup } from "@/hooks/use-backup";
@@ -37,6 +38,7 @@ function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [terminalOpen, setTerminalOpen] = useState(false);
   const [templatePicker, setTemplatePicker] = useState(null);
 
   // ── Export book ──
@@ -176,6 +178,7 @@ function App() {
       if (mod && e.key === "k") { e.preventDefault(); setPaletteOpen((c) => !c); }
       if (mod && e.key === "/") { e.preventDefault(); setShortcutsOpen((c) => !c); }
       if (mod && e.key === "w") { e.preventDefault(); if (tabs.activeTabId) handleCloseTab(tabs.activeTabId); }
+      if (mod && e.key === "`") { e.preventDefault(); setTerminalOpen((c) => !c); }
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
@@ -210,6 +213,7 @@ function App() {
         onOpenWizard={() => setWizardOpen(true)}
         onOpenConnectors={connectors.openConnectors}
         onOpenChat={() => setChatOpen(true)}
+        onOpenTerminal={() => setTerminalOpen(true)}
         onOpenWorkflow={wf.loadWorkflow}
       />
 
@@ -261,6 +265,11 @@ function App() {
           return walk(pkg.pages || []);
         })}
         onOpenDoc={openDocWithTab}
+      />
+      <TerminalPanel
+        open={terminalOpen}
+        onClose={() => setTerminalOpen(false)}
+        activeDoc={vault.activeDoc}
       />
     </div>
   );

@@ -819,6 +819,99 @@ safeHandle("notes:open-external-window", async (_, { url }) => {
   return { ok: true };
 });
 
+// ─── Integrated Terminal ─────────────────────────────────────────────────────
+
+let ptyProcess = null;
+let ptyWebContents = null;
+
+safeHandle("notes:terminal-create", async (event, payload) => {
+  if (ptyProcess) { ptyProcess.kill(); ptyProcess = null; }
+
+  const pty = require("node-pty");
+  const { execSync } = require("child_process");
+  const os = require("os");
+  const root = await ensureVaultRoot();
+  const mcpScript = path.join(__dirname, "..", "scripts", "docs-mcp.mjs");
+
+  ptyWebContents = event.sender;
+
+  // Resolve full paths for CLIs (Electron doesn't inherit full shell PATH)
+  const findBin = (name) => {
+    try {
+      const output = execSync(`/bin/zsh -ilc "which ${name}"`, { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+      // Filter out session restore messages — take only the line starting with /
+      const binPath = output.split("\n").find((l) => l.startsWith("/"));
+      return binPath?.trim() || name;
+    } catch { return name; }
+  };
+
+  const mode = payload?.mode || "shell";
+  const shell = process.platform === "win32" ? "powershell.exe" : process.env.SHELL || "/bin/zsh";
+  let cmd, args;
+
+  // Full PATH for spawned processes
+  const fullPath = ["/opt/homebrew/bin", "/usr/local/bin", os.homedir() + "/.local/bin", process.env.PATH].join(":");
+  const env = { ...process.env, TERM: "xterm-256color", PATH: fullPath };
+
+  if (mode === "gemini") {
+    try { execSync(`${findBin("gemini")} mcp remove kuilo-vault --scope user 2>/dev/null`, { stdio: "ignore", env }); } catch {}
+    try { execSync(`${findBin("gemini")} mcp add kuilo-vault node --scope user -- "${mcpScript}" "${root}"`, { stdio: "ignore", env }); } catch (e) {
+      process.stderr.write(`[terminal] Gemini MCP add failed: ${e.message}\n`);
+    }
+    cmd = findBin("gemini");
+    args = [];
+  } else if (mode === "claude") {
+    const claudeConfigPath = path.join(os.homedir(), ".claude.json");
+    try {
+      const raw = await fs.readFile(claudeConfigPath, "utf8");
+      const claudeConfig = JSON.parse(raw);
+      if (!claudeConfig.mcpServers) claudeConfig.mcpServers = {};
+      claudeConfig.mcpServers["kuilo-vault"] = { command: "node", args: [mcpScript, root] };
+      await fs.writeFile(claudeConfigPath, JSON.stringify(claudeConfig, null, 2), "utf8");
+    } catch (e) {
+      process.stderr.write(`[terminal] Claude config error: ${e.message}\n`);
+    }
+    cmd = findBin("claude");
+    args = [];
+  } else {
+    cmd = shell;
+    args = [];
+  }
+
+  process.stderr.write(`[terminal] Spawning: ${cmd} ${args.join(" ")} (mode: ${mode})\n`);
+
+  ptyProcess = pty.spawn(cmd, args, {
+    name: "xterm-256color",
+    cols: 80,
+    rows: 24,
+    cwd: root,
+    env,
+  });
+
+  ptyProcess.onData((data) => {
+    try { ptyWebContents?.send("terminal-data", data); } catch {}
+  });
+
+  ptyProcess.onExit(() => {
+    try { ptyWebContents?.send("terminal-exit"); } catch {}
+    ptyProcess = null;
+  });
+
+  return { ok: true, shell };
+});
+
+safeHandle("notes:terminal-write", async (_, { data }) => {
+  if (ptyProcess) ptyProcess.write(data);
+});
+
+safeHandle("notes:terminal-resize", async (_, { cols, rows }) => {
+  if (ptyProcess) ptyProcess.resize(cols, rows);
+});
+
+safeHandle("notes:terminal-kill", async () => {
+  if (ptyProcess) { ptyProcess.kill(); ptyProcess = null; }
+});
+
 // ─── MCP Connectors ──────────────────────────────────────────────────────────
 
 const isMac = process.platform === "darwin";

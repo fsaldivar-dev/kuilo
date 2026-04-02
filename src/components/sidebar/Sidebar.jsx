@@ -12,6 +12,7 @@ import {
   LayoutGrid,
   Star,
   StarOff,
+  TerminalSquare,
   FolderPlus,
   FolderTree,
   Pencil,
@@ -37,6 +38,7 @@ export function Sidebar({
   onOpenConnectors,
   onOpenWorkflow,
   onOpenChat,
+  onOpenTerminal,
 }) {
   const addDoc = onAddDoc || vault.addDocToPackage;
   const openDoc = onOpenDoc || vault.openDoc;
@@ -146,6 +148,7 @@ export function Sidebar({
             onOpenWizard={onOpenWizard}
             onOpenConnectors={onOpenConnectors}
             onOpenChat={onOpenChat}
+            onOpenTerminal={onOpenTerminal}
           />
         </>
       )}
@@ -179,7 +182,7 @@ function SearchResults({ search, onOpenDoc }) {
   );
 }
 
-function SidebarFooter({ vault, onExportBook, onPublishSite, onOpenWizard, onOpenConnectors, onOpenChat }) {
+function SidebarFooter({ vault, onExportBook, onPublishSite, onOpenWizard, onOpenConnectors, onOpenChat, onOpenTerminal }) {
   if (vault.packageFormOpen) {
     return (
       <div className="sidebar-footer">
@@ -262,6 +265,12 @@ function SidebarFooter({ vault, onExportBook, onPublishSite, onOpenWizard, onOpe
         <button className="footer-btn ai-chat-btn" onClick={onOpenChat}>
           <Bot size={13} />
           Kuilo AI
+        </button>
+      )}
+      {onOpenTerminal && (
+        <button className="footer-btn terminal-btn" onClick={onOpenTerminal}>
+          <TerminalSquare size={13} />
+          Terminal
         </button>
       )}
     </div>
