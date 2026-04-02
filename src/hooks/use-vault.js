@@ -147,9 +147,17 @@ export function useVault(editor) {
     editor.setSaveState(result?.ok ? "Carpeta abierta" : "No se pudo abrir carpeta");
   };
 
-  const deleteDoc = async (packageName, pagePath, title) => {
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+  const deleteDoc = (packageName, pagePath, title) => {
     if (!api?.deleteDoc) return;
-    if (!confirm(`¿Eliminar "${title}"? Esta acción no se puede deshacer.`)) return;
+    setDeleteConfirm({ packageName, pagePath, title });
+  };
+
+  const executeDelete = async () => {
+    if (!deleteConfirm) return;
+    const { packageName, pagePath } = deleteConfirm;
+    setDeleteConfirm(null);
     await api.deleteDoc({ packageName, pagePath });
     if (activeDoc?.packageName === packageName && activeDoc?.pagePath === pagePath) {
       setActiveDoc(null);
@@ -239,6 +247,7 @@ export function useVault(editor) {
     packageError,
     renameTarget,
     renameDraft,
+    deleteConfirm,
 
     // Setters needed by UI
     setPackageDraft,
@@ -256,6 +265,8 @@ export function useVault(editor) {
     handleChangeVault,
     openDocsFolder,
     deleteDoc,
+    executeDelete,
+    cancelDelete: () => setDeleteConfirm(null),
     startRename,
     confirmRename,
     promoteAllLegacy,
