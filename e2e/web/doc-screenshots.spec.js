@@ -165,4 +165,33 @@ test.describe("Documentation screenshots", () => {
     const screenshot = await page.screenshot();
     fs.writeFileSync(path.join(SCREENSHOTS_DIR, "workflow-board.png"), screenshot);
   });
+
+  test("kanban — injected kanban board", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForSelector(".sidebar", { timeout: 10000 });
+    await page.evaluate(() => {
+      const kanban = document.createElement("div");
+      kanban.id = "kanban-preview";
+      kanban.style.cssText = "width:700px;margin:40px auto;background:#1c1c1e;border-radius:12px;padding:16px;display:flex;gap:12px;font-family:-apple-system,system-ui,sans-serif;";
+      const cols = [
+        { title: "Por hacer", color: "#ff9500", cards: ["Diseñar landing page", "Configurar analytics", "Escribir copy de onboarding"] },
+        { title: "En progreso", color: "#0071e3", cards: ["Implementar auth OAuth", "Setup CI/CD pipeline"] },
+        { title: "Hecho", color: "#34c759", cards: ["Definir stack técnico", "Crear repositorio", "Diseñar esquema de DB", "Configurar Vite + React"] },
+      ];
+      kanban.innerHTML = cols.map(col => `
+        <div style="flex:1;background:#2c2c2e;border-radius:10px;overflow:hidden;">
+          <div style="padding:10px 12px;border-top:3px solid ${col.color};display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:12px;font-weight:700;color:#f2f2f7;text-transform:uppercase;">${col.title}</span>
+            <span style="font-size:11px;color:#8e8e93;background:rgba(255,255,255,0.06);padding:1px 7px;border-radius:10px;">${col.cards.length}</span>
+          </div>
+          <div style="padding:8px;display:flex;flex-direction:column;gap:4px;">
+            ${col.cards.map(c => '<div style="padding:8px 10px;border-radius:6px;border:1px solid #48484a;background:#3a3a3c;font-size:12px;color:#f2f2f7;cursor:grab;">' + c + '</div>').join("")}
+          </div>
+        </div>
+      `).join("");
+      document.body.appendChild(kanban);
+    });
+    const screenshot = await page.locator("#kanban-preview").screenshot();
+    fs.writeFileSync(path.join(SCREENSHOTS_DIR, "kanban.png"), screenshot);
+  });
 });
