@@ -1,7 +1,5 @@
 # Knowledge Base
 
-![Knowledge Base](screenshots/overview.png)
-
 Base de conocimiento integrada que permite al AI entender metodologias, guiar el proceso de documentacion, y validar calidad.
 
 ## Estructura
