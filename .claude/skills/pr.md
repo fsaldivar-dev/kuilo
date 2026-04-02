@@ -1,91 +1,88 @@
 ---
 name: pr
-description: Full PR workflow — tests, docs, snapshots, previews, then create PR
+description: Full PR workflow — tests, reviews, docs, snapshots, changelog, then create PR
 user_invocable: true
 ---
 
-Complete PR workflow. Run each step in order, stop if any step fails.
+Complete PR workflow. Run each step in order, stop and fix if any step fails.
 
 ## Arguments
 
 - First argument (optional): PR title override
 - Second argument (optional): version label (`major`, `minor`, `patch`, `no-release`)
-
-If no label specified, default to `minor` for features, `patch` for fixes.
+- Default: `minor` for features, `patch` for fixes, `no-release` for docs/CI
 
 ## Workflow
 
-### Step 1: Tests (/test)
-
-Run all tests locally. If any fail, STOP and report — do not create a PR with failing tests.
-
+### Step 1: Tests
+Run all tests. If any fail, STOP — do not continue.
 1. `npm test` — all unit tests must pass
 2. `npx playwright test --project=web` — all E2E tests must pass
+Report: "X unit + Y E2E — all green" or failure details.
 
-### Step 2: Documentation (/docs)
+### Step 2: Architecture Review
+Quick validation that code structure is sound.
+1. Check no file in `src/` exceeds 200 lines
+2. Verify App.jsx hook order matches CLAUDE.md
+3. Report any violations — fix before continuing
 
-Update all documentation to match current code:
-
-1. Read current `docs/*.md`, `README.md`, `CLAUDE.md`
+### Step 3: Documentation
+Update all docs to match current code.
+1. Read `docs/*.md`, `README.md`, `CLAUDE.md`
 2. Compare against actual code (hooks, components, MCP tools, IPC methods)
-3. Update any outdated docs
-4. Create new docs for undocumented features
-5. Update README badges and capabilities table
-6. Update CLAUDE.md architecture if structure changed
+3. Update outdated docs, create new docs for undocumented features
+4. Update README badges (test count, MCP tool count) and capabilities table
+5. Update CLAUDE.md architecture if structure changed
 
-### Step 3: Visual Previews (/preview)
+### Step 4: Visual Previews
+For any NEW UI components in this branch:
+1. `git diff main --name-only` for new components/modals
+2. Add E2E tests for new visual features
+3. For cross-platform: use layout assertions, not pixel snapshots
 
-For any NEW UI components or visual changes in this branch:
-
-1. Check `git diff main --name-only` for new components/modals
-2. Add E2E screenshot tests for new visual features
-3. Capture screenshots and verify they look correct
-
-### Step 4: Snapshots (/snapshots)
-
-Update visual regression baselines:
-
+### Step 5: Snapshots
 1. `npx playwright test --project=web --update-snapshots`
-2. Verify all pass without `--update-snapshots`
+2. Verify: `npx playwright test --project=web` (without --update-snapshots)
 
-### Step 5: Re-run Tests
+### Step 6: Changelog
+1. `git log $(git describe --tags --abbrev=0)..HEAD --oneline --no-merges`
+2. Group by: features, fixes, improvements
+3. Write entry in CHANGELOG.md (Spanish, user-facing)
 
-Run all tests ONE MORE TIME after docs/snapshot changes to confirm nothing broke:
-
+### Step 7: Final Tests
+Run ALL tests one more time after changes.
 1. `npm test`
 2. `npx playwright test --project=web`
+If anything fails → fix and re-run. Max 2 retries.
 
-If anything fails, fix it and re-run.
-
-### Step 6: Commit & Push
-
-1. Stage all changes: `git add -A`
+### Step 8: Commit & Push
+1. `git add -A`
 2. Commit with descriptive message
-3. Push to remote
+3. `git push`
 
-### Step 7: Create PR
+### Step 9: Create PR
+```
+gh pr create --title "..." --label "..." --body "..."
+```
+Body format: Summary (bullets), New files (table), Test plan (checklist)
 
-1. Use `gh pr create` with:
-   - Title from argument or auto-generated from commits
-   - Label: `minor`, `patch`, `major`, or `no-release`
-   - Body with:
-     - ## Summary (bullet points of what changed)
-     - ## New files (table if any)
-     - ## Test plan (checklist of what was verified)
-     - Footer: 🤖 Generated with [Claude Code](https://claude.com/claude-code)
+### Step 10: Wait for CI
+1. `gh pr checks <number> --watch`
+2. If CI fails → read logs, fix, push, re-watch
+3. Report final status: all green or blocked
 
-2. Report the PR URL
+## Error Recovery
 
-### Step 8: Wait for CI
-
-1. `gh pr checks <number> --watch` — wait for CI to complete
-2. If CI fails, diagnose from logs, fix, and re-push
-3. Report final status
+If any step fails:
+1. Report which step failed and why
+2. Attempt to fix (max 2 attempts)
+3. If can't fix → stop, report status, do NOT create PR with known issues
 
 ## Rules
 
 - NEVER create a PR with failing tests
 - NEVER skip documentation updates
 - ALWAYS run tests locally before pushing
-- ALWAYS update snapshots if UI changed
+- ALWAYS include changelog entry
 - Report each step's status as you go
+- Do not push more commits after saying "PR ready"

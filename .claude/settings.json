@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"systemMessage\": \"Recuerda: si hiciste cambios, corre /pr antes de cerrar.\"}'",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
