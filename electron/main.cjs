@@ -839,8 +839,10 @@ safeHandle("notes:terminal-create", async (event, payload) => {
   if (mode === "gemini") {
     // Add MCP server to Gemini CLI config (idempotent)
     const { execSync } = require("child_process");
-    try { execSync(`gemini mcp remove kuilo-vault 2>/dev/null`, { stdio: "ignore" }); } catch {}
-    try { execSync(`gemini mcp add kuilo-vault -- node ${mcpScript} ${root}`, { stdio: "ignore" }); } catch {}
+    try { execSync(`gemini mcp remove kuilo-vault --scope user`, { stdio: "ignore" }); } catch {}
+    try { execSync(`gemini mcp add kuilo-vault node --scope user -- "${mcpScript}" "${root}"`, { stdio: "ignore" }); } catch (e) {
+      process.stderr.write(`[terminal] Gemini MCP add failed: ${e.message}\n`);
+    }
 
     cmd = "gemini";
     args = [];
@@ -849,12 +851,15 @@ safeHandle("notes:terminal-create", async (event, payload) => {
     // Add kuilo-vault MCP to Claude's global config
     const os = require("os");
     const claudeConfigPath = path.join(os.homedir(), ".claude.json");
+    process.stderr.write(`[terminal] Claude config path: ${claudeConfigPath}\n`);
+    process.stderr.write(`[terminal] MCP script: ${mcpScript}, vault: ${root}\n`);
     try {
       const raw = await fs.readFile(claudeConfigPath, "utf8");
       const claudeConfig = JSON.parse(raw);
       if (!claudeConfig.mcpServers) claudeConfig.mcpServers = {};
       claudeConfig.mcpServers["kuilo-vault"] = { command: "node", args: [mcpScript, root] };
       await fs.writeFile(claudeConfigPath, JSON.stringify(claudeConfig, null, 2), "utf8");
+      process.stderr.write(`[terminal] Claude config updated with kuilo-vault\n`);
     } catch (e) {
       process.stderr.write(`[terminal] Could not update claude config: ${e.message}\n`);
     }
