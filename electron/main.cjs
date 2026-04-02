@@ -837,21 +837,23 @@ safeHandle("notes:terminal-create", async (event, payload) => {
   let cmd, args, env;
 
   if (mode === "gemini") {
-    // Write temporary MCP config for Gemini CLI
-    const geminiMcpDir = path.join(root, ".gemini");
-    await fs.mkdir(geminiMcpDir, { recursive: true });
-    await fs.writeFile(path.join(geminiMcpDir, "settings.json"), JSON.stringify({
-      mcpServers: { "kuilo-vault": { command: "node", args: [mcpScript, root] } }
-    }, null, 2));
+    // Add MCP server to Gemini CLI config (idempotent)
+    const { execSync } = require("child_process");
+    try { execSync(`gemini mcp remove kuilo-vault 2>/dev/null`, { stdio: "ignore" }); } catch {}
+    try { execSync(`gemini mcp add kuilo-vault -- node ${mcpScript} ${root}`, { stdio: "ignore" }); } catch {}
 
     cmd = "gemini";
-    args = payload?.prompt ? ["-p", payload.prompt] : [];
+    args = [];
     env = { ...process.env, TERM: "xterm-256color" };
   } else if (mode === "claude") {
+    // Add MCP to .claude.json in vault dir for project-level config
+    const claudeMcp = path.join(root, ".mcp.json");
+    const mcpConfig = { mcpServers: { "kuilo-vault": { command: "node", args: [mcpScript, root] } } };
+    await fs.writeFile(claudeMcp, JSON.stringify(mcpConfig, null, 2), "utf8");
+
     cmd = "claude";
     args = [];
     env = { ...process.env, TERM: "xterm-256color" };
-    // Claude uses .claude/settings.json — the app's connector feature already handles this
   } else {
     cmd = process.platform === "win32" ? "powershell.exe" : process.env.SHELL || "/bin/zsh";
     args = [];
