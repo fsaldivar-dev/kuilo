@@ -1,5 +1,8 @@
 # Export
 
+
+![Export](screenshots/full-app.png)
+
 Kuilo exporta documentos en múltiples formatos.
 
 ## Formatos
