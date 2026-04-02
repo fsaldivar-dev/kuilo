@@ -3,9 +3,10 @@
  * Asks questions, then creates packages + initial documents.
  */
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X, ChevronRight, ChevronLeft, Rocket } from "lucide-react";
+import { X, ChevronRight, ChevronLeft, Rocket, Loader2 } from "lucide-react";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 import "./project-wizard.scss";
 
 const AREAS = [
@@ -31,6 +32,8 @@ const PRESETS = [
 const api = window.notesApi;
 
 export function ProjectWizard({ onComplete, onClose }) {
+  const wizardRef = useRef(null);
+  useFocusTrap(wizardRef, true);
   const [step, setStep] = useState(0);
   const [projectName, setProjectName] = useState("");
   const [projectDesc, setProjectDesc] = useState("");
@@ -61,7 +64,10 @@ export function ProjectWizard({ onComplete, onClose }) {
     }
   };
 
+  const [creating, setCreating] = useState(false);
+
   const handleCreate = () => {
+    setCreating(true);
     const areas = AREAS.filter(a => selectedAreas.includes(a.id));
     onComplete({ projectName, projectDesc, vaultPath, areas, githubUrl, githubToken });
   };
@@ -75,7 +81,7 @@ export function ProjectWizard({ onComplete, onClose }) {
 
   return createPortal(
     <div className="wizard-overlay">
-      <div className="wizard-container">
+      <div className="wizard-container" ref={wizardRef}>
         {/* Header */}
         <div className="wizard-header">
           <div className="wizard-steps">
@@ -85,7 +91,7 @@ export function ProjectWizard({ onComplete, onClose }) {
               </span>
             ))}
           </div>
-          <button className="wizard-close" onClick={onClose}><X size={18} /></button>
+          <button className="wizard-close" onClick={onClose} aria-label="Cerrar wizard"><X size={18} /></button>
         </div>
 
         {/* Step 0: Project info */}
@@ -251,12 +257,17 @@ export function ProjectWizard({ onComplete, onClose }) {
           )}
           <div className="wizard-spacer" />
           {step < 4 ? (
-            <button className="wizard-btn primary" onClick={() => setStep(s => s + 1)} disabled={!canNext()}>
+            <button
+              className="wizard-btn primary"
+              onClick={() => setStep(s => s + 1)}
+              disabled={!canNext()}
+              title={!canNext() ? (step === 0 ? "Ingresa un nombre y selecciona carpeta" : step === 1 ? "Selecciona un tipo" : step === 2 ? "Selecciona al menos un área" : "") : ""}
+            >
               Siguiente <ChevronRight size={14} />
             </button>
           ) : (
-            <button className="wizard-btn create" onClick={handleCreate}>
-              <Rocket size={14} /> Crear proyecto
+            <button className="wizard-btn create" onClick={handleCreate} disabled={creating}>
+              {creating ? <><Loader2 size={14} className="ai-chat-spinner" /> Creando...</> : <><Rocket size={14} /> Crear proyecto</>}
             </button>
           )}
         </div>

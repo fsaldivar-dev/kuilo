@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, FileText, FolderPlus, Plus, Settings, Download, Plug } from "lucide-react";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 
 /**
  * Cmd+K command palette — global quick actions + document navigation.
@@ -9,6 +10,8 @@ export function CommandPalette({ open, onClose, commands }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef(null);
   const listRef = useRef(null);
+  const paletteRef = useRef(null);
+  useFocusTrap(paletteRef, open);
 
   const filtered = query.trim()
     ? commands.filter((c) => {
@@ -59,7 +62,7 @@ export function CommandPalette({ open, onClose, commands }) {
 
   return (
     <div className="palette-overlay" onClick={onClose}>
-      <div className="palette" onClick={(e) => e.stopPropagation()}>
+      <div className="palette" ref={paletteRef} onClick={(e) => e.stopPropagation()}>
         <div className="palette-input-row">
           <Search size={16} />
           <input
@@ -69,6 +72,7 @@ export function CommandPalette({ open, onClose, commands }) {
             placeholder="Buscar comando o página..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            aria-label="Buscar comando"
           />
         </div>
         <div className="palette-list" ref={listRef}>
@@ -100,7 +104,9 @@ export function CommandPalette({ open, onClose, commands }) {
  * Build the command list from app state.
  * Called on each render so doc list stays current.
  */
-export function buildPaletteCommands({ vault, search, onOpenWizard, onOpenConnectors, onExportBook, onPublishSite }) {
+export function buildPaletteCommands({ vault, search, onOpenWizard, onOpenConnectors, onExportBook, onPublishSite, onToggleTerminal, onOpenShortcuts }) {
+  const isMac = navigator.platform.includes("Mac");
+  const mod = isMac ? "⌘" : "Ctrl";
   const commands = [];
 
   // Navigation: all pages in all packages
@@ -180,6 +186,30 @@ export function buildPaletteCommands({ vault, search, onOpenWizard, onOpenConnec
     icon: <Settings size={14} />,
     execute: () => vault.handleChangeVault(),
   });
+
+  if (onToggleTerminal) {
+    commands.push({
+      id: "action:terminal",
+      title: "Terminal",
+      description: "Abrir o cerrar la terminal integrada",
+      keywords: ["terminal", "consola", "shell", "bash"],
+      icon: <Settings size={14} />,
+      shortcut: "Ctrl+`",
+      execute: onToggleTerminal,
+    });
+  }
+
+  if (onOpenShortcuts) {
+    commands.push({
+      id: "action:shortcuts",
+      title: "Atajos de teclado",
+      description: "Ver todos los atajos disponibles",
+      keywords: ["shortcuts", "atajos", "teclado", "keyboard"],
+      icon: <Settings size={14} />,
+      shortcut: `${mod}+?`,
+      execute: onOpenShortcuts,
+    });
+  }
 
   return commands;
 }
