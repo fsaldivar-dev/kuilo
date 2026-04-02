@@ -37,6 +37,7 @@ export const PAGE_TEMPLATES = [
     title: "Página en blanco",
     description: "Documento vacío",
     icon: "📄",
+    category: "Básico",
     blocks: [p()],
   },
 
@@ -45,6 +46,7 @@ export const PAGE_TEMPLATES = [
     title: "PRD",
     description: "Product Requirements Document",
     icon: "📋",
+    category: "Producto",
     blocks: [
       h(1, "PRD: [Feature]"),
       meta(
@@ -74,6 +76,7 @@ export const PAGE_TEMPLATES = [
     id: "rfc",
     title: "RFC / ADR",
     description: "Propuesta técnica o decisión de arquitectura",
+    category: "Técnico",
     icon: "📐",
     blocks: [
       h(1, "RFC: [Título]"),
@@ -105,6 +108,7 @@ export const PAGE_TEMPLATES = [
     id: "meeting-notes",
     title: "Meeting Notes",
     description: "Notas de reunión con decisiones y action items",
+    category: "Básico",
     icon: "🤝",
     blocks: [
       h(1, "Meeting: [Tema]"),
@@ -129,6 +133,7 @@ export const PAGE_TEMPLATES = [
     id: "sprint-plan",
     title: "Sprint Plan",
     description: "Planificación de sprint con backlog y retro",
+    category: "Producto",
     icon: "🚀",
     blocks: [
       h(1, "Sprint #N"),
@@ -157,6 +162,7 @@ export const PAGE_TEMPLATES = [
     id: "api-spec",
     title: "API Spec",
     description: "Documentación de API REST con endpoints",
+    category: "Técnico",
     icon: "🌐",
     blocks: [
       h(1, "API: [Nombre del servicio]"),
@@ -208,6 +214,7 @@ export const PAGE_TEMPLATES = [
     id: "runbook",
     title: "Runbook",
     description: "Guía de operaciones y troubleshooting",
+    category: "Técnico",
     icon: "🔧",
     blocks: [
       h(1, "Runbook: [Servicio]"),

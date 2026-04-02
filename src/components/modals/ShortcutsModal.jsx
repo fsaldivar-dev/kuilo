@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 
 const isMac = navigator.platform.includes("Mac");
 const mod = isMac ? "⌘" : "Ctrl";
@@ -37,6 +38,9 @@ const SHORTCUTS = [
 ];
 
 export function ShortcutsModal({ open, onClose }) {
+  const modalRef = useRef(null);
+  useFocusTrap(modalRef, open);
+
   useEffect(() => {
     if (!open) return;
     const handler = (e) => { if (e.key === "Escape") { e.preventDefault(); onClose(); } };
@@ -48,10 +52,10 @@ export function ShortcutsModal({ open, onClose }) {
 
   return (
     <div className="connectors-overlay" onClick={onClose}>
-      <div className="shortcuts-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="shortcuts-modal" ref={modalRef} onClick={(e) => e.stopPropagation()}>
         <div className="shortcuts-header">
           <h3>Atajos de teclado</h3>
-          <button className="history-close" onClick={onClose}>
+          <button className="history-close" onClick={onClose} aria-label="Cerrar">
             <X size={14} />
           </button>
         </div>

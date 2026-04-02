@@ -21,6 +21,7 @@ export function TabBar({ tabs, activeTabId, onSwitch, onClose, onCloseOthers, fa
           <button
             className="tab-close"
             onClick={(e) => { e.stopPropagation(); onClose(tab.id); }}
+            aria-label="Cerrar pestaña"
           >
             <X size={10} />
           </button>
