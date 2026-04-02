@@ -74,14 +74,20 @@ export function AiChat({ open, onClose, vaultContext, pages, onOpenDoc }) {
         <Bot size={15} />
         <span>Kuilo AI</span>
         <div className="ai-chat-header-actions">
-          <button className="ai-chat-settings-btn" onClick={() => setShowSettings((c) => !c)} title="Configurar API key">
+          <button className="ai-chat-settings-btn" onClick={() => setShowSettings((c) => !c)} title="Configurar API key" aria-label="Configuracion del chat">
             <Settings size={13} />
           </button>
-          <button className="ai-chat-close" onClick={onClose}>
+          <button className="ai-chat-close" onClick={onClose} aria-label="Cerrar chat">
             <X size={14} />
           </button>
         </div>
       </div>
+
+      {!apiKey && !showSettings && (
+        <div className="ai-chat-key-banner">
+          Necesitas una API key para usar el chat. Opciones gratuitas: Gemini, Groq, Cohere.
+        </div>
+      )}
 
       {showSettings && (
         <div className="ai-chat-config">
@@ -101,6 +107,7 @@ export function AiChat({ open, onClose, vaultContext, pages, onOpenDoc }) {
             value={apiKey}
             onChange={(e) => { const c = { ...config, apiKey: e.target.value }; setConfig(c); saveConfig(c); }}
             onKeyDown={(e) => { if (e.key === "Enter" && config.apiKey) setShowSettings(false); }}
+            aria-label="API key"
           />
           {apiKey && (
             <button className="ai-chat-config-done" onClick={() => setShowSettings(false)}>
@@ -164,8 +171,9 @@ export function AiChat({ open, onClose, vaultContext, pages, onOpenDoc }) {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") send(); }}
           disabled={loading}
+          aria-label="Escribe un mensaje"
         />
-        <button className="ai-chat-send" onClick={send} disabled={loading || !input.trim()}>
+        <button className="ai-chat-send" onClick={send} disabled={loading || !input.trim()} aria-label="Enviar mensaje">
           <Send size={14} />
         </button>
       </div>

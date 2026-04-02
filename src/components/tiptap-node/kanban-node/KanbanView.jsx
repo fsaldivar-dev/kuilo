@@ -1,10 +1,18 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { NodeViewWrapper } from "@tiptap/react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Plus, Trash2, X } from "lucide-react";
+import { ConfirmDialog } from "@/components/modals/ConfirmDialog";
 import "./kanban-node.scss";
 
-const COLORS = ["", "blue", "green", "orange", "red", "purple"];
+const COLORS = [
+  { id: "", label: "Sin color" },
+  { id: "blue", label: "Azul" },
+  { id: "green", label: "Verde" },
+  { id: "orange", label: "Naranja" },
+  { id: "red", label: "Rojo" },
+  { id: "purple", label: "Morado" },
+];
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 
 function safeParse(val) {
@@ -16,6 +24,7 @@ function safeParse(val) {
 
 export function KanbanView({ node, updateAttributes }) {
   const board = safeParse(node.attrs.board);
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   const save = useCallback((newBoard) => {
     updateAttributes({ board: JSON.stringify(newBoard) });
@@ -86,7 +95,7 @@ export function KanbanView({ node, updateAttributes }) {
                   onChange={(e) => renameColumn(col.id, e.target.value)}
                 />
                 <span className="kanban-column-count">{col.cards.length}</span>
-                <button className="kanban-icon-btn danger" onClick={() => deleteColumn(col.id)} title="Eliminar columna">
+                <button className="kanban-icon-btn danger" onClick={() => setPendingDelete({ type: "column", colId: col.id, title: col.title, cardCount: col.cards.length })} title="Eliminar columna">
                   <X size={12} />
                 </button>
               </div>
@@ -117,13 +126,15 @@ export function KanbanView({ node, updateAttributes }) {
                               <div className="kanban-card-colors">
                                 {COLORS.map((c) => (
                                   <button
-                                    key={c || "none"}
-                                    className={`kanban-color-dot ${c || "none"} ${card.color === c ? "active" : ""}`}
-                                    onClick={() => updateCard(col.id, card.id, { color: c })}
+                                    key={c.id || "none"}
+                                    className={`kanban-color-dot ${c.id || "none"} ${card.color === c.id ? "active" : ""}`}
+                                    onClick={() => updateCard(col.id, card.id, { color: c.id })}
+                                    title={c.label}
+                                    aria-label={c.label}
                                   />
                                 ))}
                               </div>
-                              <button className="kanban-icon-btn danger" onClick={() => deleteCard(col.id, card.id)}>
+                              <button className="kanban-icon-btn danger" onClick={() => setPendingDelete({ type: "card", colId: col.id, cardId: card.id, title: card.title })}>
                                 <Trash2 size={10} />
                               </button>
                             </div>
@@ -147,6 +158,24 @@ export function KanbanView({ node, updateAttributes }) {
           </button>
         </div>
       </DragDropContext>
+
+      <ConfirmDialog
+        open={!!pendingDelete}
+        title={pendingDelete?.type === "column" ? "Eliminar columna" : "Eliminar tarea"}
+        message={
+          pendingDelete?.type === "column"
+            ? `¿Eliminar "${pendingDelete.title}" y sus ${pendingDelete.cardCount} tarea(s)?`
+            : `¿Eliminar "${pendingDelete?.title}"?`
+        }
+        confirmLabel="Eliminar"
+        variant="danger"
+        onConfirm={() => {
+          if (pendingDelete.type === "column") deleteColumn(pendingDelete.colId);
+          else deleteCard(pendingDelete.colId, pendingDelete.cardId);
+          setPendingDelete(null);
+        }}
+        onCancel={() => setPendingDelete(null)}
+      />
     </NodeViewWrapper>
   );
 }

@@ -92,6 +92,7 @@ export function Workspace({ vault, editor, tabs, favorites, onToggleFavorite, on
           className="sidebar-expand-btn"
           onClick={onExpandSidebar}
           title="Expandir sidebar"
+          aria-label="Expandir sidebar"
         >
           <ChevronRight size={14} />
         </button>
@@ -101,6 +102,9 @@ export function Workspace({ vault, editor, tabs, favorites, onToggleFavorite, on
           <FileText size={52} />
           <h2>Sin página seleccionada</h2>
           <p>Elige una página del panel izquierdo o crea una nueva.</p>
+          <div className="empty-state-hint">
+            <kbd>⌘K</kbd> Paleta de comandos &nbsp;&middot;&nbsp; <kbd>⌘/</kbd> Atajos de teclado
+          </div>
         </div>
       )}
       {!workflow?.workflow && vault.activeDoc && (
@@ -284,7 +288,7 @@ function HistoryPanel({ editor, sourceType }) {
     <aside className="history-panel">
       <div className="history-header">
         <h3>Historial</h3>
-        <button className="history-close" onClick={() => editor.setHistoryOpen(false)}>
+        <button className="history-close" onClick={() => editor.setHistoryOpen(false)} aria-label="Cerrar historial">
           <X size={13} />
         </button>
       </div>
@@ -310,8 +314,9 @@ function HistoryPanel({ editor, sourceType }) {
               <button
                 className="compare-btn"
                 onClick={() => editor.compareVersion(version.fileName, `v${version.version}`)}
+                title="Compara esta versión con el documento actual"
               >
-                Comparar
+                Comparar con actual
               </button>
               <button
                 className="restore-btn"
