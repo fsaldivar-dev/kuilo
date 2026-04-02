@@ -9,6 +9,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "desktop": "vite build && electron electron/main.cjs",
+    "postinstall": "npx @electron/rebuild -m node_modules/node-pty 2>/dev/null || true",
     "docs:status": "git status --short docs",
     "mcp:docs": "node scripts/docs-mcp.mjs",
     "test": "vitest",
