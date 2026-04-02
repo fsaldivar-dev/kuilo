@@ -2,7 +2,6 @@
 
 Kuilo incluye un servidor MCP con 19 herramientas que conecta tu vault con cualquier LLM.
 
-![MCP](screenshots/overview.png)
 
 ## Setup
 
