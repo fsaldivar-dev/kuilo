@@ -30,15 +30,19 @@ const THEME_DARK = {
   brightWhite: "#ffffff",
 };
 
-export function TerminalPanel({ open, onClose, onToggleSize }) {
+export function TerminalPanel({ open, onClose }) {
   const containerRef = useRef(null);
   const xtermRef = useRef(null);
   const fitRef = useRef(null);
   const [minimized, setMinimized] = useState(false);
   const [alive, setAlive] = useState(false);
+  const initialized = useRef(false);
 
   useEffect(() => {
-    if (!open || !containerRef.current || xtermRef.current) return;
+    if (!open || !containerRef.current || initialized.current) return;
+    if (!api?.terminalCreate) return;
+
+    initialized.current = true;
 
     const term = new XTerm({
       theme: THEME_DARK,
@@ -48,45 +52,51 @@ export function TerminalPanel({ open, onClose, onToggleSize }) {
       cursorBlink: true,
       cursorStyle: "bar",
       scrollback: 5000,
-      allowProposedApi: true,
     });
 
     const fit = new FitAddon();
     term.loadAddon(fit);
-    term.open(containerRef.current);
-    fit.fit();
 
-    xtermRef.current = term;
-    fitRef.current = fit;
+    // Wait a tick for container to be in DOM
+    requestAnimationFrame(() => {
+      term.open(containerRef.current);
+      fit.fit();
 
-    // Connect to PTY
-    api?.terminalCreate?.().then(() => {
-      setAlive(true);
+      xtermRef.current = term;
+      fitRef.current = fit;
 
+      // Register data listener BEFORE creating PTY
       api.onTerminalData((data) => {
         term.write(data);
       });
 
       api.onTerminalExit(() => {
-        term.write("\r\n[Process exited]\r\n");
+        term.write("\r\n\x1b[90m[Proceso terminado — presiona cualquier tecla para reiniciar]\x1b[0m\r\n");
         setAlive(false);
       });
 
-      // Send user input to PTY
+      // User input → PTY
       term.onData((data) => {
+        if (!alive) {
+          // Restart if process exited
+          api.terminalCreate().then(() => setAlive(true));
+          return;
+        }
         api.terminalWrite({ data });
       });
 
-      // Handle resize
+      // Resize → PTY
       term.onResize(({ cols, rows }) => {
         api.terminalResize({ cols, rows });
       });
 
-      fit.fit();
+      // Start PTY
+      api.terminalCreate().then(() => {
+        setAlive(true);
+      });
     });
 
-    // Window resize
-    const handleResize = () => { fitRef.current?.fit(); };
+    const handleResize = () => fitRef.current?.fit();
     window.addEventListener("resize", handleResize);
 
     return () => {
@@ -94,10 +104,10 @@ export function TerminalPanel({ open, onClose, onToggleSize }) {
     };
   }, [open]);
 
-  // Refit when minimized state changes
+  // Refit when un-minimized
   useEffect(() => {
-    if (!minimized && open) {
-      setTimeout(() => fitRef.current?.fit(), 100);
+    if (!minimized && open && fitRef.current) {
+      setTimeout(() => fitRef.current.fit(), 50);
     }
   }, [minimized, open]);
 
@@ -112,15 +122,27 @@ export function TerminalPanel({ open, onClose, onToggleSize }) {
           {alive ? "●" : "○"}
         </span>
         <div className="terminal-actions">
-          <button className="terminal-btn" onClick={() => setMinimized((m) => !m)} title={minimized ? "Expandir" : "Minimizar"}>
+          <button className="terminal-btn" onClick={() => setMinimized((m) => !m)}>
             {minimized ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
           </button>
-          <button className="terminal-btn" onClick={() => { api?.terminalKill?.(); onClose(); }} title="Cerrar terminal">
+          <button className="terminal-btn" onClick={() => {
+            api?.terminalKill?.();
+            initialized.current = false;
+            xtermRef.current?.dispose();
+            xtermRef.current = null;
+            fitRef.current = null;
+            setAlive(false);
+            onClose();
+          }}>
             <X size={13} />
           </button>
         </div>
       </div>
-      <div className="terminal-body" ref={containerRef} style={{ display: minimized ? "none" : "block" }} />
+      <div
+        className="terminal-body"
+        ref={containerRef}
+        style={{ display: minimized ? "none" : "block" }}
+      />
     </div>
   );
 }
