@@ -48,7 +48,8 @@
       "Bash(curl -s http://localhost:5173)",
       "Bash(curl -s http://localhost:5173/src/App.jsx)",
       "Bash(gemini --help)",
-      "Bash(gemini mcp:*)"
+      "Bash(gemini mcp:*)",
+      "Bash(/bin/zsh:*)"
     ]
   }
 }
