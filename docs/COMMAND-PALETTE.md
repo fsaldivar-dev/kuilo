@@ -1,7 +1,7 @@
 # Command Palette (Cmd+K)
 
 
-![Command Palette](screenshots/slash-commands.png)
+![Command Palette](screenshots/command-palette.png)
 
 Acceso rápido a cualquier acción o documento desde el teclado.
 

@@ -1,7 +1,7 @@
 # Terminal Integrada
 
 
-![Terminal](screenshots/toolbar.png)
+![Terminal](screenshots/terminal.png)
 
 Terminal real embebida en Kuilo — corre bash, zsh, Claude CLI, Gemini CLI, git, npm, cualquier comando.
 
