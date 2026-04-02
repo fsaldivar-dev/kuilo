@@ -822,6 +822,7 @@ safeHandle("notes:open-external-window", async (_, { url }) => {
 // ─── Integrated Terminal ─────────────────────────────────────────────────────
 
 let ptyProcess = null;
+let ptyWebContents = null;
 
 safeHandle("notes:terminal-create", async (event) => {
   if (ptyProcess) { ptyProcess.kill(); ptyProcess = null; }
@@ -829,6 +830,9 @@ safeHandle("notes:terminal-create", async (event) => {
   const pty = require("node-pty");
   const shell = process.platform === "win32" ? "powershell.exe" : process.env.SHELL || "/bin/zsh";
   const root = await ensureVaultRoot();
+
+  // Store webContents reference before async operations
+  ptyWebContents = event.sender;
 
   ptyProcess = pty.spawn(shell, [], {
     name: "xterm-256color",
@@ -839,11 +843,11 @@ safeHandle("notes:terminal-create", async (event) => {
   });
 
   ptyProcess.onData((data) => {
-    event.sender.send("terminal-data", data);
+    try { ptyWebContents?.send("terminal-data", data); } catch {}
   });
 
   ptyProcess.onExit(() => {
-    event.sender.send("terminal-exit");
+    try { ptyWebContents?.send("terminal-exit"); } catch {}
     ptyProcess = null;
   });
 
