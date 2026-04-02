@@ -828,50 +828,52 @@ safeHandle("notes:terminal-create", async (event, payload) => {
   if (ptyProcess) { ptyProcess.kill(); ptyProcess = null; }
 
   const pty = require("node-pty");
+  const { execSync } = require("child_process");
+  const os = require("os");
   const root = await ensureVaultRoot();
   const mcpScript = path.join(__dirname, "..", "scripts", "docs-mcp.mjs");
 
   ptyWebContents = event.sender;
 
+  // Resolve full paths for CLIs (Electron doesn't inherit full shell PATH)
+  const findBin = (name) => {
+    try { return execSync(`which ${name}`, { encoding: "utf8" }).trim(); } catch { return name; }
+  };
+
   const mode = payload?.mode || "shell";
-  let cmd, args, env;
+  const shell = process.platform === "win32" ? "powershell.exe" : process.env.SHELL || "/bin/zsh";
+  let cmd, args;
+
+  // Full PATH for spawned processes
+  const fullPath = ["/opt/homebrew/bin", "/usr/local/bin", os.homedir() + "/.local/bin", process.env.PATH].join(":");
+  const env = { ...process.env, TERM: "xterm-256color", PATH: fullPath };
 
   if (mode === "gemini") {
-    // Add MCP server to Gemini CLI config (idempotent)
-    const { execSync } = require("child_process");
-    try { execSync(`gemini mcp remove kuilo-vault --scope user`, { stdio: "ignore" }); } catch {}
-    try { execSync(`gemini mcp add kuilo-vault node --scope user -- "${mcpScript}" "${root}"`, { stdio: "ignore" }); } catch (e) {
+    try { execSync(`${findBin("gemini")} mcp remove kuilo-vault --scope user 2>/dev/null`, { stdio: "ignore", env }); } catch {}
+    try { execSync(`${findBin("gemini")} mcp add kuilo-vault node --scope user -- "${mcpScript}" "${root}"`, { stdio: "ignore", env }); } catch (e) {
       process.stderr.write(`[terminal] Gemini MCP add failed: ${e.message}\n`);
     }
-
-    cmd = "gemini";
+    cmd = findBin("gemini");
     args = [];
-    env = { ...process.env, TERM: "xterm-256color" };
   } else if (mode === "claude") {
-    // Add kuilo-vault MCP to Claude's global config
-    const os = require("os");
     const claudeConfigPath = path.join(os.homedir(), ".claude.json");
-    process.stderr.write(`[terminal] Claude config path: ${claudeConfigPath}\n`);
-    process.stderr.write(`[terminal] MCP script: ${mcpScript}, vault: ${root}\n`);
     try {
       const raw = await fs.readFile(claudeConfigPath, "utf8");
       const claudeConfig = JSON.parse(raw);
       if (!claudeConfig.mcpServers) claudeConfig.mcpServers = {};
       claudeConfig.mcpServers["kuilo-vault"] = { command: "node", args: [mcpScript, root] };
       await fs.writeFile(claudeConfigPath, JSON.stringify(claudeConfig, null, 2), "utf8");
-      process.stderr.write(`[terminal] Claude config updated with kuilo-vault\n`);
     } catch (e) {
-      process.stderr.write(`[terminal] Could not update claude config: ${e.message}\n`);
+      process.stderr.write(`[terminal] Claude config error: ${e.message}\n`);
     }
-
-    cmd = "claude";
+    cmd = findBin("claude");
     args = [];
-    env = { ...process.env, TERM: "xterm-256color" };
   } else {
-    cmd = process.platform === "win32" ? "powershell.exe" : process.env.SHELL || "/bin/zsh";
+    cmd = shell;
     args = [];
-    env = { ...process.env, TERM: "xterm-256color" };
   }
+
+  process.stderr.write(`[terminal] Spawning: ${cmd} ${args.join(" ")} (mode: ${mode})\n`);
 
   ptyProcess = pty.spawn(cmd, args, {
     name: "xterm-256color",
