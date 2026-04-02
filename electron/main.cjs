@@ -837,7 +837,12 @@ safeHandle("notes:terminal-create", async (event, payload) => {
 
   // Resolve full paths for CLIs (Electron doesn't inherit full shell PATH)
   const findBin = (name) => {
-    try { return execSync(`/bin/zsh -ilc "which ${name}" 2>/dev/null`, { encoding: "utf8" }).trim(); } catch { return name; }
+    try {
+      const output = execSync(`/bin/zsh -ilc "which ${name}"`, { encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+      // Filter out session restore messages — take only the line starting with /
+      const binPath = output.split("\n").find((l) => l.startsWith("/"));
+      return binPath?.trim() || name;
+    } catch { return name; }
   };
 
   const mode = payload?.mode || "shell";
