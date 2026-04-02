@@ -294,3 +294,89 @@
   --tt-color-highlight-orange-contrast: rgba(233, 126, 37, 0.2);
   --tt-color-highlight-pink-contrast: rgba(220, 76, 145, 0.22);
 }
+
+/**************************************************
+     Semantic tokens — app-wide
+**************************************************/
+
+:root {
+  /* Text */
+  --tt-color-text-primary: #1d1d1f;
+  --tt-color-text-secondary: #6e6e73; /* WCAG fix: was #8e8e93 (3.5:1) → now ≥4.5:1 on white */
+  --tt-color-text-muted: #aeaeb2;
+  --tt-color-text-disabled: #c7c7cc;
+  --tt-color-text-inverse: #ffffff;
+
+  /* Backgrounds */
+  --tt-color-bg-primary: #ffffff;
+  --tt-color-bg-secondary: #f2f2f7;
+  --tt-color-bg-tertiary: #e5e5ea;
+  --tt-color-bg-hover: rgba(0, 0, 0, 0.04);
+  --tt-color-bg-active: rgba(0, 0, 0, 0.08);
+
+  /* Borders */
+  --tt-color-border-default: #e5e5ea;
+  --tt-color-border-subtle: rgba(0, 0, 0, 0.06);
+  --tt-color-border-input: rgba(0, 0, 0, 0.12);
+
+  /* Accent */
+  --tt-color-accent: #0071e3;
+  --tt-color-accent-hover: #0077ed;
+
+  /* Semantic status */
+  --tt-color-success: #34c759;
+  --tt-color-warning: #ff9500;
+  --tt-color-danger: #ff3b30;
+  --tt-color-danger-hover: #e0342b;
+  --tt-color-info: #5ac8fa;
+
+  /* Font sizes */
+  --tt-font-size-xs: 10px;
+  --tt-font-size-sm: 11px;
+  --tt-font-size-base: 12px;
+  --tt-font-size-md: 13px;
+  --tt-font-size-lg: 14px;
+  --tt-font-size-xl: 16px;
+  --tt-font-size-2xl: 20px;
+
+  /* Spacing (4px grid) */
+  --tt-space-1: 4px;
+  --tt-space-2: 8px;
+  --tt-space-3: 12px;
+  --tt-space-4: 16px;
+  --tt-space-5: 20px;
+  --tt-space-6: 24px;
+  --tt-space-7: 28px;
+  --tt-space-8: 32px;
+  --tt-space-10: 40px;
+  --tt-space-11: 44px;
+  --tt-space-12: 48px;
+}
+
+/* Semantic tokens — Dark mode */
+.dark {
+  --tt-color-text-primary: #f5f5f7;
+  --tt-color-text-secondary: #98989d;
+  --tt-color-text-muted: rgba(255, 255, 255, 0.45);
+  --tt-color-text-disabled: rgba(255, 255, 255, 0.25);
+  --tt-color-text-inverse: #1d1d1f;
+
+  --tt-color-bg-primary: #1c1c1e;
+  --tt-color-bg-secondary: #2c2c2e;
+  --tt-color-bg-tertiary: #3a3a3c;
+  --tt-color-bg-hover: rgba(255, 255, 255, 0.06);
+  --tt-color-bg-active: rgba(255, 255, 255, 0.1);
+
+  --tt-color-border-default: rgba(255, 255, 255, 0.1);
+  --tt-color-border-subtle: rgba(255, 255, 255, 0.06);
+  --tt-color-border-input: rgba(255, 255, 255, 0.12);
+
+  --tt-color-accent: #0a84ff;
+  --tt-color-accent-hover: #409cff;
+
+  --tt-color-success: #30d158;
+  --tt-color-warning: #ff9f0a;
+  --tt-color-danger: #ff453a;
+  --tt-color-danger-hover: #ff6961;
+  --tt-color-info: #64d2ff;
+}

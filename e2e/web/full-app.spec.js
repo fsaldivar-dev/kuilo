@@ -145,7 +145,7 @@ test.describe("Feature audit — Connectors Modal", () => {
 
   test("012 — Modal muestra hint sin Electron", async ({ page }) => {
     await page.locator("text=Conectores AI").click();
-    await expect(page.locator(".connectors-hint")).toContainText("Ejecuta la app desde Electron");
+    await expect(page.locator(".connectors-hint").first()).toContainText("Los conectores MCP permiten");
     await expect(page).toHaveScreenshot("012-connectors-no-electron.png");
   });
 

@@ -19,7 +19,7 @@ export function DiffView({ entries, versionLabel, onClose }) {
     <div className="diff-view">
       <div className="diff-header">
         <span>Comparando con <strong>{versionLabel}</strong></span>
-        <button className="diff-close" onClick={onClose}>
+        <button className="diff-close" onClick={onClose} aria-label="Cerrar comparacion">
           <X size={14} /> Cerrar
         </button>
       </div>
