@@ -14,7 +14,8 @@
   <img src="https://img.shields.io/badge/stack-Electron%20%2B%20React%20%2B%20Tiptap-purple" />
   <img src="https://img.shields.io/badge/licencia-MIT-green" />
   <img src="https://img.shields.io/badge/MCP-19%20herramientas-orange" />
-  <img src="https://img.shields.io/badge/tests-397%20unit%20%2B%2060%20E2E-brightgreen" />
+  <img src="https://img.shields.io/badge/tests-397%20unit%20%2B%2064%20E2E-brightgreen" />
+  <img src="https://img.shields.io/badge/skills-15-blueviolet" />
 </p>
 
 ---
@@ -47,14 +48,17 @@ Kuilo es un IDE de documentacion tecnica para equipos de una persona. Documenta 
 | **Backlinks** | [WIKI-LINKS.md](docs/WIKI-LINKS.md) | Ve que paginas enlazan al documento actual |
 | **Template picker** | [TEMPLATES.md](docs/TEMPLATES.md) | Elige plantilla al crear nueva pagina |
 | **Version diff** | [VERSION-DIFF.md](docs/VERSION-DIFF.md) | Compara versiones con diff visual bloque a bloque |
-| **Tabs** | [COMMAND-PALETTE.md](docs/COMMAND-PALETTE.md) | Multiples documentos abiertos simultaneamente |
-| **Favoritos** | [COMMAND-PALETTE.md](docs/COMMAND-PALETTE.md) | Marca paginas con estrella para acceso rapido |
-| **Duplicar pagina** | [COMMAND-PALETTE.md](docs/COMMAND-PALETTE.md) | Copia un documento con todo su contenido |
-| **Atajos de teclado** | [COMMAND-PALETTE.md](docs/COMMAND-PALETTE.md) | Panel de referencia con Cmd+/ |
+| **Tabs** | [TABS.md](docs/TABS.md) | Multiples documentos abiertos simultaneamente |
+| **Favoritos** | [FAVORITES.md](docs/FAVORITES.md) | Marca paginas con estrella para acceso rapido |
+| **Duplicar pagina** | [DUPLICATE.md](docs/DUPLICATE.md) | Copia un documento con todo su contenido |
+| **Atajos de teclado** | [SHORTCUTS.md](docs/SHORTCUTS.md) | Panel de referencia con Cmd+/ |
 | **Workflow Pipeline** | [WORKFLOWS.md](docs/WORKFLOWS.md) | Flujos de documentacion por area con estados y dependencias cross-area |
 | **Kuilo AI** | [AI-CHAT.md](docs/AI-CHAT.md) | Chat con IA embebido — 5 providers, 3 gratis, doc links clickeables |
-| **Knowledge Base** | — | Metodologias (Shape Up, Stage-Gate, Lean), tutoriales, rules |
+| **Knowledge Base** | [KNOWLEDGE-BASE.md](docs/KNOWLEDGE-BASE.md) | Metodologias (Shape Up, Stage-Gate, Lean), tutoriales, rules |
 | **Terminal** | [TERMINAL.md](docs/TERMINAL.md) | Terminal real integrada — corre Claude CLI, Gemini CLI, git, npm |
+| **Callouts** | [CALLOUTS.md](docs/CALLOUTS.md) | 5 tipos de alertas visuales (Note, Tip, Warning, Caution, Important) |
+| **Table of Contents** | [TABLE-OF-CONTENTS.md](docs/TABLE-OF-CONTENTS.md) | Indice de contenido auto-generado desde headings |
+| **Skills** | [SKILLS.md](docs/SKILLS.md) | 15 skills para automatizar el flujo de desarrollo |
 
 ---
 

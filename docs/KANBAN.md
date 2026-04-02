@@ -1,5 +1,8 @@
 # Kanban Board
 
+
+![Kanban](screenshots/kanban.png)
+
 Tablero de tareas integrado en el editor con drag & drop.
 
 ## Insertar
