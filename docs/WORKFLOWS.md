@@ -1,5 +1,8 @@
 # Documentation Workflow Pipeline
 
+
+![Workflows](screenshots/overview.png)
+
 Pipelines de documentación basados en metodologías reales. Cada área de proyecto tiene su propio flujo con etapas, estados y dependencias.
 
 ## Uso

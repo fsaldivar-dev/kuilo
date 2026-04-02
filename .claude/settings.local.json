@@ -49,7 +49,8 @@
       "Bash(curl -s http://localhost:5173/src/App.jsx)",
       "Bash(gemini --help)",
       "Bash(gemini mcp:*)",
-      "Bash(/bin/zsh:*)"
+      "Bash(/bin/zsh:*)",
+      "Bash(xargs -I {} basename {})"
     ]
   }
 }

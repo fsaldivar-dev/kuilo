@@ -62,18 +62,21 @@ Circular dependency between vault↔editor broken via refs: editor exposes `acti
 - **page-json**: Structured doc with `{ meta, blocks }`. Blocks are Tiptap JSON. Versioned.
 - **legacy-markdown**: Plain `.md` file. Can be promoted to page-json via `promoteDoc`.
 
-### IPC API (`window.notesApi`)
-Docs: `listTree`, `readDoc`, `createDoc`, `saveDoc`, `deleteDoc`, `renameDoc`, `promoteDoc`, `restoreDocVersion`, `searchContent`, `listDocVersions`
-Vault: `getVault`, `openVaultDialog`, `openDocsFolder`
-Backup: `backupInit`, `backupStatus`, `backupCommit`, `backupPush`
-Export: `exportPdf`, `exportBook`
+### IPC API (`window.notesApi`) — 23 methods
+Docs: `listTree`, `readDoc`, `createDoc`, `saveDoc`, `deleteDoc`, `renameDoc`, `promoteDoc`, `restoreDocVersion`, `readDocVersion`, `searchContent`, `listDocVersions`
+Vault: `getVault`, `openVaultDialog`, `openDocsFolder`, `chooseOrCreateFolder`, `resetVault`
+Backup: `backupInit`, `backupStatus`, `backupCommit`, `backupPush`, `backupLog`
+Export: `exportPdf`, `exportBook`, `publishSite`
+Workflow: `readWorkflow`, `saveWorkflow`
+Terminal: `terminalCreate`, `terminalWrite`, `terminalResize`, `terminalKill`, `onTerminalData`, `onTerminalExit`
+AI Chat: `aiChat`, `openExternalWindow`
 MCP: `getMcpInfo`, `configureAiConnector`, `disconnectAiConnector`
 
 ## Testing
 
 ```bash
-npm test                    # 344 unit tests (vitest, ~2s)
-npm run test:e2e:web        # 34 E2E tests (playwright, ~16s)
+npm test                    # 397 unit tests (vitest, ~2s)
+npm run test:e2e:web        # 64 E2E tests (playwright, ~26s)
 npm run test:e2e:electron   # 4 Electron tests (requires npm run build first)
 ```
 
@@ -88,6 +91,16 @@ Screenshots: `e2e/screenshots/` (19 feature audit snapshots)
 - Auto-save: 450ms debounce via `scheduleSaveLegacy` / `scheduleSavePageDocument`
 - Tiptap JSON stored directly as blocks (not converted to pageDocument format)
 - Paths: `@/` alias → `src/` (vite config)
+
+## PR checklist (run /pr or do manually)
+
+1. `npm test` — all unit tests pass
+2. `npx playwright test --project=web` — all E2E pass
+3. Update `docs/*.md` if any feature changed
+4. Update `README.md` badges and capabilities table
+5. Update this file (CLAUDE.md) if architecture changed
+6. Update snapshots if UI changed: `npx playwright test --update-snapshots`
+7. Generate changelog entry
 
 ## Known issues
 

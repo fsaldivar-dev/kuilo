@@ -1,5 +1,8 @@
 # AI Chat (Kuilo AI)
 
+
+![AI Chat](screenshots/sidebar.png)
+
 Panel de chat embebido que usa la API key del usuario para responder preguntas sobre el vault.
 
 ## Uso
