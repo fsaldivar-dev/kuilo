@@ -54,6 +54,7 @@ Kuilo es un IDE de documentacion tecnica para equipos de una persona. Documenta 
 | **Workflow Pipeline** | [WORKFLOWS.md](docs/WORKFLOWS.md) | Flujos de documentacion por area con estados y dependencias cross-area |
 | **Kuilo AI** | [AI-CHAT.md](docs/AI-CHAT.md) | Chat con IA embebido — 5 providers, 3 gratis, doc links clickeables |
 | **Knowledge Base** | — | Metodologias (Shape Up, Stage-Gate, Lean), tutoriales, rules |
+| **Terminal** | [TERMINAL.md](docs/TERMINAL.md) | Terminal real integrada — corre Claude CLI, Gemini CLI, git, npm |
 
 ---
 

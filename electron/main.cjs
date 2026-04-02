@@ -819,6 +819,49 @@ safeHandle("notes:open-external-window", async (_, { url }) => {
   return { ok: true };
 });
 
+// ─── Integrated Terminal ─────────────────────────────────────────────────────
+
+let ptyProcess = null;
+
+safeHandle("notes:terminal-create", async (event) => {
+  if (ptyProcess) { ptyProcess.kill(); ptyProcess = null; }
+
+  const pty = require("node-pty");
+  const shell = process.platform === "win32" ? "powershell.exe" : process.env.SHELL || "/bin/zsh";
+  const root = await ensureVaultRoot();
+
+  ptyProcess = pty.spawn(shell, [], {
+    name: "xterm-256color",
+    cols: 80,
+    rows: 24,
+    cwd: root,
+    env: { ...process.env, TERM: "xterm-256color" },
+  });
+
+  ptyProcess.onData((data) => {
+    event.sender.send("terminal-data", data);
+  });
+
+  ptyProcess.onExit(() => {
+    event.sender.send("terminal-exit");
+    ptyProcess = null;
+  });
+
+  return { ok: true, shell };
+});
+
+safeHandle("notes:terminal-write", async (_, { data }) => {
+  if (ptyProcess) ptyProcess.write(data);
+});
+
+safeHandle("notes:terminal-resize", async (_, { cols, rows }) => {
+  if (ptyProcess) ptyProcess.resize(cols, rows);
+});
+
+safeHandle("notes:terminal-kill", async () => {
+  if (ptyProcess) { ptyProcess.kill(); ptyProcess = null; }
+});
+
 // ─── MCP Connectors ──────────────────────────────────────────────────────────
 
 const isMac = process.platform === "darwin";
