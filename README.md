@@ -206,3 +206,8 @@ MIT
 <p align="center">
   <em>Kuilo — del nahuatl tlacuilo, el que documenta.</em>
 </p>
+
+
+---
+
+> *El conocimiento se pudre cuando se guarda. Se mantiene vivo cuando se comparte.* — [Manifiesto](./MANIFESTO.md)
